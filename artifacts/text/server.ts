@@ -1,0 +1,89 @@
+import { smoothStream, streamText } from 'ai';
+import { myProvider } from '@/lib/ai/providers';
+import { createDocumentHandler } from '@/lib/artifacts/server';
+import { updateDocumentPrompt } from '@/lib/ai/prompts';
+
+export const textDocumentHandler = createDocumentHandler<'text'>({
+  kind: 'text',
+  onCreateDocument: async ({ title, streamWriter, toolCallId }) => {
+    let draftContent = '';
+
+    const { fullStream } = streamText({
+      model: myProvider.languageModel('artifact-model'),
+      system:
+        'Write about the given topic. Markdown is supported. Use headings wherever appropriate.',
+      experimental_transform: smoothStream({ chunking: 'word' }),
+      prompt: title,
+    });
+
+    for await (const delta of fullStream) {
+      const { type } = delta;
+
+      if (type === 'text') {
+        draftContent += delta.text;
+
+        streamWriter.write({
+          id: toolCallId,
+          type: 'data-document',
+          data: {
+            content: draftContent,
+          },
+        });
+      }
+    }
+
+    return draftContent;
+  },
+  onUpdateDocument: async ({
+    document,
+    description,
+    streamWriter,
+    toolCallId,
+  }) => {
+    let draftContent = '';
+
+    const { fullStream } = streamText({
+      model: myProvider.languageModel('artifact-model'),
+      system: updateDocumentPrompt(document.content, 'text'),
+      experimental_transform: smoothStream({ chunking: 'word' }),
+      prompt: description,
+      providerOptions: {
+        openai: {
+          prediction: {
+            type: 'content',
+            content: document.content,
+          },
+        },
+      },
+    });
+
+    for await (const delta of fullStream) {
+      const { type } = delta;
+
+      if (type === 'text') {
+        draftContent += delta.text;
+
+        streamWriter.write({
+          id: toolCallId,
+          type: 'data-document',
+          data: {
+            content: draftContent,
+          },
+        });
+      }
+
+      streamWriter.write({
+        id: toolCallId,
+        type: 'data-document',
+        data: {
+          id: document.id,
+          kind: document.kind,
+          content: draftContent,
+          title: document.title,
+        },
+      });
+    }
+
+    return draftContent;
+  },
+});
