@@ -14,7 +14,7 @@ const inference = async (prompt: string): Promise<string> => {
     const result = await generateText(prompt);
     return result;
   } catch (error) {
-    console.error('Inference error_two:', error);
+    console.error('Inference error_twothree:', error);
     throw new Error(`Model inference failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 };
