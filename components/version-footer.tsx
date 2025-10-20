@@ -99,7 +99,7 @@ export const VersionFooter = ({
           }}
           variant="outline"
         >
-          Back to latest version
+        Setup Setup
         </Button>
       </div>
     </motion.div>
