@@ -3,10 +3,10 @@
  * Uses open-weight models for local inference
  */
 
-import { pipeline, Pipeline } from '@huggingface/transformers';
+import { pipeline, TextGenerationPipeline } from '@huggingface/transformers';
 
 // Global pipeline instance to avoid re-initializing the model on every call
-let textGenerationPipeline: Pipeline | null = null;
+let textGenerationPipeline: TextGenerationPipeline | null = null;
 
 // Model configuration
 const MODEL_NAME = 'Xenova/gpt2'; // Using GPT-2 as mentioned in the comments
@@ -16,9 +16,9 @@ const MAX_NEW_TOKENS = 50; // Maximum number of tokens to generate
  * Initialize the text generation pipeline
  * Lazy loads the model on first use
  */
-async function initializePipeline(): Promise<Pipeline> {
+async function initializePipeline(): Promise<TextGenerationPipeline> {
   if (!textGenerationPipeline) {
-    textGenerationPipeline = await pipeline('text-generation', MODEL_NAME);
+    textGenerationPipeline = await pipeline('text-generation', MODEL_NAME) as unknown as TextGenerationPipeline;
   }
   return textGenerationPipeline;
 }
@@ -43,7 +43,9 @@ export async function generateText(prompt: string): Promise<string> {
     // Extract the generated text from the result
     // The result is an array with a single object containing generated_text
     if (Array.isArray(result) && result.length > 0 && 'generated_text' in result[0]) {
-      return result[0].generated_text;
+      const generatedText = result[0].generated_text;
+      // Handle both string and Chat types
+      return typeof generatedText === 'string' ? generatedText : String(generatedText);
     }
 
     throw new Error('Unexpected response format from model');
