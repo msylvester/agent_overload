@@ -15,7 +15,7 @@
     "db:pull": "drizzle-kit pull",
     "db:check": "drizzle-kit check",
     "db:up": "drizzle-kit up",
-    "test": "export PLAYWRIGHT=True && pnpm exec playwright test"
+    "test": "vitest"
   },
   "dependencies": {
     "@ai-sdk/gateway": "^1.0.15",
@@ -91,7 +91,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.2",
-    "@playwright/test": "^1.50.1",
     "@tailwindcss/postcss": "^4.1.13",
     "@tailwindcss/typography": "^0.5.15",
     "@types/d3-scale": "^4.0.8",
@@ -106,7 +105,8 @@
     "tailwindcss": "^4.1.13",
     "tsx": "^4.19.1",
     "typescript": "^5.6.3",
-    "ultracite": "5.3.9"
+    "ultracite": "5.3.9",
+    "vitest": "^3.2.4"
   },
   "packageManager": "pnpm@9.12.3"
 }
