@@ -1,4 +1,3 @@
-//I want to add support for Magistral Small 1.2
 
 import { pipeline, type TextGenerationPipeline } from '@xenova/transformers';
 import {
