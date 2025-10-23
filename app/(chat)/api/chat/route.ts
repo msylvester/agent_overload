@@ -47,26 +47,12 @@ export async function POST(request: Request) {
     } = requestBody;
 
     const session = await auth();
-
-    if (!session?.user) {
-      return new ChatSDKError("unauthorized:chat").toResponse();
-    }
-
-    const userType: UserType = session.user.type;
-
-    const messageCount = await getMessageCountByUserId({
-      id: session.user.id,
-      differenceInHours: 24,
-    });
-
-    if (messageCount > entitlementsByUserType[userType].maxMessagesPerDay) {
-      return new ChatSDKError("rate_limit:chat").toResponse();
-    }
+    const userId = session?.user?.id || "anonymous";
 
     const chat = await getChatById({ id });
 
     if (chat) {
-      if (chat.userId !== session.user.id) {
+      if (chat.userId !== userId) {
         return new ChatSDKError("forbidden:chat").toResponse();
       }
     } else {
@@ -76,7 +62,7 @@ export async function POST(request: Request) {
 
       await saveChat({
         id,
-        userId: session.user.id,
+        userId,
         title,
         visibility: selectedVisibilityType,
       });
@@ -169,14 +155,11 @@ export async function DELETE(request: Request) {
   }
 
   const session = await auth();
-
-  if (!session?.user) {
-    return new ChatSDKError("unauthorized:chat").toResponse();
-  }
+  const userId = session?.user?.id || "anonymous";
 
   const chat = await getChatById({ id });
 
-  if (chat?.userId !== session.user.id) {
+  if (chat?.userId !== userId) {
     return new ChatSDKError("forbidden:chat").toResponse();
   }
 

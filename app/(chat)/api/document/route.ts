@@ -19,10 +19,7 @@ export async function GET(request: Request) {
   }
 
   const session = await auth();
-
-  if (!session?.user) {
-    return new ChatSDKError("unauthorized:document").toResponse();
-  }
+  const userId = session?.user?.id || "anonymous";
 
   const documents = await getDocumentsById({ id });
 
@@ -32,7 +29,7 @@ export async function GET(request: Request) {
     return new ChatSDKError("not_found:document").toResponse();
   }
 
-  if (document.userId !== session.user.id) {
+  if (document.userId !== userId) {
     return new ChatSDKError("forbidden:document").toResponse();
   }
 
@@ -51,10 +48,7 @@ export async function POST(request: Request) {
   }
 
   const session = await auth();
-
-  if (!session?.user) {
-    return new ChatSDKError("not_found:document").toResponse();
-  }
+  const userId = session?.user?.id || "anonymous";
 
   const {
     content,
@@ -68,7 +62,7 @@ export async function POST(request: Request) {
   if (documents.length > 0) {
     const [doc] = documents;
 
-    if (doc.userId !== session.user.id) {
+    if (doc.userId !== userId) {
       return new ChatSDKError("forbidden:document").toResponse();
     }
   }
@@ -78,7 +72,7 @@ export async function POST(request: Request) {
     content,
     title,
     kind,
-    userId: session.user.id,
+    userId,
   });
 
   return Response.json(document, { status: 200 });
@@ -104,16 +98,13 @@ export async function DELETE(request: Request) {
   }
 
   const session = await auth();
-
-  if (!session?.user) {
-    return new ChatSDKError("unauthorized:document").toResponse();
-  }
+  const userId = session?.user?.id || "anonymous";
 
   const documents = await getDocumentsById({ id });
 
   const [document] = documents;
 
-  if (document.userId !== session.user.id) {
+  if (document.userId !== userId) {
     return new ChatSDKError("forbidden:document").toResponse();
   }
 

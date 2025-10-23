@@ -14,10 +14,7 @@ export async function GET(request: Request) {
   }
 
   const session = await auth();
-
-  if (!session?.user) {
-    return new ChatSDKError("unauthorized:vote").toResponse();
-  }
+  const userId = session?.user?.id || "anonymous";
 
   const chat = await getChatById({ id: chatId });
 
@@ -25,7 +22,7 @@ export async function GET(request: Request) {
     return new ChatSDKError("not_found:chat").toResponse();
   }
 
-  if (chat.userId !== session.user.id) {
+  if (chat.userId !== userId) {
     return new ChatSDKError("forbidden:vote").toResponse();
   }
 
@@ -50,10 +47,7 @@ export async function PATCH(request: Request) {
   }
 
   const session = await auth();
-
-  if (!session?.user) {
-    return new ChatSDKError("unauthorized:vote").toResponse();
-  }
+  const userId = session?.user?.id || "anonymous";
 
   const chat = await getChatById({ id: chatId });
 
@@ -61,7 +55,7 @@ export async function PATCH(request: Request) {
     return new ChatSDKError("not_found:vote").toResponse();
   }
 
-  if (chat.userId !== session.user.id) {
+  if (chat.userId !== userId) {
     return new ChatSDKError("forbidden:vote").toResponse();
   }
 

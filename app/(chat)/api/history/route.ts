@@ -18,13 +18,10 @@ export async function GET(request: NextRequest) {
   }
 
   const session = await auth();
-
-  if (!session?.user) {
-    return new ChatSDKError("unauthorized:chat").toResponse();
-  }
+  const userId = session?.user?.id || "anonymous";
 
   const chats = await getChatsByUserId({
-    id: session.user.id,
+    id: userId,
     limit,
     startingAfter,
     endingBefore,
@@ -35,12 +32,9 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE() {
   const session = await auth();
+  const userId = session?.user?.id || "anonymous";
 
-  if (!session?.user) {
-    return new ChatSDKError("unauthorized:chat").toResponse();
-  }
-
-  const result = await deleteAllChatsByUserId({ userId: session.user.id });
+  const result = await deleteAllChatsByUserId({ userId });
 
   return Response.json(result, { status: 200 });
 }

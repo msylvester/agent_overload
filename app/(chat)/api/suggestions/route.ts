@@ -14,10 +14,7 @@ export async function GET(request: Request) {
   }
 
   const session = await auth();
-
-  if (!session?.user) {
-    return new ChatSDKError("unauthorized:suggestions").toResponse();
-  }
+  const userId = session?.user?.id || "anonymous";
 
   const suggestions = await getSuggestionsByDocumentId({
     documentId,
@@ -29,7 +26,7 @@ export async function GET(request: Request) {
     return Response.json([], { status: 200 });
   }
 
-  if (suggestion.userId !== session.user.id) {
+  if (suggestion.userId !== userId) {
     return new ChatSDKError("forbidden:api").toResponse();
   }
 
