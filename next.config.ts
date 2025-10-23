@@ -11,6 +11,18 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  webpack: (config, { isServer }) => {
+    // Prevent @xenova/transformers from being bundled in client-side code
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@xenova/transformers': false,
+        'sharp': false,
+        'onnxruntime-node': false,
+      };
+    }
+    return config;
+  },
 };
 
 export default nextConfig;

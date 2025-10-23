@@ -7,8 +7,7 @@ import { DEFAULT_MODEL_ID, isValidModelId } from './ai/model-registry';
  *
  * Model selection priority:
  * 1. options.modelId parameter
- * 2. INFERENCE_MODEL environment variable
- * 3. DEFAULT_MODEL_ID from registry
+ * 2. DEFAULT_MODEL_ID from registry
  *
  * @param prompt - The input text prompt
  * @param options - Inference options
@@ -24,11 +23,7 @@ import { DEFAULT_MODEL_ID, isValidModelId } from './ai/model-registry';
  *
  * @example
  * // Use specific model
- * const result = await inference("Hello world", { modelId: "mistral" });
- *
- * @example
- * // Use environment variable: INFERENCE_MODEL=mistral npx ts-node script.ts
- * const result = await inference("Hello world");
+ * const result = await inference("Hello world", { modelId: "distilgpt2" });
  */
 const inference = async (
   prompt: string,
@@ -40,13 +35,13 @@ const inference = async (
   } = {}
 ): Promise<string> => {
   try {
-    // Determine model to use (priority: parameter > env var > default)
-    const modelId = options.modelId || process.env.INFERENCE_MODEL || DEFAULT_MODEL_ID;
+    // Determine model to use (priority: parameter > default)
+    const modelId = options.modelId || DEFAULT_MODEL_ID;
 
     // Validate model ID
     if (!isValidModelId(modelId)) {
       throw new Error(
-        `Invalid model ID: ${modelId}. Check INFERENCE_MODEL environment variable or pass valid modelId.`
+        `Invalid model ID: ${modelId}. Please pass a valid modelId option.`
       );
     }
 

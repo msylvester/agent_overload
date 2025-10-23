@@ -1,4 +1,3 @@
-import type { UseChatHelpers } from "@ai-sdk/react";
 import { formatDistance } from "date-fns";
 import equal from "fast-deep-equal";
 import { AnimatePresence, motion } from "framer-motion";
@@ -72,15 +71,15 @@ function PureArtifact({
   chatId: string;
   input: string;
   setInput: Dispatch<SetStateAction<string>>;
-  status: UseChatHelpers<ChatMessage>["status"];
-  stop: UseChatHelpers<ChatMessage>["stop"];
+  status: "ready" | "submitted";
+  stop: () => Promise<void>;
   attachments: Attachment[];
   setAttachments: Dispatch<SetStateAction<Attachment[]>>;
   messages: ChatMessage[];
-  setMessages: UseChatHelpers<ChatMessage>["setMessages"];
+  setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
   votes: Vote[] | undefined;
-  sendMessage: UseChatHelpers<ChatMessage>["sendMessage"];
-  regenerate: UseChatHelpers<ChatMessage>["regenerate"];
+  sendMessage: (message: ChatMessage) => Promise<void>;
+  regenerate: () => Promise<void>;
   isReadonly: boolean;
   selectedVisibilityType: VisibilityType;
   selectedModelId: string;
@@ -339,10 +338,10 @@ function PureArtifact({
                     messages={messages}
                     selectedModelId={selectedModelId}
                     selectedVisibilityType={selectedVisibilityType}
-                    sendMessage={sendMessage}
+                    sendMessage={sendMessage as any}
                     setAttachments={setAttachments}
                     setInput={setInput}
-                    setMessages={setMessages}
+                    setMessages={setMessages as any}
                     status={status}
                     stop={stop}
                   />
@@ -482,11 +481,11 @@ function PureArtifact({
                   <Toolbar
                     artifactKind={artifact.kind}
                     isToolbarVisible={isToolbarVisible}
-                    sendMessage={sendMessage}
+                    sendMessage={sendMessage as any}
                     setIsToolbarVisible={setIsToolbarVisible}
-                    setMessages={setMessages}
+                    setMessages={setMessages as any}
                     status={status}
-                    stop={stop}
+                    stop={stop as any}
                   />
                 )}
               </AnimatePresence>

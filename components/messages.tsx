@@ -1,4 +1,4 @@
-import type { UseChatHelpers } from "@ai-sdk/react";
+import type { Dispatch, SetStateAction } from "react";
 import equal from "fast-deep-equal";
 import { AnimatePresence } from "framer-motion";
 import { ArrowDownIcon } from "lucide-react";
@@ -13,11 +13,11 @@ import { PreviewMessage, ThinkingMessage } from "./message";
 
 type MessagesProps = {
   chatId: string;
-  status: UseChatHelpers<ChatMessage>["status"];
+  status: "ready" | "submitted";
   votes: Vote[] | undefined;
   messages: ChatMessage[];
-  setMessages: UseChatHelpers<ChatMessage>["setMessages"];
-  regenerate: UseChatHelpers<ChatMessage>["regenerate"];
+  setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  regenerate: () => void;
   isReadonly: boolean;
   isArtifactVisible: boolean;
   selectedModelId: string;
@@ -73,16 +73,16 @@ function PureMessages({
             <PreviewMessage
               chatId={chatId}
               isLoading={
-                status === "streaming" && messages.length - 1 === index
+                status === "submitted" && messages.length - 1 === index
               }
               isReadonly={isReadonly}
               key={message.id}
               message={message}
-              regenerate={regenerate}
+              regenerate={regenerate as any}
               requiresScrollPadding={
                 hasSentMessage && index === messages.length - 1
               }
-              setMessages={setMessages}
+              setMessages={setMessages as any}
               vote={
                 votes
                   ? votes.find((vote) => vote.messageId === message.id)

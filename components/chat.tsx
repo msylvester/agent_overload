@@ -1,10 +1,8 @@
 "use client";
 
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import useSWR, { useSWRConfig } from "swr";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
 import { ChatHeader } from "@/components/chat-header";
 import {
@@ -18,15 +16,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useArtifactSelector } from "@/hooks/use-artifact";
-import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
-import type { Vote } from "@/lib/db/schema";
-import { ChatSDKError } from "@/lib/errors";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
-import { fetcher, fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
+import { generateUUID } from "@/lib/utils";
 import { Artifact } from "./artifact";
-import { useDataStream } from "./data-stream-provider";
 import { Messages } from "./messages";
 import { MultimodalInput } from "./multimodal-input";
 import { getChatHistoryPaginationKey } from "./sidebar-history";
@@ -56,7 +50,6 @@ export function Chat({
   });
 
   const { mutate } = useSWRConfig();
-  const { setDataStream } = useDataStream();
 
   const [input, setInput] = useState<string>("");
   const [usage, setUsage] = useState<AppUsage | undefined>(initialLastContext);
@@ -64,63 +57,65 @@ export function Chat({
   const [currentModelId, setCurrentModelId] = useState(initialChatModel);
   const currentModelIdRef = useRef(currentModelId);
 
+  // Custom message state management (replacing useChat)
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [status, setStatus] = useState<"ready" | "submitted">("ready");
+
   useEffect(() => {
     currentModelIdRef.current = currentModelId;
   }, [currentModelId]);
 
-  const {
-    messages,
-    setMessages,
-    sendMessage,
-    status,
-    stop,
-    regenerate,
-    resumeStream,
-  } = useChat<ChatMessage>({
-    id,
-    messages: initialMessages,
-    experimental_throttle: 100,
-    generateId: generateUUID,
-    transport: new DefaultChatTransport({
-      api: "/api/chat",
-      fetch: fetchWithErrorHandlers,
-      prepareSendMessagesRequest(request) {
-        return {
-          body: {
-            id: request.id,
-            message: request.messages.at(-1),
-            selectedChatModel: currentModelIdRef.current,
-            selectedVisibilityType: visibilityType,
-            ...request.body,
-          },
-        };
-      },
-    }),
-    onData: (dataPart) => {
-      setDataStream((ds) => (ds ? [...ds, dataPart] : []));
-      if (dataPart.type === "data-usage") {
-        setUsage(dataPart.data);
+  // Custom sendMessage function that POSTs to local inference endpoint
+  const sendMessage = useCallback(async (message: ChatMessage) => {
+    setStatus("submitted");
+
+    // Add user message to UI immediately
+    setMessages((prev) => [...prev, message]);
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id,
+          message,
+          selectedChatModel: currentModelIdRef.current,
+          selectedVisibilityType: visibilityType,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    },
-    onFinish: () => {
+
+      const data = await response.json();
+
+      // Add assistant response to UI
+      if (data.message) {
+        setMessages((prev) => [...prev, data.message]);
+      }
+
       mutate(unstable_serialize(getChatHistoryPaginationKey));
-    },
-    onError: (error) => {
-      if (error instanceof ChatSDKError) {
-        // Check if it's a credit card error
-        if (
-          error.message?.includes("AI Gateway requires a valid credit card")
-        ) {
-          setShowCreditCardAlert(true);
-        } else {
-          toast({
-            type: "error",
-            description: error.message,
-          });
-        }
-      }
-    },
-  });
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast({
+        type: "error",
+        description: "Failed to send message. Please try again.",
+      });
+    } finally {
+      setStatus("ready");
+    }
+  }, [id, visibilityType, mutate]);
+
+  const stop = useCallback(async () => {
+    setStatus("ready");
+  }, []);
+
+  const regenerate = useCallback(async () => {
+    // No-op for now since we don't have regeneration with local inference
+  }, []);
 
   const searchParams = useSearchParams();
   const query = searchParams.get("query");
@@ -130,6 +125,7 @@ export function Chat({
   useEffect(() => {
     if (query && !hasAppendedQuery) {
       sendMessage({
+        id: generateUUID(),
         role: "user" as const,
         parts: [{ type: "text", text: query }],
       });
@@ -139,20 +135,8 @@ export function Chat({
     }
   }, [query, sendMessage, hasAppendedQuery, id]);
 
-  const { data: votes } = useSWR<Vote[]>(
-    messages.length >= 2 ? `/api/vote?chatId=${id}` : null,
-    fetcher
-  );
-
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
-
-  useAutoResume({
-    autoResume,
-    initialMessages,
-    resumeStream,
-    setMessages,
-  });
 
   return (
     <>
@@ -172,7 +156,7 @@ export function Chat({
           selectedModelId={initialChatModel}
           setMessages={setMessages}
           status={status}
-          votes={votes}
+          votes={undefined}
         />
 
         <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
@@ -212,7 +196,7 @@ export function Chat({
         setMessages={setMessages}
         status={status}
         stop={stop}
-        votes={votes}
+        votes={undefined}
       />
 
       <AlertDialog

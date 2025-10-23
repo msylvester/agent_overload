@@ -21,7 +21,6 @@ import { useLocalStorage, useWindowSize } from "usehooks-ts";
 import { saveChatModelAsCookie } from "@/app/(chat)/actions";
 import { SelectItem } from "@/components/ui/select";
 import { chatModels } from "@/lib/ai/models";
-import { myProvider } from "@/lib/ai/providers";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { cn } from "@/lib/utils";
@@ -67,13 +66,13 @@ function PureMultimodalInput({
   chatId: string;
   input: string;
   setInput: Dispatch<SetStateAction<string>>;
-  status: UseChatHelpers<ChatMessage>["status"];
+  status: "ready" | "submitted";
   stop: () => void;
   attachments: Attachment[];
   setAttachments: Dispatch<SetStateAction<Attachment[]>>;
   messages: UIMessage[];
-  setMessages: UseChatHelpers<ChatMessage>["setMessages"];
-  sendMessage: UseChatHelpers<ChatMessage>["sendMessage"];
+  setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  sendMessage: (message: ChatMessage) => Promise<void>;
   className?: string;
   selectedVisibilityType: VisibilityType;
   selectedModelId: string;
@@ -133,6 +132,7 @@ function PureMultimodalInput({
     window.history.replaceState({}, "", `/chat/${chatId}`);
 
     sendMessage({
+      id: crypto.randomUUID(),
       role: "user",
       parts: [
         ...attachments.map((attachment) => ({
@@ -146,7 +146,7 @@ function PureMultimodalInput({
           text: input,
         },
       ],
-    });
+    } as any);
 
     setAttachments([]);
     setLocalStorageInput("");
@@ -195,10 +195,6 @@ function PureMultimodalInput({
     }
   }, []);
 
-  const _modelResolver = useMemo(() => {
-    return myProvider.languageModel(selectedModelId);
-  }, [selectedModelId]);
-
   const contextProps = useMemo(
     () => ({
       usage,
@@ -240,7 +236,7 @@ function PureMultimodalInput({
           <SuggestedActions
             chatId={chatId}
             selectedVisibilityType={selectedVisibilityType}
-            sendMessage={sendMessage}
+            sendMessage={sendMessage as any}
           />
         )}
 
@@ -372,16 +368,17 @@ function PureAttachmentsButton({
   selectedModelId,
 }: {
   fileInputRef: React.MutableRefObject<HTMLInputElement | null>;
-  status: UseChatHelpers<ChatMessage>["status"];
+  status: "ready" | "submitted";
   selectedModelId: string;
 }) {
-  const isReasoningModel = selectedModelId === "chat-model-reasoning";
+  // Local GPT2 models don't support images, so always disable
+  const isLocalModel = true;
 
   return (
     <Button
       className="aspect-square h-8 rounded-lg p-1 transition-colors hover:bg-accent"
       data-testid="attachments-button"
-      disabled={status !== "ready" || isReasoningModel}
+      disabled={status !== "ready" || isLocalModel}
       onClick={(event) => {
         event.preventDefault();
         fileInputRef.current?.click();

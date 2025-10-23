@@ -24,7 +24,7 @@ describe('inference', () => {
     const result = await inference(testPrompt);
 
     expect(mockGenerateText).toHaveBeenCalledWith(testPrompt, {
-      modelId: 'distilgpt2',
+      modelId: 'gpt2',
     });
     expect(result).toBe(expectedResponse);
   });
@@ -59,7 +59,7 @@ describe('inference', () => {
     const result = await inference(emptyPrompt);
 
     expect(mockGenerateText).toHaveBeenCalledWith(emptyPrompt, {
-      modelId: 'distilgpt2',
+      modelId: 'gpt2',
     });
     expect(result).toBe(expectedResponse);
   });

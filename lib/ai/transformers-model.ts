@@ -1,4 +1,3 @@
-
 import { pipeline, type TextGenerationPipeline } from '@xenova/transformers';
 import {
   getModelConfig,

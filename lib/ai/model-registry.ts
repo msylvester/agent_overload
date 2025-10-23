@@ -44,7 +44,7 @@ const MODEL_REGISTRY: Record<string, ModelConfig> = {
 /**
  * Default model ID used when no model is specified
  */
-export const DEFAULT_MODEL_ID = 'distilgpt2';
+export const DEFAULT_MODEL_ID = 'gpt2';
 
 /**
  * Get model configuration by ID
@@ -70,4 +70,25 @@ export function isValidModelId(modelId: string): boolean {
  */
 export function getAvailableModelIds(): string[] {
   return Object.keys(MODEL_REGISTRY);
+}
+
+/**
+ * Mapping from UI chat model IDs to inference model IDs
+ * UI uses 'chat-model' and 'chat-model-reasoning'
+ * Inference uses model IDs from MODEL_REGISTRY
+ */
+export const UI_TO_INFERENCE_MODEL_MAP: Record<string, string> = {
+  'chat-model': 'gpt2',
+  'chat-model-reasoning': 'distilgpt2',
+  'title-model': 'gpt2',
+  'artifact-model': 'gpt2',
+};
+
+/**
+ * Convert UI model ID to inference model ID
+ * @param uiModelId - The model ID from the UI (e.g., 'chat-model')
+ * @returns The corresponding inference model ID (e.g., 'gpt2')
+ */
+export function uiModelToInferenceModel(uiModelId: string): string {
+  return UI_TO_INFERENCE_MODEL_MAP[uiModelId] || DEFAULT_MODEL_ID;
 }
