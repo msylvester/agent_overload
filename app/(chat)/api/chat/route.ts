@@ -20,6 +20,7 @@ import { generateTitleFromUserMessage } from "../../actions";
 import { type PostRequestBody, postRequestBodySchema } from "./schema";
 import inference from "@/lib/inference";
 import { uiModelToInferenceModel } from "@/lib/ai/model-registry";
+import { ensureAuthenticated } from "@/lib/auth-helpers";
 
 export const maxDuration = 60;
 
@@ -46,8 +47,7 @@ export async function POST(request: Request) {
       selectedVisibilityType: VisibilityType;
     } = requestBody;
 
-    const session = await auth();
-    const userId = session?.user?.id || "anonymous";
+    const userId = await ensureAuthenticated();
 
     const chat = await getChatById({ id });
 
@@ -154,8 +154,7 @@ export async function DELETE(request: Request) {
     return new ChatSDKError("bad_request:api").toResponse();
   }
 
-  const session = await auth();
-  const userId = session?.user?.id || "anonymous";
+  const userId = await ensureAuthenticated();
 
   const chat = await getChatById({ id });
 
