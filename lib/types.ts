@@ -30,6 +30,16 @@ export type ChatTools = {
   requestSuggestions: requestSuggestionsTool;
 };
 
+export type ResearchResponseData = {
+  company_name: string;
+  description: string;
+  industry?: string;
+  founded?: string;
+  headquarters?: string;
+  companySize?: string;
+  website?: string;
+};
+
 export type CustomUIDataTypes = {
   textDelta: string;
   imageDelta: string;
@@ -43,6 +53,7 @@ export type CustomUIDataTypes = {
   clear: null;
   finish: null;
   usage: AppUsage;
+  researchResponse: ResearchResponseData;
 };
 
 export type ChatMessage = UIMessage<

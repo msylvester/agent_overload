@@ -24,7 +24,7 @@ describe('inference', () => {
     const result = await inference(testPrompt);
 
     expect(mockGenerateText).toHaveBeenCalledWith(testPrompt, {
-      modelId: 'gpt2',
+      modelId: 'onnx-community/Llama-3.2-1B-Instruct',
     });
     expect(result).toBe(expectedResponse);
   });
@@ -59,7 +59,7 @@ describe('inference', () => {
     const result = await inference(emptyPrompt);
 
     expect(mockGenerateText).toHaveBeenCalledWith(emptyPrompt, {
-      modelId: 'gpt2',
+      modelId: 'onnx-community/Llama-3.2-1B-Instruct',
     });
     expect(result).toBe(expectedResponse);
   });
@@ -71,5 +71,21 @@ describe('inference', () => {
     mockGenerateText.mockRejectedValue(originalError);
 
     await expect(inference(testPrompt)).rejects.toThrow('Model inference failed: Network timeout');
+  });
+
+  it('should call generateText with onnx-community/Llama-3.2-1B-Instruct model when specified', async () => {
+    const testPrompt = 'Who is Barry Bonds?';
+    const expectedResponse = 'Who is Barry Bonds? Barry Bonds is a former professional baseball player who played for the Pittsburgh Pirates and San Francisco Giants.';
+
+    mockGenerateText.mockResolvedValue(expectedResponse);
+
+    const result = await inference(testPrompt, {
+      modelId: 'onnx-community/Llama-3.2-1B-Instruct',
+    });
+
+    expect(mockGenerateText).toHaveBeenCalledWith(testPrompt, {
+      modelId: 'onnx-community/Llama-3.2-1B-Instruct',
+    });
+    expect(result).toBe(expectedResponse);
   });
 });

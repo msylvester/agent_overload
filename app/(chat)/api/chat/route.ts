@@ -1,5 +1,6 @@
 import { geolocation } from "@vercel/functions";
 import { auth, type UserType } from "@/app/(auth)/auth";
+
 import { runResearchWorkflow } from "@/workflows/research_workflow";
 
 import type { VisibilityType } from "@/components/visibility-selector";
@@ -102,15 +103,30 @@ export async function POST(request: Request) {
 */
     console.log(`about to run`)
     const workflowOutput = await runResearchWorkflow(userMessageText);
-    console.log('finished runnign')
-    const generatedText = JSON.stringify(workflowOutput.webResults);
+    console.log('finished running')
 
+    // Create a data part for each company with mapped field names
+    const companyParts = (workflowOutput.webResults?.companies || []).map(company => ({
+      type: "data" as const,
+      data: {
+        type: "researchResponse",
+        company_name: company.company_name,
+        description: company.description,
+        industry: company.industry,
+        founded: String(company.founded_year),
+        headquarters: company.headquarters_location,
+        companySize: company.company_size,
+        website: company.website,
+      }
+    }));
 
-    // Create assistant response message
+    // Create assistant response message with research response data parts
     const assistantMessage: ChatMessage = {
       id: generateUUID(),
       role: "assistant",
-      parts: [{ type: "text", text: generatedText }],
+      parts: companyParts.length > 0
+        ? companyParts
+        : [{ type: "text" as const, text: "No research results found." }],
     };
 
     // Save assistant message
@@ -131,7 +147,6 @@ export async function POST(request: Request) {
     return Response.json({
       success: true,
       message: assistantMessage,
-      response: generatedText,
     });
   } catch (error) {
     const vercelId = request.headers.get("x-vercel-id");

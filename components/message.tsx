@@ -23,6 +23,7 @@ import { MessageActions } from "./message-actions";
 import { MessageEditor } from "./message-editor";
 import { MessageReasoning } from "./message-reasoning";
 import { PreviewAttachment } from "./preview-attachment";
+import ResearchResponse from "./researchResponse";
 import { Weather } from "./weather";
 
 const PurePreviewMessage = ({
@@ -264,6 +265,22 @@ const PurePreviewMessage = ({
                     )}
                   </ToolContent>
                 </Tool>
+              );
+            }
+
+            if (type === "data" && part.data?.type === "researchResponse") {
+              const { company_name, description, industry, founded, headquarters, companySize, website } = part.data;
+              return (
+                <ResearchResponse
+                  key={key}
+                  company_name={company_name}
+                  description={description}
+                  industry={industry}
+                  founded={founded}
+                  headquarters={headquarters}
+                  companySize={companySize}
+                  website={website}
+                />
               );
             }
 

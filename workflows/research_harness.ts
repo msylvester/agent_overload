@@ -7,17 +7,10 @@
 
 import { config } from 'dotenv';
 import { resolve } from 'path';
+import { runResearchWorkflow, WorkflowOutput } from './research_workflow';
 
 // Load environment variables from .env.local
 config({ path: resolve(__dirname, '../.env.local') });
-
-// Type definitions
-type Company = {
-  company_name: string;
-  industry?: string;
-  headquarters_location?: string;
-  description?: string;
-}
 
 interface TestQuery {
   query: string;
@@ -75,39 +68,39 @@ async function runSingleTest(queryData: TestQuery): Promise<TestResult> {
   console.log("-".repeat(50));
 
   try {
-    // TODO: Replace with actual workflow call once implemented
-    // const result = await runResearchWorkflow(query);
+    // Run the actual research workflow
+    const result = await runResearchWorkflow(query);
 
-    // Placeholder for now - will be replaced with actual getCompanies method
-    const result = {
-      research: {
-        companies: [] as Company[]
-      },
-      summary: {
-        company_name: "",
-        industry: "",
-        description: ""
-      }
-    };
+    // Extract data from RAG results
+    const ragSources = result.ragResults?.sources || [];
+    const webCompanies = result.webResults?.companies || [];
 
-    // Check research results
-    const companies = result.research?.companies || [];
-    const summary = result.summary || {};
+    console.log(`\nRAG Results:`);
+    console.log(`  Sources found: ${ragSources.length}`);
+    console.log(`  Confidence: ${result.ragResults?.confidenceScore?.toFixed(2) || 'N/A'}`);
 
-    console.log(`Research Results:`);
-    console.log(`  Companies found: ${companies.length}`);
-
-    for (let i = 0; i < Math.min(companies.length, 5); i++) {
-      const company = companies[i];
-      console.log(`  ${i + 1}. ${company.company_name || 'Unknown'}`);
-      console.log(`     Industry: ${company.industry || 'N/A'}`);
-      console.log(`     Location: ${company.headquarters_location || 'N/A'}`);
+    for (let i = 0; i < Math.min(ragSources.length, 5); i++) {
+      const source = ragSources[i];
+      console.log(`  ${i + 1}. ${source.companyName || 'Unknown'}`);
+      console.log(`     Relevance: ${source.relevanceScore?.toFixed(2) || 'N/A'}`);
+      console.log(`     Snippet: ${(source.documentSnippet || '').substring(0, 100)}...`);
     }
 
-    console.log(`\nSummary Result:`);
-    console.log(`  Company: ${summary.company_name || 'N/A'}`);
-    console.log(`  Industry: ${summary.industry || 'N/A'}`);
-    console.log(`  Description: ${(summary.description || 'N/A').substring(0, 200)}...`);
+    console.log(`\nRAG Answer:`);
+    console.log(`  ${(result.ragResults?.answer || 'N/A').substring(0, 300)}...`);
+
+    if (webCompanies.length > 0) {
+      console.log(`\nWeb Research Results:`);
+      console.log(`  Companies enriched: ${webCompanies.length}`);
+
+      for (let i = 0; i < Math.min(webCompanies.length, 5); i++) {
+        const company = webCompanies[i];
+        console.log(`  ${i + 1}. ${company.company_name || 'Unknown'}`);
+        console.log(`     Industry: ${company.industry || 'N/A'}`);
+        console.log(`     Location: ${company.headquarters_location || 'N/A'}`);
+        console.log(`     Website: ${company.website || 'N/A'}`);
+      }
+    }
 
     // Check if expected result is in the output
     const allText = JSON.stringify(result).toLowerCase();
@@ -117,7 +110,7 @@ async function runSingleTest(queryData: TestQuery): Promise<TestResult> {
       query,
       success: true,
       found_expected: foundExpected,
-      companies_count: companies.length,
+      companies_count: ragSources.length + webCompanies.length,
       result
     };
 
