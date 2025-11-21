@@ -1,5 +1,7 @@
 import { geolocation } from "@vercel/functions";
 import { auth, type UserType } from "@/app/(auth)/auth";
+import { runResearchWorkflow } from "@/workflows/research_workflow";
+
 import type { VisibilityType } from "@/components/visibility-selector";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import type { ChatModel } from "@/lib/ai/models";
@@ -30,7 +32,8 @@ export async function POST(request: Request) {
   try {
     const json = await request.json();
     requestBody = postRequestBodySchema.parse(json);
-  } catch (_) {
+  } catch (error) {
+    console.error("Schema validation failed:", error);
     return new ChatSDKError("bad_request:api").toResponse();
   }
 
@@ -90,12 +93,18 @@ export async function POST(request: Request) {
       .map((part) => part.text)
       .join(" ");
 
-    // Map UI model ID to inference model ID
+    /***
     const inferenceModelId = uiModelToInferenceModel(selectedChatModel);
     console.log(`Selected UI model: ${selectedChatModel}, using inference model: ${inferenceModelId}`);
 
     // Call local inference endpoint with the mapped model
     const generatedText = await inference(userMessageText, { modelId: inferenceModelId });
+*/
+    console.log(`about to run`)
+    const workflowOutput = await runResearchWorkflow(userMessageText);
+    console.log('finished runnign')
+    const generatedText = JSON.stringify(workflowOutput.webResults);
+
 
     // Create assistant response message
     const assistantMessage: ChatMessage = {

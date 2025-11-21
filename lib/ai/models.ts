@@ -8,13 +8,13 @@ export type ChatModel = {
 
 export const chatModels: ChatModel[] = [
   {
-    id: "chat-model",
-    name: "GPT-2",
-    description: "Local GPT-2 model for text generation",
+    id: "llama-chat-model",
+    name: "Llama 3.2 1B Instruct",
+    description: "Small instruction-tuned Llama model",
   },
   {
-    id: "chat-model-reasoning",
-    name: "DistilGPT-2",
-    description: "Faster, distilled version of GPT-2",
+    id: "llama-3.1-8b-chat-model",
+    name: "Llama 3.1 8B Instruct",
+    description: "Larger instruction-tuned Llama model with enhanced capabilities",
   },
 ];

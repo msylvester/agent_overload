@@ -21,22 +21,22 @@ export interface ModelConfig {
  * Add new models here with their configurations
  */
 const MODEL_REGISTRY: Record<string, ModelConfig> = {
-  'gpt2': {
-    transformersModelName: 'Xenova/gpt2',
-    displayName: 'GPT-2',
+  'onnx-community/Llama-3.2-1B-Instruct': {
+    transformersModelName: 'onnx-community/Llama-3.2-1B-Instruct',
+    displayName: 'Llama 3.2 1B Instruct',
     defaultParams: {
-      maxNewTokens: 50,
-      temperature: 0.7,
-      topK: 50,
+      maxNewTokens: 2048,
+      temperature: 0.4,
+      topK: 30,
     },
   },
-  'distilgpt2': {
-    transformersModelName: 'Xenova/distilgpt2',
-    displayName: 'DistilGPT-2',
+  'onnx-community/Llama-3.2-3B-Instruct': {
+    transformersModelName: 'onnx-community/Llama-3.2-3B-Instruct',
+    displayName: 'Llama 3.2 3B Instruct',
     defaultParams: {
-      maxNewTokens: 50,
-      temperature: 0.7,
-      topK: 50,
+      maxNewTokens: 512,
+      temperature: 0.4,
+      topK: 30,
     },
   },
 };
@@ -44,7 +44,7 @@ const MODEL_REGISTRY: Record<string, ModelConfig> = {
 /**
  * Default model ID used when no model is specified
  */
-export const DEFAULT_MODEL_ID = 'gpt2';
+export const DEFAULT_MODEL_ID = 'onnx-community/Llama-3.2-1B-Instruct';
 
 /**
  * Get model configuration by ID
@@ -74,14 +74,13 @@ export function getAvailableModelIds(): string[] {
 
 /**
  * Mapping from UI chat model IDs to inference model IDs
- * UI uses 'chat-model' and 'chat-model-reasoning'
- * Inference uses model IDs from MODEL_REGISTRY
+ * All UI models now use Llama 3.2 1B Instruct
  */
 export const UI_TO_INFERENCE_MODEL_MAP: Record<string, string> = {
-  'chat-model': 'gpt2',
-  'chat-model-reasoning': 'distilgpt2',
-  'title-model': 'gpt2',
-  'artifact-model': 'gpt2',
+  'llama-chat-model': 'onnx-community/Llama-3.2-1B-Instruct',
+  'llama-3.1-8b-chat-model': 'onnx-community/Llama-3.1-8B-Instruct',
+  'title-model': 'onnx-community/Llama-3.2-1B-Instruct',
+  'artifact-model': 'onnx-community/Llama-3.2-1B-Instruct',
 };
 
 /**

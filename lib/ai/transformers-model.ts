@@ -1,4 +1,4 @@
-import { pipeline, type TextGenerationPipeline } from '@xenova/transformers';
+import { pipeline, type TextGenerationPipeline } from '@huggingface/transformers';
 import {
   getModelConfig,
   DEFAULT_MODEL_ID,
@@ -99,14 +99,16 @@ export async function generateText(
   } = generationOptions;
 
   try {
-    const model = await TransformersModelSingleton.getInstance().getModel(modelId);
-
+    //TODO: generate the text as a response to the query to agent_007;
+//    const model = await TransformersModelSingleton.getInstance().getModel(modelId);
+/**
     const result = await model(prompt, {
       max_new_tokens: maxNewTokens,
       temperature,
       top_k: topK,
       do_sample: true,
     });
+    */
 
     // Extract generated text from result
     // Handle both single and array outputs
@@ -114,7 +116,14 @@ export async function generateText(
       ? (result[0] as any)?.generated_text || ''
       : (result as any)?.generated_text || '';
 
-    return generatedText;
+    // Strip the original prompt from the output
+    // The Transformers library returns the full text (prompt + completion)
+    // We only want the newly generated tokens
+    const completion = generatedText.startsWith(prompt)
+      ? generatedText.slice(prompt.length)
+      : generatedText;
+
+    return completion;
   } catch (error) {
     console.error('Text generation error:', error);
     throw error;
