@@ -107,9 +107,8 @@ export async function POST(request: Request) {
 
     // Create a data part for each company with mapped field names
     const companyParts = (workflowOutput.webResults?.companies || []).map(company => ({
-      type: "data" as const,
+      type: "data-researchResponse" as const,
       data: {
-        type: "researchResponse",
         company_name: company.company_name,
         description: company.description,
         industry: company.industry,

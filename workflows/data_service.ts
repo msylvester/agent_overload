@@ -69,7 +69,7 @@ type Embedding = {
 //
 //
 //
-async function embedSingle(query: string): Promise<Embedding> {
+export async function embedSingle(query: string): Promise<Embedding> {
   const input = `Description: ${query}`;
 
   const response = await openaiClient.embeddings.create({
@@ -94,7 +94,7 @@ async function embedSingle(query: string): Promise<Embedding> {
  * @param description - Description of the company
  * @returns Object containing the document ID and embedding vector
  */
-async function embed(
+export async function embed(
   uid: ObjectId,
   company_name: string,
   description: string
@@ -158,6 +158,5 @@ async function dumpRecords(): Promise<Record<string, any>> {
 //   console.log(`Found ${records.length} records`);
 // })();
 
-export { embedSingle, embed };
 
 

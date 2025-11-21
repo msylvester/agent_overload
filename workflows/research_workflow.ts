@@ -99,7 +99,8 @@ async function runResearchWorkflow(inputText: string): Promise<WorkflowOutput> {
 // EXPORTS
 // ===============================
 
-export { runResearchWorkflow, WorkflowOutput, WorkflowInput };
+export { runResearchWorkflow };
+export type { WorkflowOutput, WorkflowInput };
 
 // ===============================
 // STANDALONE TESTING

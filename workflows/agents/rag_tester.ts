@@ -10,9 +10,10 @@ const uri = process.env.MONGODB_URI;
 if (!uri) {
   throw new Error('MONGODB_URI is not defined in .env.local');
 }
+const mongoUri: string = uri;
 
 async function runVectorSearch(queryVector: number[]) {
-  const client = new MongoClient(uri);
+  const client = new MongoClient(mongoUri);
 
   try {
     await client.connect();

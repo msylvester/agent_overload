@@ -268,7 +268,7 @@ const PurePreviewMessage = ({
               );
             }
 
-            if (type === "data" && part.data?.type === "researchResponse") {
+            if (type === "data-researchResponse") {
               const { company_name, description, industry, founded, headquarters, companySize, website } = part.data;
               return (
                 <ResearchResponse

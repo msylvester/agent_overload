@@ -338,6 +338,10 @@ Output format:
 export async function runRagQuery(question: string): Promise<RAGQueryResponse> {
   const result = await run(ragQueryAgent, question);
 
+  if (!result.finalOutput) {
+    throw new Error("RAG query failed: no output received");
+  }
+
   return {
     answer: result.finalOutput.answer,
     sources: result.finalOutput.sources.map(source => {

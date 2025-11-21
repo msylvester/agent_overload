@@ -93,9 +93,14 @@ Return an array with one entry per company.`;
 
   const result = await run(webResearchAgent, companiesPrompt);
 
+  if (!result.finalOutput) {
+    throw new Error("Web research failed: no output received");
+  }
+
   return {
     companies: result.finalOutput.companies,
   };
 }
 
-export { researchCompanies, WebResearchAgentOutput, CompanyDetails };
+export { researchCompanies };
+export type { WebResearchAgentOutput, CompanyDetails };

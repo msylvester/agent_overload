@@ -108,7 +108,6 @@ export async function generateText(
       top_k: topK,
       do_sample: true,
     });
-    */
 
     // Extract generated text from result
     // Handle both single and array outputs
@@ -124,6 +123,9 @@ export async function generateText(
       : generatedText;
 
     return completion;
+    */
+    // TODO: Implement model inference - returning empty string for now
+    return '';
   } catch (error) {
     console.error('Text generation error:', error);
     throw error;
