@@ -49,7 +49,7 @@ export async function fetchWithErrorHandlers(
 }
 
 export function getLocalStorage(key: string) {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && typeof localStorage?.getItem === 'function') {
     return JSON.parse(localStorage.getItem(key) || '[]');
   }
   return [];

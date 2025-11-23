@@ -17,7 +17,8 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
-import { useLocalStorage, useWindowSize } from "usehooks-ts";
+import { useWindowSize } from "usehooks-ts";
+import { useLocalStorageSafe } from "@/hooks/use-local-storage-safe";
 import { saveChatModelAsCookie } from "@/app/(chat)/actions";
 import { SelectItem } from "@/components/ui/select";
 import { chatModels } from "@/lib/ai/models";
@@ -100,7 +101,7 @@ function PureMultimodalInput({
     }
   }, []);
 
-  const [localStorageInput, setLocalStorageInput] = useLocalStorage(
+  const [localStorageInput, setLocalStorageInput] = useLocalStorageSafe(
     "input",
     ""
   );
