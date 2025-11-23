@@ -65,7 +65,7 @@ Example output structure:
 }
 
 Focus on finding accurate, up-to-date information. Search for each company individually to get the most accurate results.`,
-  model: "gpt-4o",
+  model: "gpt-4o-mini", // Faster and cheaper, sufficient for web research
   outputType: WebResearchOutputSchema,
   tools: [webSearchTool()],
   modelSettings: {

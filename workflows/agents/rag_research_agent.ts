@@ -1,7 +1,8 @@
 //get the emebeding function
 import { config } from 'dotenv';
 import { embedSingle } from '../data_service';
-import { MongoClient, Collection, ObjectId } from 'mongodb';
+import { getMongoClient } from '../mongoPool';
+import { Collection, ObjectId } from 'mongodb';
 import * as path from 'path';
 
 // Load environment variables from .env.local (two directories up from agents/)
@@ -21,21 +22,18 @@ type CosineDistance = {
 
 
 class RagResearchAgent {
-  private collection: Collection;
-  private client: MongoClient;
+  private collection: Collection | null = null;
 
- constructor() {
-    const uri = process.env.MONGODB_URI;
-    if (!uri) {
-      throw new Error('MONGODB_URI is not defined in .env.local');
-    }
-    this.client = new MongoClient(uri);
-    this.collection = this.client.db("companies").collection("funded_companies");
-  }
-
+  /**
+   * Connect using the pooled MongoDB connection.
+   * This is much faster than creating a new connection per request.
+   */
   async connect() {
-    await this.client.connect();
-    this.collection = this.client.db("companies").collection("funded_companies");
+    if (this.collection) {
+      return; // Already connected
+    }
+    const client = await getMongoClient();
+    this.collection = client.db("companies").collection("funded_companies");
   }
   /** getEmbeddings, embed the prompt
    * @param string query
@@ -54,6 +52,9 @@ class RagResearchAgent {
 
   //just try a basic vector search
   async testVectorSearch(query: string): Promise<any[]> {
+    if (!this.collection) {
+      throw new Error("Not connected. Call connect() first.");
+    }
     const embedding = await this.getEmbedding(query);
     const queryVector = embedding.embedding;
 
@@ -98,6 +99,9 @@ class RagResearchAgent {
    *
    */
   async getCosineDistance(query: string): Promise<CosineDistance[]> {
+    if (!this.collection) {
+      throw new Error("Not connected. Call connect() first.");
+    }
     const embedding = await this.getEmbedding(query);
     const queryVector = embedding.embedding;
 
