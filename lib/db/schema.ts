@@ -171,3 +171,21 @@ export const stream = pgTable(
 );
 
 export type Stream = InferSelectModel<typeof stream>;
+
+// Background job tracking for async workflow processing
+export const job = pgTable("Job", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  chatId: uuid("chatId")
+    .notNull()
+    .references(() => chat.id),
+  messageId: uuid("messageId").notNull(), // The user message that triggered the job
+  status: varchar("status", { enum: ["pending", "processing", "completed", "failed"] })
+    .notNull()
+    .default("pending"),
+  result: json("result"), // Stores the assistant message when completed
+  error: text("error"), // Stores error message if failed
+  createdAt: timestamp("createdAt").notNull(),
+  updatedAt: timestamp("updatedAt").notNull(),
+});
+
+export type Job = InferSelectModel<typeof job>;

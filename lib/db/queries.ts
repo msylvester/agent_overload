@@ -24,6 +24,8 @@ import {
   chat,
   type DBMessage,
   document,
+  job,
+  type Job,
   message,
   type Suggestion,
   stream,
@@ -588,6 +590,76 @@ export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to get stream ids by chat id"
+    );
+  }
+}
+
+// Job-related queries for background processing
+
+export async function createJob({
+  id,
+  chatId,
+  messageId,
+}: {
+  id: string;
+  chatId: string;
+  messageId: string;
+}) {
+  try {
+    const now = new Date();
+    const [newJob] = await db
+      .insert(job)
+      .values({
+        id,
+        chatId,
+        messageId,
+        status: "pending",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+    return newJob;
+  } catch (_error) {
+    throw new ChatSDKError("bad_request:database", "Failed to create job");
+  }
+}
+
+export async function getJobById({ id }: { id: string }) {
+  try {
+    const [selectedJob] = await db.select().from(job).where(eq(job.id, id));
+    return selectedJob || null;
+  } catch (_error) {
+    throw new ChatSDKError("bad_request:database", "Failed to get job by id");
+  }
+}
+
+export async function updateJobStatus({
+  id,
+  status,
+  result,
+  error,
+}: {
+  id: string;
+  status: "pending" | "processing" | "completed" | "failed";
+  result?: unknown;
+  error?: string;
+}) {
+  try {
+    const [updatedJob] = await db
+      .update(job)
+      .set({
+        status,
+        result: result ?? null,
+        error: error ?? null,
+        updatedAt: new Date(),
+      })
+      .where(eq(job.id, id))
+      .returning();
+    return updatedJob;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to update job status"
     );
   }
 }

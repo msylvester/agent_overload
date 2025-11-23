@@ -39,6 +39,7 @@ function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
             onClick={(suggestion) => {
               window.history.replaceState({}, "", `/chat/${chatId}`);
               sendMessage({
+                id: crypto.randomUUID(),
                 role: "user",
                 parts: [{ type: "text", text: suggestion }],
               });

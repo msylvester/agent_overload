@@ -1,31 +1,95 @@
-import { geolocation } from "@vercel/functions";
-import { auth, type UserType } from "@/app/(auth)/auth";
+import { waitUntil } from "@vercel/functions";
 
 import { runResearchWorkflow } from "@/workflows/research_workflow";
 
 import type { VisibilityType } from "@/components/visibility-selector";
-import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import type { ChatModel } from "@/lib/ai/models";
 import {
-  createStreamId,
+  createJob,
   deleteChatById,
   getChatById,
-  getMessageCountByUserId,
   getMessagesByChatId,
   saveChat,
   saveMessages,
-  updateChatLastContextById,
+  updateJobStatus,
 } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
 import type { ChatMessage } from "@/lib/types";
 import { generateUUID } from "@/lib/utils";
 import { generateTitleFromUserMessage } from "../../actions";
 import { type PostRequestBody, postRequestBodySchema } from "./schema";
-import inference from "@/lib/inference";
-import { uiModelToInferenceModel } from "@/lib/ai/model-registry";
 import { ensureAuthenticated } from "@/lib/auth-helpers";
 
 export const maxDuration = 60;
+
+// Background workflow processor
+async function processWorkflowInBackground(
+  jobId: string,
+  chatId: string,
+  userMessageText: string
+) {
+  try {
+    // Mark job as processing
+    await updateJobStatus({ id: jobId, status: "processing" });
+
+    console.log(`[Job ${jobId}] Starting workflow...`);
+    const workflowOutput = await runResearchWorkflow(userMessageText);
+    console.log(`[Job ${jobId}] Workflow completed`);
+
+    // Create a data part for each company with mapped field names
+    const companyParts = (workflowOutput.webResults?.companies || []).map(company => ({
+      type: "data-researchResponse" as const,
+      data: {
+        company_name: company.company_name,
+        description: company.description,
+        industry: company.industry,
+        founded: String(company.founded_year),
+        headquarters: company.headquarters_location,
+        companySize: company.company_size,
+        website: company.website,
+      }
+    }));
+
+    // Create assistant response message with research response data parts
+    const assistantMessage: ChatMessage = {
+      id: generateUUID(),
+      role: "assistant",
+      parts: companyParts.length > 0
+        ? companyParts
+        : [{ type: "text" as const, text: "No research results found." }],
+    };
+
+    // Save assistant message
+    await saveMessages({
+      messages: [
+        {
+          chatId,
+          id: assistantMessage.id,
+          role: "assistant",
+          parts: assistantMessage.parts,
+          attachments: [],
+          createdAt: new Date(),
+        },
+      ],
+    });
+
+    // Mark job as completed with the result
+    await updateJobStatus({
+      id: jobId,
+      status: "completed",
+      result: assistantMessage,
+    });
+
+    console.log(`[Job ${jobId}] Completed successfully`);
+  } catch (error) {
+    console.error(`[Job ${jobId}] Failed:`, error);
+    await updateJobStatus({
+      id: jobId,
+      status: "failed",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+}
 
 export async function POST(request: Request) {
   let requestBody: PostRequestBody;
@@ -72,8 +136,6 @@ export async function POST(request: Request) {
       });
     }
 
-    const messagesFromDb = await getMessagesByChatId({ id });
-
     // Save the user message
     await saveMessages({
       messages: [
@@ -94,58 +156,23 @@ export async function POST(request: Request) {
       .map((part) => part.text)
       .join(" ");
 
-    /***
-    const inferenceModelId = uiModelToInferenceModel(selectedChatModel);
-    console.log(`Selected UI model: ${selectedChatModel}, using inference model: ${inferenceModelId}`);
-
-    // Call local inference endpoint with the mapped model
-    const generatedText = await inference(userMessageText, { modelId: inferenceModelId });
-*/
-    console.log(`about to run`)
-    const workflowOutput = await runResearchWorkflow(userMessageText);
-    console.log('finished running')
-
-    // Create a data part for each company with mapped field names
-    const companyParts = (workflowOutput.webResults?.companies || []).map(company => ({
-      type: "data-researchResponse" as const,
-      data: {
-        company_name: company.company_name,
-        description: company.description,
-        industry: company.industry,
-        founded: String(company.founded_year),
-        headquarters: company.headquarters_location,
-        companySize: company.company_size,
-        website: company.website,
-      }
-    }));
-
-    // Create assistant response message with research response data parts
-    const assistantMessage: ChatMessage = {
-      id: generateUUID(),
-      role: "assistant",
-      parts: companyParts.length > 0
-        ? companyParts
-        : [{ type: "text" as const, text: "No research results found." }],
-    };
-
-    // Save assistant message
-    await saveMessages({
-      messages: [
-        {
-          chatId: id,
-          id: assistantMessage.id,
-          role: "assistant",
-          parts: assistantMessage.parts,
-          attachments: [],
-          createdAt: new Date(),
-        },
-      ],
+    // Create a job for background processing
+    const jobId = generateUUID();
+    await createJob({
+      id: jobId,
+      chatId: id,
+      messageId: message.id,
     });
 
-    // Return the assistant's response
+    // Use waitUntil to process the workflow in the background
+    // This allows the response to return immediately while processing continues
+    waitUntil(processWorkflowInBackground(jobId, id, userMessageText));
+
+    // Return immediately with the job ID for polling
     return Response.json({
       success: true,
-      message: assistantMessage,
+      jobId,
+      status: "pending",
     });
   } catch (error) {
     const vercelId = request.headers.get("x-vercel-id");

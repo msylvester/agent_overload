@@ -65,14 +65,55 @@ export function Chat({
     currentModelIdRef.current = currentModelId;
   }, [currentModelId]);
 
+  // Poll for job completion
+  const pollJobStatus = useCallback(async (jobId: string): Promise<ChatMessage | null> => {
+    const maxAttempts = 120; // 2 minutes with 1s intervals
+    const pollInterval = 1000; // 1 second
+    console.log("[pollJobStatus] Starting to poll for job:", jobId);
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        console.log(`[pollJobStatus] Attempt ${attempt + 1}/${maxAttempts}`);
+        const response = await fetch(`/api/job/${jobId}`);
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch job status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log(`[pollJobStatus] Job status:`, data.status);
+
+        if (data.status === "completed") {
+          console.log("[pollJobStatus] Job completed!", data.result);
+          return data.result as ChatMessage;
+        }
+
+        if (data.status === "failed") {
+          console.error("[pollJobStatus] Job failed:", data.error);
+          throw new Error(data.error || "Job failed");
+        }
+
+        // Job is still pending or processing, wait and try again
+        await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      } catch (error) {
+        console.error("Error polling job status:", error);
+        throw error;
+      }
+    }
+
+    throw new Error("Job timed out");
+  }, []);
+
   // Custom sendMessage function that POSTs to local inference endpoint
   const sendMessage = useCallback(async (message: ChatMessage) => {
+    console.log("[sendMessage] Called with:", message);
     setStatus("submitted");
 
     // Add user message to UI immediately
     setMessages((prev) => [...prev, message]);
 
     try {
+      console.log("[sendMessage] Sending fetch to /api/chat");
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -85,15 +126,27 @@ export function Chat({
           selectedVisibilityType: visibilityType,
         }),
       });
+      console.log("[sendMessage] Fetch response:", response.status);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log("[sendMessage] Response data:", data);
 
-      // Add assistant response to UI
-      if (data.message) {
+      // Check if we got a jobId (background processing) or direct message
+      console.log("[sendMessage] Checking for jobId:", !!data.jobId);
+      if (data.jobId) {
+        console.log("[sendMessage] Starting poll for jobId:", data.jobId);
+        // Poll for job completion
+        const assistantMessage = await pollJobStatus(data.jobId);
+        console.log("[sendMessage] Poll returned:", assistantMessage);
+        if (assistantMessage) {
+          setMessages((prev) => [...prev, assistantMessage]);
+        }
+      } else if (data.message) {
+        // Direct response (fallback for sync processing)
         setMessages((prev) => [...prev, data.message]);
       }
 
@@ -107,7 +160,7 @@ export function Chat({
     } finally {
       setStatus("ready");
     }
-  }, [id, visibilityType, mutate]);
+  }, [id, visibilityType, mutate, pollJobStatus]);
 
   const stop = useCallback(async () => {
     setStatus("ready");
