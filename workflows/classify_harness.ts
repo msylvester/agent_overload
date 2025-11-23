@@ -19,10 +19,25 @@ interface Result {
 let results: Result[] = [];
 let TestCases: Question[] = [];
 
-TestCases.push({ "input": "What investors would be interested in my SaaS product?", "expected": "advice" });
+TestCases.push({ "input": "What investors would be interested in my SaaS product?", "expected": "basic" });
 TestCases.push({ "input": "Research Tesla", "expected": "research" });
-TestCases.push({ "input": "Tell Mea bout SpaceX Funding", "expected": "research" });
-TestCases.push({ "input": "How should I pitch my AI startup?", "expected": "advice" });
+TestCases.push({ "input": "Tell me about SpaceX funding", "expected": "research" });
+TestCases.push({ "input": "How should I pitch my AI startup?", "expected": "basic" });
+
+// Added research cases
+TestCases.push({ "input": "Find recent news about OpenAI leadership changes", "expected": "research" });
+TestCases.push({ "input": "Give me the latest financial performance of Nvidia", "expected": "research" });
+TestCases.push({ "input": "Look up the market size of the cybersecurity industry", "expected": "research" });
+TestCases.push({ "input": "Has Apple released any new products this quarter?", "expected": "research" });
+TestCases.push({ "input": "Get me information on Sequoia Capital's latest investments", "expected": "research" });
+
+// Added basic (non-research) cases
+TestCases.push({ "input": "Help me brainstorm SaaS feature ideas", "expected": "basic" });
+TestCases.push({ "input": "Explain how a startup can validate its MVP", "expected": "basic" });
+TestCases.push({ "input": "Write a pitch deck outline for a fintech app", "expected": "basic" });
+TestCases.push({ "input": "How do I improve user retention in a mobile app?", "expected": "basic" });
+TestCases.push({ "input": "Generate a tagline for my productivity tool", "expected": "basic" });
+
 
 /***
  * classifyHarness(String)
