@@ -10,12 +10,7 @@ import { MongoClient } from "mongodb";
 let cachedClient: MongoClient | null = null;
 let cachedDb: ReturnType<MongoClient["db"]> | null = null;
 
-const MONGODB_URI = process.env.MONGODB_URI;
 const DATABASE_NAME = "companies";
-
-if (!MONGODB_URI) {
-  console.warn("MONGODB_URI environment variable is not set");
-}
 
 /**
  * Get a cached MongoDB client connection.
@@ -25,6 +20,9 @@ export async function getMongoClient(): Promise<MongoClient> {
   if (cachedClient) {
     return cachedClient;
   }
+
+  // Read MONGODB_URI at runtime, not at module load time
+  const MONGODB_URI = process.env.MONGODB_URI;
 
   if (!MONGODB_URI) {
     throw new Error("MONGODB_URI environment variable is not set");

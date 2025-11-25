@@ -172,7 +172,7 @@ Please synthesize the information from these documents to answer the query. Be s
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // Faster and cheaper, sufficient for synthesis
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -320,7 +320,7 @@ Output format:
 - confidenceScore: 0.0-1.0 based on evidence quality
 - reasoning: Brief explanation of how you arrived at the answer
 `,
-  model: "gpt-4o-mini", // Faster and cheaper for tool selection
+  model: "gpt-4o",
   outputType: RAGQueryResponseSchema,
   tools: [ragSemanticSearchTool, ragGenerateReasoningTool],
 });

@@ -16,6 +16,7 @@ interface TestQuery {
   query: string;
   expected: string;
   description: string;
+  expectedIntent: "basic" | "research";
 }
 
 interface TestResult {
@@ -29,30 +30,79 @@ interface TestResult {
 
 // Test data - same queries as in Python version
 const TEST_QUERIES: TestQuery[] = [
+  // Research intent queries
   {
     query: "storage technology",
     expected: "Vast Data",
-    description: "Should find storage technology companies like Vast Data"
+    description: "Should find storage technology companies like Vast Data",
+    expectedIntent: "research"
   },
   {
     query: "medical research",
     expected: "Tahoe",
-    description: "Should find medical research companies like Tahoe Therapeutics"
+    description: "Should find medical research companies like Tahoe Therapeutics",
+    expectedIntent: "research"
   },
   {
     query: "enterprise grade developer tools",
     expected: "Uno",
-    description: "Should find developer tools companies like Uno Platform"
+    description: "Should find developer tools companies like Uno Platform",
+    expectedIntent: "research"
   },
   {
     query: "ai powered speech translation",
     expected: "Palabra",
-    description: "Should find AI speech translation companies like Palabra AI"
+    description: "Should find AI speech translation companies like Palabra AI",
+    expectedIntent: "research"
   },
   {
     query: "ai powered sleep tech",
     expected: "Eight Sleep",
-    description: "Should find AI sleep tech companies like Eight Sleep"
+    description: "Should find AI sleep tech companies like Eight Sleep",
+    expectedIntent: "research"
+  },
+  // Basic intent queries (from classify_harness.ts)
+  {
+    query: "What investors would be interested in my SaaS product?",
+    expected: "basic_response",
+    description: "Should return basic response - general advice question",
+    expectedIntent: "basic"
+  },
+  {
+    query: "How should I pitch my AI startup?",
+    expected: "basic_response",
+    description: "Should return basic response - strategy question",
+    expectedIntent: "basic"
+  },
+  {
+    query: "Help me brainstorm SaaS feature ideas",
+    expected: "basic_response",
+    description: "Should return basic response - brainstorming request",
+    expectedIntent: "basic"
+  },
+  {
+    query: "Explain how a startup can validate its MVP",
+    expected: "basic_response",
+    description: "Should return basic response - explanation request",
+    expectedIntent: "basic"
+  },
+  {
+    query: "Write a pitch deck outline for a fintech app",
+    expected: "basic_response",
+    description: "Should return basic response - writing task",
+    expectedIntent: "basic"
+  },
+  {
+    query: "How do I improve user retention in a mobile app?",
+    expected: "basic_response",
+    description: "Should return basic response - how-to question",
+    expectedIntent: "basic"
+  },
+  {
+    query: "Generate a tagline for my productivity tool",
+    expected: "basic_response",
+    description: "Should return basic response - creative request",
+    expectedIntent: "basic"
   }
 ];
 
@@ -60,9 +110,10 @@ const TEST_QUERIES: TestQuery[] = [
  * Run a single test case
  */
 async function runSingleTest(queryData: TestQuery): Promise<TestResult> {
-  const { query, expected, description } = queryData;
+  const { query, expected, description, expectedIntent } = queryData;
 
   console.log(`\nQuery: ${query}`);
+  console.log(`Expected intent: ${expectedIntent}`);
   console.log(`Expected to find: ${expected}`);
   console.log(`Description: ${description}`);
   console.log("-".repeat(50));
@@ -71,7 +122,29 @@ async function runSingleTest(queryData: TestQuery): Promise<TestResult> {
     // Run the actual research workflow
     const result = await runResearchWorkflow(query);
 
-    // Extract data from RAG results
+    // Check if intent matches expected
+    const actualIntent = result.classifyResults.intent;
+    const intentMatches = actualIntent === expectedIntent;
+
+    console.log(`\nClassification:`);
+    console.log(`  Intent: ${actualIntent} ${intentMatches ? '✅' : '❌'}`);
+    console.log(`  Reasoning: ${result.classifyResults.reasoning}`);
+
+    // Handle basic intent
+    if (actualIntent === 'basic') {
+      console.log(`\nBasic Response:`);
+      console.log(`  ${(result.basicResponse || 'N/A').substring(0, 300)}...`);
+
+      return {
+        query,
+        success: true,
+        found_expected: intentMatches, // For basic, success means intent matched
+        companies_count: 0,
+        result
+      };
+    }
+
+    // Handle research intent
     const ragSources = result.ragResults?.sources || [];
     const webCompanies = result.webResults?.companies || [];
 
@@ -102,9 +175,9 @@ async function runSingleTest(queryData: TestQuery): Promise<TestResult> {
       }
     }
 
-    // Check if expected result is in the output
+    // Check if expected result is in the output (for research queries)
     const allText = JSON.stringify(result).toLowerCase();
-    const foundExpected = allText.includes(expected.toLowerCase());
+    const foundExpected = intentMatches && allText.includes(expected.toLowerCase());
 
     return {
       query,
