@@ -36,11 +36,9 @@ async function getRecentCompanies(
   const collection: Collection = client.db("companies").collection("funded_companies");
 
   try {
-    // Validate and convert ISO date strings to Date objects
     const startDateObj = new Date(startDate);
     const endDateObj = new Date(endDate);
 
-    // Validate dates
     if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
       throw new Error(`Invalid date format. Expected ISO strings (YYYY-MM-DD). Got: start=${startDate}, end=${endDate}`);
     }
@@ -49,15 +47,12 @@ async function getRecentCompanies(
       throw new Error(`Start date (${startDate}) cannot be after end date (${endDate})`);
     }
 
-    const now = endDateObj; // Use endDate as the upper bound
+    const now = endDateObj;
 
-    // Build query using actual MongoDB field names
-    // Query only on 'created_at' (when the record was added to the database)
     const query: any = {
       created_at: { $gte: startDateObj, $lte: now }
     };
 
-    // Add domain filter if provided
     if (domain) {
       query.$and = [
         { created_at: { $gte: startDateObj, $lte: now } },
@@ -95,10 +90,7 @@ async function getRecentCompanies(
     };
   } catch (error) {
     console.error("Error in getRecentCompanies:", error);
-    return {
-      companies: [],
-      details: [],
-    };
+    return { companies: [], details: [] };
   }
 }
 
@@ -125,50 +117,70 @@ const temporalSearchTool = tool({
 });
 
 // ===============================
-// TEMPORAL AGENT
+// UPDATED TEMPORAL AGENT
 // ===============================
 
 const temporal_agent = new Agent({
   name: "Temporal Trend Analyzer",
   instructions: `
-You are a trend spotting agent that analyzes companies and market trends within specific time periods using a MongoDB database of funded companies.
+You are a trend spotting agent that analyzes companies and market movements within specific time periods using a MongoDB database of funded companies.
 
-You will receive a query along with pre-computed start and end dates for analysis.
+You will receive a query and a pair of dates (start_date and end_date).
 
-Your task is to:
-1. Use the temporalSearch tool with the provided start_date and end_date from the user's input to find companies that were founded or received funding during that specific time period
-2. Analyze the companies and identify trends such as:
-   - Common industries or sectors gaining traction
-   - Emerging technologies or product categories
-   - Geographic patterns in company formation
-   - Funding patterns and investor interest areas
-   - Key themes across company descriptions
+Your core responsibilities:
+1. Always call the temporalSearch tool using the provided start_date and end_date.
+2. Retrieve companies and their metadata.
+3. Produce trend analysis describing:
+   - Common industries gaining traction
+   - Emerging technologies
+   - Funding patterns and notable investors
+   - Geographic patterns
+   - Themes in company descriptions
 
-Search Strategy:
-- Extract the start_date and end_date from the input context provided
-- Use the temporalSearch tool with these exact dates
-- If the user mentions a specific domain (e.g., "AI companies"), include it in the domain parameter
-- The data contains funding announcements from news articles with their publication dates
-- Look at article dates (funding announcement dates), company descriptions, and sectors to identify patterns
+--------------------------------------------------
+ADDITIONAL BEHAVIOR FOR INDUSTRY-LEVEL FUNDING QUESTIONS
+--------------------------------------------------
 
-Output Requirements:
-- companies: Array of company names that fit the temporal criteria (return all companies found, up to 40)
-- inference: A detailed analysis of the trends you've identified, including:
-  - What patterns emerged across these companies
-  - Key themes or technologies gaining traction in this time period
-  - Market dynamics or shifts observed
-  - Notable insights about the direction of the industry/sector
-  - Specific examples from the companies you found
-  - Reference to the time period analyzed (e.g., "Between January 2024 and March 2024...")
+If the user asks anything involving:
+- "what industry received the most funding"
+- "top funded industry"
+- "which sector had the highest funding"
+- "industry with most investment"
+- or similar comparative funding questions
 
-Be specific and data-driven in your analysis. Reference specific company activities and patterns.
-  `,
+You MUST:
+
+1. Call the temporalSearch tool with the provided start and end date.
+2. Retrieve all company metadata including:
+   - sector/industry
+   - funding_amount
+   - total_funding
+3. Aggregate funding totals by industry:
+   - Prefer total_funding when available
+   - If missing, fallback to funding_amount
+   - If both missing, treat as 0
+4. Determine:
+   - The top-funded industry
+   - Ranked list of industries by total funding
+   - Key companies contributing to these totals
+5. Include this result in the 'inference' field.
+
+--------------------------------------------------
+OUTPUT FORMAT
+--------------------------------------------------
+
+Your final JSON MUST match the TemporalAnalysisSchema:
+{
+  companies: string[],   // All companies returned by the tool
+  inference: string      // Detailed trend analysis + industry funding results (if applicable)
+}
+
+Be highly specific, cite examples, include funding patterns, and reference the time window (e.g. "Between April 2024 and June 2024...").
+`,
   model: "gpt-4o",
   outputType: TemporalAnalysisSchema,
   tools: [temporalSearchTool],
-  modelSettings: {
-    store: true,
-  },
+  modelSettings: { store: true },
 });
 
 // ===============================
@@ -180,12 +192,10 @@ export async function getTemporal(
   startDate: string,
   endDate: string
 ): Promise<ResponseItem> {
-  // Validate inputs
   if (!startDate || !endDate) {
     throw new Error("start_date and end_date are required parameters");
   }
 
-  // Enrich the input with date context for the agent
   const enrichedInput = `
 Analyze companies and trends for the following query using the specified time period.
 
