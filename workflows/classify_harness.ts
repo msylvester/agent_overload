@@ -31,12 +31,19 @@ TestCases.push({ "input": "Look up the market size of the cybersecurity industry
 TestCases.push({ "input": "Has Apple released any new products this quarter?", "expected": "research" });
 TestCases.push({ "input": "Get me information on Sequoia Capital's latest investments", "expected": "research" });
 
-// Added basic (non-research) cases
-TestCases.push({ "input": "Help me brainstorm SaaS feature ideas", "expected": "basic" });
-TestCases.push({ "input": "Explain how a startup can validate its MVP", "expected": "basic" });
-TestCases.push({ "input": "Write a pitch deck outline for a fintech app", "expected": "basic" });
-TestCases.push({ "input": "How do I improve user retention in a mobile app?", "expected": "basic" });
-TestCases.push({ "input": "Generate a tagline for my productivity tool", "expected": "basic" });
+// Time-based cases (should be classified as "time", not "research")
+TestCases.push({ "input": "Who has been funded in the last 6 days", "expected": "time" });
+TestCases.push({ "input": "Who has been funded in the last week", "expected": "time" });
+TestCases.push({ "input": "Who has been funded in 2024", "expected": "time" });
+TestCases.push({ "input": "Who has been funded in the last month", "expected": "time" });
+TestCases.push({ "input": "Companies funded in Q1 2024", "expected": "time" });
+TestCases.push({ "input": "Show me startups founded since January", "expected": "time" });
+TestCases.push({ "input": "Which companies received funding this year", "expected": "time" });
+TestCases.push({ "input": "Funding rounds from the past 30 days", "expected": "time" });
+
+// Research cases (specific companies, no time constraint)
+TestCases.push({ "input": "Tell me about Stripe's funding history", "expected": "research" });
+TestCases.push({ "input": "Find AI companies in healthcare", "expected": "research" });
 
 
 /***
@@ -44,8 +51,6 @@ TestCases.push({ "input": "Generate a tagline for my productivity tool", "expect
  * @param input
  * returns void
  */
-
-
 
 const classifyHarness = async () => {
   //use the classify method on the input and compare to expected

@@ -1,6 +1,8 @@
 import { waitUntil } from "@vercel/functions";
 
 import { runResearchWorkflow } from "@/workflows/research_workflow";
+import { runOrchestratorWorkflow, type OrchFlowOutput } from "@/workflows/orchestrator_workflow";
+
 
 import type { VisibilityType } from "@/components/visibility-selector";
 import type { ChatModel } from "@/lib/ai/models";
@@ -33,31 +35,103 @@ async function processWorkflowInBackground(
     await updateJobStatus({ id: jobId, status: "processing" });
 
     console.log(`[Job ${jobId}] Starting workflow...`);
-    const workflowOutput = await runResearchWorkflow(userMessageText);
-    console.log(`[Job ${jobId}] Workflow completed`);
 
-    // Create a data part for each company with mapped field names
-    const companyParts = (workflowOutput.webResults?.companies || []).map(company => ({
-      type: "data-researchResponse" as const,
-      data: {
-        company_name: company.company_name,
-        description: company.description,
-        industry: company.industry,
-        founded: String(company.founded_year),
-        headquarters: company.headquarters_location,
-        companySize: company.company_size,
-        website: company.website,
+    const orchWorkflowOutput: OrchFlowOutput = await runOrchestratorWorkflow(userMessageText);
+    const { classifyResponse } = orchWorkflowOutput;
+
+    let assistantMessage: ChatMessage;
+
+    switch (classifyResponse) {
+      case 'time': {
+        // Extract temporal data
+        const temporalResponse = orchWorkflowOutput.temporalResponse;
+
+        let formattedText = "";
+
+        if (temporalResponse?.time) {
+          formattedText += `**Time Period:** ${temporalResponse.time.start} to ${temporalResponse.time.end}\n\n`;
+        }
+
+        if (temporalResponse?.results?.companies && temporalResponse.results.companies.length > 0) {
+          formattedText += `**Companies Found:**\n`;
+          temporalResponse.results.companies.forEach(company => {
+            formattedText += `• ${company}\n`;
+          });
+          formattedText += `\n`;
+        }
+
+        if (temporalResponse?.results?.inference) {
+          formattedText += `**Analysis:**\n${temporalResponse.results.inference}`;
+        }
+
+        if (!formattedText) {
+          formattedText = "No temporal results found.";
+        }
+
+        assistantMessage = {
+          id: generateUUID(),
+          role: "assistant",
+          parts: [{ type: "text" as const, text: formattedText }],
+        };
+        break;
       }
-    }));
 
-    // Create assistant response message with research response data parts
-    const assistantMessage: ChatMessage = {
-      id: generateUUID(),
-      role: "assistant",
-      parts: companyParts.length > 0
-        ? companyParts
-        : [{ type: "text" as const, text: "No research results found." }],
-    };
+      case 'basic': {
+        // Extract basic response
+        const basicText = orchWorkflowOutput.basicResponse || "No response available.";
+
+        assistantMessage = {
+          id: generateUUID(),
+          role: "assistant",
+          parts: [{ type: "text" as const, text: basicText }],
+        };
+        break;
+      }
+
+      case 'research': {
+        // Map companies to research response parts
+        const companyParts = (orchWorkflowOutput.webResults?.companies || []).map(company => ({
+          type: "data-researchResponse" as const,
+          data: {
+            company_name: company.company_name,
+            description: company.description,
+            industry: company.industry,
+            founded: String(company.founded_year),
+            headquarters: company.headquarters_location,
+            companySize: company.company_size,
+            website: company.website,
+          }
+        }));
+
+        assistantMessage = {
+          id: generateUUID(),
+          role: "assistant",
+          parts: companyParts.length > 0
+            ? companyParts
+            : [{ type: "text" as const, text: "No research results found." }],
+        };
+        break;
+      }
+
+      default: {
+        console.error(`[Job ${jobId}] Unexpected classification: ${classifyResponse}`);
+
+        assistantMessage = {
+          id: generateUUID(),
+          role: "assistant",
+          parts: [{ type: "text" as const, text: "Sorry, I couldn't process your request." }],
+        };
+
+        await updateJobStatus({
+          id: jobId,
+          status: "failed",
+          error: `Unexpected classification: ${classifyResponse}`,
+        });
+        return;
+      }
+    }
+
+    console.log(`[Job ${jobId}] Workflow completed`);
 
     // Save assistant message
     await saveMessages({

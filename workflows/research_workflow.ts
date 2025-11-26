@@ -1,9 +1,11 @@
 import { Agent, run } from "@openai/agents";
 import { z } from "zod";
 import OpenAI from "openai";
-import { classifyIntent } from './agents/classify_agent';
+//import { classifyIntent } from './agents/classify_agent';
 import { researchCompanies, WebResearchAgentOutput } from "./agents/web_search_agent";
 import { runRagQuery, RAGQueryResponse } from "./rag_service";
+import { temporalIntent } from './temporal_integration_workflow';
+import type { TemporalOutput } from './temporal_integration_workflow';
 
 const openai = new OpenAI();
 
@@ -18,10 +20,6 @@ const RagCompanySchema = z.object({
 });
 
 const WorkflowOutputSchema = z.object({
-  classifyResults: z.object({
-    intent: z.enum(["basic", "research"]),
-    reasoning: z.string(),
-  }),
   basicResponse: z.string().optional(),
   ragResults: z.object({
     answer: z.string(),
@@ -50,14 +48,11 @@ type WorkflowInput = {
   input_as_text: string;
 };
 
-type ClassifyResult = {
-  intent: "basic" | "research";
-  reasoning: string;
-};
-
 type WorkflowOutput = {
-  classifyResults: ClassifyResult;
   basicResponse?: string;
+  /*
+  temporalResponse?: TemporalOutput;
+  */
   ragResults?: RAGQueryResponse;
   webResults?: WebResearchAgentOutput;
 };
@@ -91,30 +86,41 @@ Keep responses concise but informative. Focus on practical guidance.`,
 // WORKFLOW
 // ===============================
 
-async function runResearchWorkflow(inputText: string): Promise<WorkflowOutput> {
+async function runResearchWorkflow(inputText: string, intent: string): Promise<WorkflowOutput> {
 
 
   const workflowInput: WorkflowInput = {
     input_as_text: inputText,
   };
 
-  const classificationResult = await classifyIntent(workflowInput.input_as_text);
+  //const classificationResult = await classifyIntent(workflowInput.input_as_text);
 
-  console.log(`🏷️ Classification: ${classificationResult.intent}`);
-  console.log(`💭 Reasoning: ${classificationResult.reasoning}`);
 
   // If basic intent, generate a simple response without research
-  if (classificationResult.intent === 'basic') {
+  if (intent === 'basic') {
     console.log("\n💬 Basic query detected - generating direct response...");
     const basicResponse = await generateBasicResponse(workflowInput.input_as_text);
     return {
-      classifyResults: classificationResult,
       basicResponse,
     };
   }
+  //Time intent - run full temoral workflow
+  if (intent === 'time') {
+    console.log("🔍 Starting temporal workflow...");
+    console.log(`📝 Query: ${workflowInput.input_as_text}`);
+
+    // Step 1: Run RAG query to find relevant companies from the knowledge base
+    console.log("\n📚 Running Time query ");
+    const temporalResponse = await temporalIntent(workflowInput.input_as_text);
+
+    return {
+      temporalResponse,
+    }
+
+  }
 
   // Research intent - run full workflow
-  if (classificationResult.intent === 'research') { 
+  if (intent === 'research') { 
     console.log("🔍 Starting research workflow...");
     console.log(`📝 Query: ${workflowInput.input_as_text}`);
 
@@ -147,14 +153,13 @@ async function runResearchWorkflow(inputText: string): Promise<WorkflowOutput> {
 
     console.log("\n✨ Research workflow complete!");
     return {
-      classifyResults: classificationResult,
       ragResults,
       webResults,
     };
   }
 
   // Fallback (shouldn't reach here)
-  throw new Error(`Unknown intent: ${classificationResult.intent}`);
+  throw new Error(`Unknown intent: ${intent}`);
 }
 
 // ===============================
@@ -170,19 +175,17 @@ export type { WorkflowOutput, WorkflowInput };
 
 if (require.main === module) {
   const testQuery = process.argv[2] || "fintech startups in Saudi Arabia";
+  const testIntent = (process.argv[3] as "basic" | "research" | "time") || "research";
 
   console.log("=".repeat(60));
   console.log("RESEARCH WORKFLOW TEST");
   console.log("=".repeat(60));
 
-  runResearchWorkflow(testQuery)
+  runResearchWorkflow(testQuery, testIntent)
     .then(result => {
       console.log("\n" + "=".repeat(60));
       console.log("RESULTS");
       console.log("=".repeat(60));
-
-      console.log(`\n🏷️ Intent: ${result.classifyResults.intent}`);
-      console.log(`💭 Reasoning: ${result.classifyResults.reasoning}`);
 
       // Handle basic response
       if (result.basicResponse) {

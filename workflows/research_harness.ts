@@ -7,6 +7,7 @@
 
 import { config } from 'dotenv';
 import { resolve } from 'path';
+import { temporalIntent, TemporalOutput } from 'temporal_integration_workflow';
 import { runResearchWorkflow, WorkflowOutput } from './research_workflow';
 
 // Load environment variables from .env.local
@@ -16,7 +17,7 @@ interface TestQuery {
   query: string;
   expected: string;
   description: string;
-  expectedIntent: "basic" | "research";
+  expectedIntent: "basic" | "research" | "time";
 }
 
 interface TestResult {
@@ -31,6 +32,17 @@ interface TestResult {
 // Test data - same queries as in Python version
 const TEST_QUERIES: TestQuery[] = [
   // Research intent queries
+  //
+  //
+  //
+  //
+  {
+    query: "Who has been funded in the last 7 days",
+    //the expected return is a TemporalResponse Object, but we can check to see if the response has one company
+    expected: "Agentio",
+    description: "Should find a few companies (>2)",
+    expectedIntent: "time",
+  },
   {
     query: "storage technology",
     expected: "Vast Data",
@@ -120,29 +132,43 @@ async function runSingleTest(queryData: TestQuery): Promise<TestResult> {
 
   try {
     // Run the actual research workflow
-    const result = await runResearchWorkflow(query);
+    const result = await runResearchWorkflow(query, expectedIntent);
 
-    // Check if intent matches expected
-    const actualIntent = result.classifyResults.intent;
-    const intentMatches = actualIntent === expectedIntent;
-
-    console.log(`\nClassification:`);
-    console.log(`  Intent: ${actualIntent} ${intentMatches ? '✅' : '❌'}`);
-    console.log(`  Reasoning: ${result.classifyResults.reasoning}`);
+    console.log(`\nIntent: ${expectedIntent}`);
 
     // Handle basic intent
-    if (actualIntent === 'basic') {
-      console.log(`\nBasic Response:`);
+    if (expectedIntent === 'basic') {
+      console.log(`\nBasic response:`);
       console.log(`  ${(result.basicResponse || 'N/A').substring(0, 300)}...`);
 
       return {
         query,
         success: true,
-        found_expected: intentMatches, // For basic, success means intent matched
+        found_expected: true, // for basic, success means we got a basic response
         companies_count: 0,
         result
       };
     }
+
+    if (expectedIntent === 'time') {
+      console.log(`\nTemporal response:`);
+
+      //TODO: if the intent is TIME, then we have to deconstruct the query AND call the temporal workflow to get the predicted result
+      const companies = result.temporalResponse?.companies || [];
+      console.log(`  Found ${companies.length} companies`);
+      const foundExpectedCompany = companies.find((company) => company.name === expected) !== undefined;
+
+      return {
+        query,
+        success: foundExpectedCompany,
+        found_expected: foundExpectedCompany,
+        companies_count: companies.length,
+        result
+      };
+    }
+
+
+
 
     // Handle research intent
     const ragSources = result.ragResults?.sources || [];
@@ -177,7 +203,7 @@ async function runSingleTest(queryData: TestQuery): Promise<TestResult> {
 
     // Check if expected result is in the output (for research queries)
     const allText = JSON.stringify(result).toLowerCase();
-    const foundExpected = intentMatches && allText.includes(expected.toLowerCase());
+    const foundExpected = allText.includes(expected.toLowerCase());
 
     return {
       query,

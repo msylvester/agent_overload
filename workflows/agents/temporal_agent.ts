@@ -52,19 +52,15 @@ async function getRecentCompanies(
     const now = endDateObj; // Use endDate as the upper bound
 
     // Build query using actual MongoDB field names
-    // Note: 'date' is the article publication date (funding announcement date)
-    // 'created_at' is when the record was added to the database
+    // Query only on 'created_at' (when the record was added to the database)
     const query: any = {
-      $or: [
-        { date: { $gte: startDateObj, $lte: now } },
-        { created_at: { $gte: startDateObj, $lte: now } },
-      ],
+      created_at: { $gte: startDateObj, $lte: now }
     };
 
     // Add domain filter if provided
     if (domain) {
       query.$and = [
-        { $or: query.$or },
+        { created_at: { $gte: startDateObj, $lte: now } },
         {
           $or: [
             { description: { $regex: domain, $options: "i" } },
@@ -73,7 +69,7 @@ async function getRecentCompanies(
           ],
         },
       ];
-      delete query.$or;
+      delete query.created_at;
     }
 
     const results = await collection

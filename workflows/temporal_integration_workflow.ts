@@ -58,9 +58,9 @@ export async function temporalIntent(input_text: string): Promise<TemporalOutput
 
   // 2. Get temporal/company flow data
   const temporalResult: ResponseItem = await getTemporal(
+    workflowInput.input_as_text,
     start,
-    end,
-    workflowInput.input_as_text
+    end
   );
 
 
