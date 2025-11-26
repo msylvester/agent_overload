@@ -27,18 +27,18 @@ type WorkflowInput = {
   input_as_text: string;
 };
 
-export type WorkflowOutput = {
+export type TemporalOutput = {
   time: TimeClassification | null;
-  results: TemporalflowOutput | null;
+  results: ResponseItem | null;
 };
 
 // --- Main Function ---
 /**
  * temporalIntent
  * @param input_text string
- * @returns WorkflowOutput
+ * @returns TemporalOutput
  */
-export async function temporalIntent(input_text: string): Promise<WorkflowOutput> {
+export async function temporalIntent(input_text: string): Promise<TemporalOutput> {
   // Build the workflow input
   const workflowInput: WorkflowInput = {
     input_as_text: input_text,
