@@ -21,7 +21,7 @@ export default async function Layout({
         strategy="beforeInteractive"
       />
       <DataStreamProvider>
-        <SidebarProvider defaultOpen={!isCollapsed}>
+        <SidebarProvider defaultOpen={false}>
           <AppSidebar user={undefined} />
           <SidebarInset>{children}</SidebarInset>
         </SidebarProvider>
