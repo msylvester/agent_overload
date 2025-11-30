@@ -192,24 +192,7 @@ useEffect(() => {
 
 //render a compoennt called Image
           (<ProfileImage type={type} />)}
-          {/*
-          //   (
-          //   <div className="flex flex-col gap-1.5">
-          //     <div className="border-[3px] border-[#6b6b6b] bg-[#171217] shadow-[inset_0_0_0_2px_#2b2b2b] relative p-1.5 h-80 flex items-center justify-center bg-[radial-gradient(circle_at_top,#172141_0%,#050509_80%)] max-md:h-[260px]">
-          //       <div className="relative w-full max-w-[280px] h-full flex items-center justify-center">
-          //         <Image
-          //           src="/bar_maiden.png"
-          //           alt="Bar Maiden"
-          //           fill
-          //           sizes="(max-width: 768px) 100vw, 280px"
-          //           className="object-contain [filter:drop-shadow(0_0_20px_rgba(93,172,255,0.6))_drop-shadow(0_0_40px_rgba(125,205,255,0.4))]"
-          //         />
-          //       </div>
-          //     </div>
-          //   </div>
-          // )} */} 
-
-          {/* RIGHT: CHAT / LOG */}
+         {/* RIGHT: CHAT / LOG */}
           <div className="flex flex-col h-80 max-md:h-[260px]">
             <div className="border-[3px] border-[#6b6b6b] bg-[#171217] shadow-[inset_0_0_0_2px_#2b2b2b] relative h-full p-1.5 bg-[#1a1516]">
               <ScrollablePane>
@@ -246,13 +229,41 @@ useEffect(() => {
             <div className="flex gap-1.5 sm:justify-end">
               <button
                 type="submit"
-                className="border-2 border-[#7abf60] bg-[linear-gradient(#52a13a,#25621a)] text-[#f5f5dc] px-2.5 py-1 text-[10px] uppercase cursor-pointer [text-shadow:1px_1px_#000] shadow-[0_2px_0_#000] active:translate-y-px active:shadow-[0_1px_0_#000]"
+                disabled={isLoading}
+              className="
+    border-2 border-[#555555]
+    bg-[linear-gradient(#373737,#181818)]
+    text-[#f5f5dc]
+    px-2.5 py-1 text-[10px] uppercase
+    [text-shadow:1px_1px_#000]
+    shadow-[0_2px_0_#000]
+
+    cursor-pointer
+    disabled:cursor-not-allowed
+    disabled:opacity-50
+    disabled:shadow-none
+  "
               >
                 ASK
               </button>
               <button
                 type="button"
-                className="border-2 border-[#555555] bg-[linear-gradient(#373737,#181818)] text-[#f5f5dc] px-2.5 py-1 text-[10px] uppercase cursor-pointer [text-shadow:1px_1px_#000] shadow-[0_2px_0_#000] active:translate-y-px active:shadow-[0_1px_0_#000]"
+                disabled={isLoading}
+             className="
+    border-2 border-[#555555]
+    bg-[linear-gradient(#373737,#181818)]
+    text-[#f5f5dc]
+    px-2.5 py-1 text-[10px] uppercase
+    [text-shadow:1px_1px_#000]
+    shadow-[0_2px_0_#000]
+
+    cursor-pointer
+    disabled:cursor-not-allowed
+    disabled:opacity-50
+    disabled:shadow-none
+  "
+           
+                // className="border-2 border-[#555555] bg-[linear-gradient(#373737,#181818)] text-[#f5f5dc] px-2.5 py-1 text-[10px] uppercase cursor-pointer [text-shadow:1px_1px_#000] shadow-[0_2px_0_#000] active:translate-y-px active:shadow-[0_1px_0_#000]"
                 onClick={handleReset}
               >
                 RESET
