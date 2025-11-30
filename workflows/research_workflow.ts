@@ -134,6 +134,12 @@ async function runResearchWorkflow(inputText: string, intent: string): Promise<W
     // Extract company names from RAG results
     const companiesFromRag = ragResults.sources.map(source => source.companyName);
 
+    const investorsFromRag = ragResults.sources.map(source => source.investors);
+
+    console.log(`here are the investos ${investorsFromRag}`)
+
+ 
+
     // Step 2: If we found companies, enrich with web research
     let webResults: WebResearchAgentOutput | undefined;
 

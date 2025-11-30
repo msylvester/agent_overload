@@ -41,6 +41,11 @@ const TEST_QUERIES: TestQuery[] = [
     expected: 2,
     description: "Should find companies funded in the last 7 days",
   },
+  {
+    query: "show me companies from the last 2 weeks",
+    expected: 5,
+    description: "Should find companies funded in the last 2 weeks"
+  }
 ];
 
 // --- Harness ---

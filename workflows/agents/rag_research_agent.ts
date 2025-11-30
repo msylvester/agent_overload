@@ -75,6 +75,7 @@ class RagResearchAgent {
             $project: {
               company_name: 1,
               description: 1,
+              investors: 1,
               similarity: { $meta: "vectorSearchScore" },
               distance: {
                 $subtract: [1, { $meta: "vectorSearchScore" }]

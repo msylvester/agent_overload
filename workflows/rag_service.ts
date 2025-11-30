@@ -51,6 +51,7 @@ export function resetRagAgent(): void {
 
 const RAGSourceSchema = z.object({
   companyName: z.string(),
+  investors: z.string().optional(),
   relevanceScore: z.number(),
   documentSnippet: z.string(),
 });
@@ -112,6 +113,7 @@ export async function ragSemanticSearch(
         company_index: idx,
         _id: r._id,
         description: r.description || "",
+        investors: r.investors || "",
       })),
       distances: filteredResults.map(r => r.distance || 1.0),
       count: filteredResults.length,
@@ -348,6 +350,7 @@ export async function runRagQuery(question: string): Promise<RAGQueryResponse> {
       console.log('Document:', JSON.stringify(source, null, 2));
       return ({
       companyName: source.companyName,
+      investors: source.investors,
       relevanceScore: source.relevanceScore,
       documentSnippet: source.documentSnippet,
     })
