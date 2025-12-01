@@ -34,7 +34,8 @@ function getRagAgent(): RagResearchAgent {
 function getOpenAIClient(): OpenAI {
   if (_openaiClient === null) {
     _openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: process.env.OPENROUTER_API_KEY,
+      baseURL: "https://openrouter.ai/api/v1",
     });
   }
   return _openaiClient;

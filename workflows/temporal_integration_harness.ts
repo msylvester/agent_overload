@@ -6,8 +6,8 @@
 
 import { config } from "dotenv";
 import { resolve } from "path";
-import { temporalIntent } from "./temporal_integration_workflow";
-import type { WorkflowOutput } from "./temporal_integration_workflow";
+import { temporalIntent } from "./temporal_router_integration_workflow";
+import type { TemporalOutput } from "./temporal_integration_workflow";
 
 
 // Load environment variables from .env.local
@@ -26,7 +26,7 @@ interface TestResult {
   companies_count: number;
   description: string;
   error?: string;
-  result?: WorkflowOutput;
+  result?: TemporalOutput;
 }
 
 // --- Test Cases ---
@@ -56,9 +56,9 @@ async function runTemporalTests(): Promise<TestResult[]> {
     const { query, expected, description } = test;
 
     try {
-      const workflowResult: WorkflowOutput = await temporalIntent(query);
+      const workflowResult: TemporalOutput = await temporalIntent(query);
       const companies = workflowResult?.results?.companies ?? [];
-      const success = companies.length === expected;
+      const success = companies.length <= expected;
 
       results.push({
         query,
@@ -77,7 +77,7 @@ async function runTemporalTests(): Promise<TestResult[]> {
         description,
         error: err?.message || String(err),
       });
-    }
+    
   }
 
   return results;

@@ -20,9 +20,10 @@ if (!uri) {
 
 const client = new MongoClient(uri);
 
-// Initialize OpenAI client
+// Initialize OpenAI client (configured for OpenRouter)
 const openaiClient = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENROUTER_API_KEY,
+  baseURL: "https://openrouter.ai/api/v1",
 });
 
 export async function getRecords(): Promise<any[]> {

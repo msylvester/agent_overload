@@ -2,8 +2,8 @@ import { Agent, run } from "@openai/agents";
 import { z } from "zod";
 import OpenAI from "openai";
 
-import { classifyTime } from "./agents/time_agent";
-import { getTemporal } from "./agents/temporal_agent";
+import { classifyTime } from "./agents/time_agent"; //time_router_agent
+import { getTemporal } from "./agents/temporal_agent"; //temporaal_router_agent
 
 import { ResponseItem } from "./agents/temporal_agent";
 import type { TimeClassification } from "./agents/time_agent";

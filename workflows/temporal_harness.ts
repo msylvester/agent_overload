@@ -4,7 +4,7 @@ import path from 'path';
 // Load environment variables from .env.local (project root)
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
-import { getTemporal } from './agents/temporal_agent';
+import { getTemporal } from './agents/temporal_router_agent';
 
 interface TemporalResponse {
   companies: string[];

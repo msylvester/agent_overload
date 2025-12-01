@@ -84,13 +84,16 @@ export async function classifyTime(
   minConfidence: number = 0.6
 ): Promise<TimeClassification> {
   try {
-    // Step 1: Initialize OpenAI client
-    const apiKey = process.env.OPENAI_API_KEY;
+    // Step 1: Initialize OpenAI client (configured for OpenRouter)
+    const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
-      throw new Error("OPENAI_API_KEY environment variable not set");
+      throw new Error("OPENROUTER_API_KEY environment variable not set");
     }
 
-    const client = new OpenAI({ apiKey });
+    const client = new OpenAI({
+      apiKey,
+      baseURL: "https://openrouter.ai/api/v1"
+    });
 
     // Step 2: Create JSON schema for structured output
     const schema = {
