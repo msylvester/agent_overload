@@ -1,6 +1,7 @@
 //Give the agent a bunch of companies and get search results
 //
-import { researchCompanies } from './agents/web_search_agent';
+import 'dotenv/config';
+import { researchCompanies } from './agents/web_search_router';
 
 type Company = {
   company_name: string,
@@ -17,7 +18,7 @@ interface SearchResult {
   description: string;
 }
 
-const TEST_DATA_NAMES = ['PalabraAI', 'Lovable'];
+const TEST_DATA_NAMES = ['Lovable', 'Cursor'];
 
 const TEST_DATA = [
   {
@@ -45,6 +46,8 @@ async function web_search_harness(): Promise<SearchResult[]> {
   //use the agent to produce the results
   const agentOutput = await researchCompanies(TEST_DATA_NAMES);
 
+  console.log('Agent output:', JSON.stringify(agentOutput, null, 2));
+
   // Transform the output to match SearchResult format
   const results: SearchResult[] = agentOutput.companies.map(details => ({
     company_name: details.company_name,
@@ -61,6 +64,20 @@ async function web_search_harness(): Promise<SearchResult[]> {
 (async () => {
   try {
     const results = await web_search_harness();
+    for (let i=0; i < results.length; i++) {
+      const { name } = TEST_DATA[i];
+      const { company_name } = results[i];
+      //ignore case 
+      if (name.toLowerCase() === company_name.toLowerCase()) {
+        console.log(`success because ${name} matches ${company_name}`);
+        continue;
+      }
+      console.log(`${name} failed to match ${company_name}`)
+
+
+
+
+    }
     console.log('Search Results:', JSON.stringify(results, null, 2));
   } catch (error) {
     console.error('Error running web search harness:', error);
