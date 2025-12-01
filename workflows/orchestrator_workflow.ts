@@ -2,12 +2,12 @@
 //
 //
 //
-import { classifyIntent } from './agents/classify_agent';
-import { temporalIntent } from './temporal_integration_workflow';
-import type { TemporalOutput } from './temporal_integration_workflow';
+import { classifyIntent } from './agents/classify_agent_langgraph';
+import { temporalIntent } from './temporal_router_integration_workflow';
+import type { TemporalOutput } from './temporal_router_integration_workflow';
 import { runResearchWorkflow } from './research_workflow';
-import type { RAGQueryResponse } from './rag_service';
-import type { WebResearchAgentOutput } from './agents/web_search_agent';
+import type { RAGQueryResponse } from './rag_router_agent';
+import type { WebResearchAgentOutput } from './agents/web_search_router';
 
 type WebResearchOutput = WebResearchAgentOutput;
 

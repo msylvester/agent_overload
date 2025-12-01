@@ -5,7 +5,7 @@
  * Run with: pnpm tsx workflows/rag_service_harness.ts
  */
 
-import { runRagQuery } from './rag_service';
+import { runRagQuery } from './rag_router_agent';
 
 console.log("Testing RAG Service Agent...");
 console.log("=".repeat(50));

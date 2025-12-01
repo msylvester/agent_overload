@@ -7,8 +7,11 @@
 
 import { config } from 'dotenv';
 import { resolve } from 'path';
-import { temporalIntent, TemporalOutput } from 'temporal_integration_workflow';
-import { runResearchWorkflow, WorkflowOutput } from './research_workflow';
+import { z } from 'zod';
+import { runResearchWorkflow, WorkflowOutputSchema } from './research_workflow';
+
+// Define the workflow output type
+type WorkflowOutput = z.infer<typeof WorkflowOutputSchema>;
 
 // Load environment variables from .env.local
 config({ path: resolve(__dirname, '../.env.local') });
@@ -153,10 +156,25 @@ async function runSingleTest(queryData: TestQuery): Promise<TestResult> {
     if (expectedIntent === 'time') {
       console.log(`\nTemporal response:`);
 
-      //TODO: if the intent is TIME, then we have to deconstruct the query AND call the temporal workflow to get the predicted result
-      const companies = result.temporalResponse?.companies || [];
+      if (!result.temporalResponse) {
+        console.log(`  Warning: No temporal response received`);
+        return {
+          query,
+          success: false,
+          found_expected: false,
+          companies_count: 0,
+          result
+        };
+      }
+
+      const companies = result.temporalResponse.results?.companies || [];
       console.log(`  Found ${companies.length} companies`);
-      const foundExpectedCompany = companies.find((company) => company.name === expected) !== undefined;
+
+      if (companies.length > 0) {
+        console.log(`  Companies: ${companies.join(', ')}`);
+      }
+
+      const foundExpectedCompany = companies.includes(expected);
 
       return {
         query,
