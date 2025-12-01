@@ -112,10 +112,11 @@ ${state.results.inference}
   );
 
   // Replace inference text with summary
+  const parsedContent = JSON.parse(response.content as string);
   return {
     results: {
       ...state.results,
-      inference: response.inference_summary,
+      inference: parsedContent.inference_summary,
     },
   };
 }

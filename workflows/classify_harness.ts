@@ -4,7 +4,7 @@ import { resolve } from 'path';
 // Load environment variables from .env.local
 config({ path: resolve(__dirname, '../.env.local') });
 
-import { classifyIntent } from './agents/classify_agent';
+import { classifyIntent } from './agents/classify_agent_langgraph.ts';
 
 interface Question {
   input: string,
@@ -20,6 +20,7 @@ let results: Result[] = [];
 let TestCases: Question[] = [];
 
 TestCases.push({ "input": "What investors would be interested in my SaaS product?", "expected": "basic" });
+TestCases.push({"input": "what company raised the most money in august", "expected": "time"});
 TestCases.push({ "input": "Research Tesla", "expected": "research" });
 TestCases.push({ "input": "Tell me about SpaceX funding", "expected": "research" });
 TestCases.push({ "input": "How should I pitch my AI startup?", "expected": "basic" });

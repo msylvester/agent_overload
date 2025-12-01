@@ -77,7 +77,7 @@ async function runTemporalTests(): Promise<TestResult[]> {
         description,
         error: err?.message || String(err),
       });
-    
+    }
   }
 
   return results;

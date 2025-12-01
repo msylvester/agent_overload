@@ -28,13 +28,32 @@ export async function classifyIntent(
   const result = await generateObject({
     model: openrouter("openai/gpt-4o-mini"),
     schema: IntentSchema,
-    prompt: `You are an intent classifier. Analyze the user's query and determine if they are asking for:
-- "advice": seeking recommendations, guidance, or how-to information
-- "research": requesting factual information, data, or research about a specific topic/company
-- "time": queries about funding events or activities within a specific time period (e.g., "last week", "in 2024", "Q1")
-- "basic": simple questions that can be answered with existing knowledge
+    prompt: `You are an intent classifier. Analyze the user's query and classify it into ONE of these categories:
+
+PRIORITY ORDER (check in this order):
+1. "time": ANY query that mentions or implies a specific time period, date range, or temporal constraint
+   - Keywords: "last week", "this year", "in 2024", "Q1", "since January", "past 30 days", "recently", "this month", month names (January, August, etc.)
+   - Examples: "Who was funded last week", "Companies funded in August", "Which companies received funding this year"
+   - NOTE: Even if asking about specific companies or requesting research, if there's a time constraint, it's "time"
+
+2. "research": Requesting factual information about specific companies, topics, or data WITHOUT time constraints
+   - Examples: "Research Tesla", "Tell me about SpaceX funding", "Find AI companies in healthcare"
+   - Must be about specific entities or topics
+   - No temporal constraints mentioned
+
+3. "advice": Seeking recommendations, strategic guidance, or how-to information for the user's own situation
+   - Must be asking for personalized advice or strategic recommendations
+   - Examples: "What investors would be interested in my SaaS product?", "How should I approach investors?"
+   - NOT for general how-to questions without personal context
+
+4. "basic": Simple, general questions that don't fit the above categories
+   - General how-to questions: "How should I pitch my AI startup?"
+   - Informational queries without specific research targets
+   - Questions answerable with general knowledge
 
 User query: ${query}
+
+Analyze the query carefully for temporal indicators. If ANY time-related word or date reference exists, classify as "time".
 
 Return JSON that matches the required schema.`,
   });
