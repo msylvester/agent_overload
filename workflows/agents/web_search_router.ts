@@ -12,7 +12,8 @@ import { z } from "zod";
 import { StateGraph, END } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 import { zodResponseFormat } from "openai/helpers/zod";
-import { TavilyClient } from "tavily";
+// @ts-ignore - using require for compatibility
+const { TavilyClient } = require("tavily");
 
 // ----------------------------
 // SCHEMAS

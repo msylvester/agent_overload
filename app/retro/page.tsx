@@ -29,18 +29,15 @@ function renderResponse(message: ChatMessage): {
   newType: string;
 } {
   const textParts = message.parts.filter((p) => p.type === "text");
-  const dataParts = message.parts.filter((p) => p.type.startsWith("data-"));
+  const text = textParts.map((p: any) => p.text).join("\n");
 
   // Research response
-  if (dataParts.length > 0) {
-    const companies = dataParts.map((p: any) => p.data);
+  if (text.includes("**Dragon**")) {
     return {
-      node: <ResearchResponse companies={companies} />,
+      node: <ResearchResponse ragResponse={text} />,
       newType: "/dragon.png",
     };
   }
-
-  const text = textParts.map((p: any) => p.text).join("\n");
 
   // Temporal response
   if (text.includes("**Time Period:**")) {

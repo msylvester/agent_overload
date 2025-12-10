@@ -5,33 +5,85 @@
  * Run with: pnpm tsx workflows/rag_service_harness.ts
  */
 
-import { runRagQuery } from './rag_router_agent';
+import { buildGraph, invokeGraph } from "../web_yt_vid/agentic_two_rag.js";
+// If you actually need these, you can use them; otherwise remove.
+// import type { AgentState } from "./agentic_two_rag.js";
+// import type { CompiledStateGraph } from "@langchain/langgraph";
+// import { HumanMessage } from "@langchain/core/messages";
+
+interface TestCase {
+  query: string;
+  expectedKeywords: string[];
+  description: string;
+}
+
+interface RagResultSource {
+  companyName: string;
+  relevanceScore: number;
+}
+
+interface RagResult {
+  answer: string;
+  confidenceScore: number;
+  sources: RagResultSource[];
+}
 
 console.log("Testing RAG Service Agent...");
 console.log("=".repeat(50));
 
-const testQueries = [
-  "data storage infastrucutre comanies", // should at least select Vast Data
-  "biotech AI drug discovery startups", // should at least select tahoe therapeutics
-  "ai sleep", // should at least select uno platform
-  "dev tools",
+console.log("Testing RAG Service Agent...");
+console.log("=".repeat(50));
+
+const TEST_CASES: TestCase[] = [
+  {
+    query: "data storage infastrucutre comanies",
+    expectedKeywords: ["Vast Data"],
+    description: "Should find all the companies that do data storage"
+  },
+  {
+    query: "whats going on with energy innvoation",
+    expectedKeywords: ["General", "Exo", "Fusion", "Commonwealth"],
+    description: "Should find all the companies that do energy and make mention of fusion"
+  },
+  {
+    query: "who are some dev tool companies",
+    expectedKeywords: ["Emergent", "Cursor", "No Code"],
+    description: "Should discuss the no code platforms"
+  }
 ];
 
 (async () => {
-  for (const query of testQueries) {
-    console.log(`\nQuery: ${query}`);
+  // Build once
+  const graph = await buildGraph();
+
+  for (const test of TEST_CASES) {
+    const { query, expectedKeywords, description } = test;
+
+    console.log(`\nTest: ${description}`);
+    console.log(`Query: ${query}`);
     console.log("-".repeat(50));
 
     try {
-      const result = await runRagQuery(query);
-      console.log(`Answer: ${result.answer.substring(0, 200)}...`);
-      console.log(`Confidence: ${result.confidenceScore}`);
-      console.log(`Sources: ${result.sources.length} documents`);
-      result.sources.slice(0, 3).forEach(source => {
-        console.log(`  - ${source.companyName} (relevance: ${source.relevanceScore.toFixed(2)})`);
-      });
-    } catch (error) {
-      console.error(`Error: ${error}`);
+      const finalAnswer: string = await invokeGraph(query, graph);
+
+      const lower = finalAnswer.toLowerCase();
+
+      const found = expectedKeywords.filter(k =>
+        lower.includes(k.toLowerCase())
+      );
+
+      const missing = expectedKeywords.filter(k =>
+        !lower.includes(k.toLowerCase())
+      );
+
+      console.log(`Expected: ${JSON.stringify(expectedKeywords)}`);
+      console.log(`Found:    ${JSON.stringify(found)}`);
+      if (missing.length)
+        console.log(`Missing:  ${JSON.stringify(missing)}`);
+
+      console.log(`Answer Preview: ${finalAnswer.substring(0, 200)}...`);
+    } catch (err) {
+      console.error("Error:", err);
     }
 
     console.log("=".repeat(50));

@@ -5,18 +5,13 @@
 import { classifyIntent } from './agents/classify_agent_langgraph';
 import { temporalIntent } from './temporal_router_integration_workflow';
 import type { TemporalOutput } from './temporal_router_integration_workflow';
-import { runResearchWorkflow } from './research_workflow';
-import type { RAGQueryResponse } from './rag_router_agent';
-import type { WebResearchAgentOutput } from './agents/web_search_router';
-
-type WebResearchOutput = WebResearchAgentOutput;
+import { runResearchWorkflow } from './agentic_research_workflow';
 
 export interface OrchFlowOutput {
   classifyResponse?: 'time' | 'basic' | 'research';
   basicResponse?: string;
   temporalResponse?: TemporalOutput;
-  ragResults?: RAGQueryResponse;
-  webResults?: WebResearchOutput;
+  ragResults?: string;
 }
 
 async function runOrchestratorWorkflow(input_text: string): Promise<OrchFlowOutput> {
@@ -37,7 +32,6 @@ async function runOrchestratorWorkflow(input_text: string): Promise<OrchFlowOutp
     // Run research workflow for research queries
     const researchResult = await runResearchWorkflow(input_text, 'research');
     output.ragResults = researchResult.ragResults;
-    output.webResults = researchResult.webResults;
   } else if (classification.intent === 'basic') {
     // Generate basic response for simple queries
     const basicResult = await runResearchWorkflow(input_text, 'basic');
@@ -48,4 +42,3 @@ async function runOrchestratorWorkflow(input_text: string): Promise<OrchFlowOutp
 }
 
 export { runOrchestratorWorkflow };
-export type { WebResearchOutput };

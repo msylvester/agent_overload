@@ -1,6 +1,5 @@
 import { waitUntil } from "@vercel/functions";
 
-import { runResearchWorkflow } from "@/workflows/research_workflow";
 import { runOrchestratorWorkflow, type OrchFlowOutput } from "@/workflows/orchestrator_workflow";
 
 
@@ -89,26 +88,13 @@ async function processWorkflowInBackground(
       }
 
       case 'research': {
-        // Map companies to research response parts
-        const companyParts = (orchWorkflowOutput.webResults?.companies || []).map(company => ({
-          type: "data-researchResponse" as const,
-          data: {
-            company_name: company.company_name,
-            description: company.description,
-            industry: company.industry,
-            founded: String(company.founded_year),
-            headquarters: company.headquarters_location,
-            companySize: company.company_size,
-            website: company.website,
-          }
-        }));
+        // Extract RAG results text
+        const ragText = orchWorkflowOutput.ragResults || "No research results found.";
 
         assistantMessage = {
           id: generateUUID(),
           role: "assistant",
-          parts: companyParts.length > 0
-            ? companyParts
-            : [{ type: "text" as const, text: "No research results found." }],
+          parts: [{ type: "text" as const, text: ragText }],
         };
         break;
       }
