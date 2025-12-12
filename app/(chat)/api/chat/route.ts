@@ -48,7 +48,18 @@ async function processWorkflowInBackground(
         let formattedText = "";
 
         if (temporalResponse?.time) {
-          formattedText += `**Time Period:** ${temporalResponse.time.start} to ${temporalResponse.time.end}\n\n`;
+          // Convert Unix timestamps to readable dates
+          const startDate = new Date(temporalResponse.time.start * 1000).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+          const endDate = new Date(temporalResponse.time.end * 1000).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+          formattedText += `**Time Period:** ${startDate} to ${endDate}\n\n`;
         }
 
         if (temporalResponse?.results?.companies && temporalResponse.results.companies.length > 0) {

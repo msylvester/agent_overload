@@ -331,3 +331,113 @@
 .animate-crystal-pulse {
   animation: crystal-pulse 1.5s ease-in-out infinite;
 }
+
+/* Retro Markdown Styles for Research Response */
+.retro-markdown {
+  font-size: 0.75rem;
+  line-height: 1.625;
+  color: #2c1f18;
+}
+
+.retro-markdown h1 {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #2c1f18;
+  border-bottom: 1px solid #8b7a52;
+  padding-bottom: 0.25rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.retro-markdown h2 {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #2c1f18;
+  border-bottom: 1px solid #8b7a52;
+  padding-bottom: 0.25rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.retro-markdown h3,
+.retro-markdown h4,
+.retro-markdown h5,
+.retro-markdown h6 {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #8b6914;
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.retro-markdown p {
+  margin-bottom: 0.5rem;
+}
+
+.retro-markdown ul,
+.retro-markdown ol {
+  margin-left: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.retro-markdown li {
+  margin-bottom: 0.25rem;
+}
+
+.retro-markdown ul > li {
+  list-style-type: '▸ ';
+}
+
+.retro-markdown strong {
+  font-weight: 700;
+  color: #8b6914;
+}
+
+.retro-markdown em {
+  font-style: normal;
+  text-decoration: underline;
+  text-decoration-color: #8b7a52;
+  text-underline-offset: 2px;
+}
+
+.retro-markdown a {
+  color: #174c7e;
+  text-decoration: none;
+}
+
+.retro-markdown a:hover {
+  text-decoration: underline;
+}
+
+.retro-markdown code {
+  background-color: #c9b88a;
+  border: 1px solid #8b7a52;
+  padding: 0.125rem 0.375rem;
+  border-radius: 2px;
+  font-size: 0.7rem;
+}
+
+.retro-markdown pre {
+  background-color: #1a1516;
+  border: 2px solid #6b6b6b;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  overflow-x: auto;
+  border-radius: 2px;
+}
+
+.retro-markdown pre code {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  color: #f5f5dc;
+  font-size: 0.65rem;
+}
+
+.retro-markdown > *:first-child {
+  margin-top: 0;
+}
+
+.retro-markdown > *:last-child {
+  margin-bottom: 0;
+}

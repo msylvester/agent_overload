@@ -76,7 +76,11 @@ async function temporalNode(state: {
 
   const { start, end } = state.time;
 
-  const temporalResults = await getTemporal(state.inputText, start, end);
+  // Convert Unix timestamps (seconds) to ISO date strings
+  const startDate = new Date(start * 1000).toISOString();
+  const endDate = new Date(end * 1000).toISOString();
+
+  const temporalResults = await getTemporal(state.inputText, startDate, endDate);
 
   return { results: temporalResults };
 }

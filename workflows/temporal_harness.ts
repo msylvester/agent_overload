@@ -13,23 +13,35 @@ interface TemporalResponse {
 
 // Helper functions for date calculation
 function getCurrentDate(): string {
-  return new Date().toISOString().split('T')[0];
+  return new Date().toISOString();
 }
 
 function getDateMonthsAgo(months: number): string {
   const date = new Date();
   date.setMonth(date.getMonth() - months);
-  return date.toISOString().split('T')[0];
+  return date.toISOString();
 }
-
 function getDateDaysAgo(days: number): string {
   const date = new Date();
+  if (days === 0) {
+    // Set to today at 12:01 AM local time
+    date.setHours(0, 1, 0, 0);
+    return date.toISOString();
+  }
   date.setDate(date.getDate() - days);
-  return date.toISOString().split('T')[0];
+  return date.toISOString();
 }
 
 // Test data with pre-computed dates
 const TEST_DATA = [
+  {
+    description: "Today",
+    input: "Who was funded today?",
+    start_date: getDateDaysAgo(0),
+    end_date: getCurrentDate(),
+    expectedMinCompanies: 1,
+  },
+ 
   {
     description: "Last week",
     input: "Who has been funded recently?",

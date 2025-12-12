@@ -33,8 +33,11 @@ function renderResponse(message: ChatMessage): {
 
   // Research response
   if (text.includes("**Dragon**")) {
+    //substring the dragonian 
+    const result = text.replace("**Dragon**", "");
+
     return {
-      node: <ResearchResponse ragResponse={text} />,
+      node: <ResearchResponse ragResponse={result} />,
       newType: "/dragon.png",
     };
   }

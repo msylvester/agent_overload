@@ -4,7 +4,7 @@
 
 import dotenv from "dotenv";
 import path from "path";
-dotenv.config({ path: path.resolve(process.cwd(), "../.env.local") });
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
@@ -15,8 +15,8 @@ import { StateGraph, END } from "@langchain/langgraph";
 // =========================================================
 
 const TimeClassificationSchema = z.object({
-  start: z.string().describe("Start date in ISO format (YYYY-MM-DD)"),
-  end: z.string().describe("End date in ISO format (YYYY-MM-DD)"),
+  start: z.number().describe("Start date as Unix timestamp (seconds since epoch)"),
+  end: z.number().describe("End date as Unix timestamp (seconds since epoch)"),
   confidence: z.number().min(0).max(1),
   rationale: z.string(),
 });
@@ -27,20 +27,53 @@ export type TimeClassification = z.infer<typeof TimeClassificationSchema>;
 // DATE HELPERS
 // =========================================================
 
-function getCurrentDate(): string {
-  return new Date().toISOString().split("T")[0];
+function getCurrentTimestamp(): number {
+  return Math.floor(Date.now() / 1000);
 }
 
-function getDateMonthsAgo(months: number): string {
+function getTimestampMonthsAgo(months: number): number {
   const d = new Date();
   d.setMonth(d.getMonth() - months);
-  return d.toISOString().split("T")[0];
+  return Math.floor(d.getTime() / 1000);
 }
 
-function getDateYearsAgo(years: number): string {
+function getTimestampYearsAgo(years: number): number {
   const d = new Date();
   d.setFullYear(d.getFullYear() - years);
-  return d.toISOString().split("T")[0];
+  return Math.floor(d.getTime() / 1000);
+}
+
+function getTimestampDaysAgo(days: number): number {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return Math.floor(d.getTime() / 1000);
+}
+
+function getStartOfWeek(): number {
+  const d = new Date();
+  const day = d.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  const diff = day === 0 ? 6 : day - 1; // Treat Monday as start of week
+  d.setDate(d.getDate() - diff);
+  d.setHours(0, 0, 0, 0);
+  return Math.floor(d.getTime() / 1000);
+}
+
+function getStartOfLastWeek(): number {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = day === 0 ? 6 : day - 1;
+  d.setDate(d.getDate() - diff - 7); // Go back one more week
+  d.setHours(0, 0, 0, 0);
+  return Math.floor(d.getTime() / 1000);
+}
+
+function getEndOfLastWeek(): number {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = day === 0 ? 6 : day - 1;
+  d.setDate(d.getDate() - diff - 1); // Last Sunday
+  d.setHours(23, 59, 59, 999);
+  return Math.floor(d.getTime() / 1000);
 }
 
 // =========================================================
@@ -64,7 +97,8 @@ function createLlm(model: string) {
 // =========================================================
 
 function buildSystemPrompt() {
-  const today = getCurrentDate();
+  const today = new Date().toISOString().split("T")[0];
+  const todayTimestamp = getCurrentTimestamp();
   const year = new Date().getFullYear();
   const month = new Date().getMonth() + 1;
 
@@ -75,26 +109,32 @@ Your task: Extract the start and end dates for the time period mentioned in the 
 
 Current context:
 - Today's date: ${today}
+- Today's Unix timestamp: ${todayTimestamp}
 - Current year: ${year}
 - Current month: ${month}
 
 Guidelines:
 - Extract the specific time range referenced in the query.
-- Output ISO 8601 dates (YYYY-MM-DD).
+- Output Unix timestamps (seconds since epoch).
+- For a given date, use the start of day (00:00:00) for start timestamps and end of day (23:59:59) for end timestamps unless the query specifies otherwise.
 - Be confident (0.8+) when years are explicitly mentioned (like "2024", "2023", "in 2024")
 - Be confident (0.9+) when quarters or specific months are mentioned
 - Common mappings:
   • "last 6 months" → 6 months ago to today
   • "past year" → 1 year ago to today
-  • "in 2024" or "2024" → 2024-01-01 to 2024-12-31 (high confidence)
-  • "Q1 2024" → 2024-01-01 to 2024-03-31
+  • "in 2024" or "2024" → January 1, 2024 00:00:00 to December 31, 2024 23:59:59 (high confidence)
+  • "Q1 2024" → January 1, 2024 00:00:00 to March 31, 2024 23:59:59
   • "recent" → last 3 months
+  • "this week" → Monday of current week 00:00:00 to now (high confidence)
+  • "last week" → Monday of last week 00:00:00 to Sunday of last week 23:59:59 (high confidence)
+  • "past week" or "past 7 days" → 7 days ago to today
   • "this month" → first day of month to today
-  • "January to March 2023" → 2023-01-01 to 2023-03-31
+  • "today" → start of today to current time
+  • "January to March 2023" → January 1, 2023 00:00:00 to March 31, 2023 23:59:59
 
 Provide:
-- start: ISO date
-- end: ISO date
+- start: Unix timestamp (seconds since epoch)
+- end: Unix timestamp (seconds since epoch)
 - confidence: 0–1 (use high values 0.8-1.0 for clear time expressions)
 - rationale: brief string
 
@@ -140,8 +180,8 @@ async function postProcessNode(
   }
 
   // Fallback to last 12 months
-  const start = getDateYearsAgo(1);
-  const end = getCurrentDate();
+  const start = getTimestampYearsAgo(1);
+  const end = getCurrentTimestamp();
 
   return {
     result: {
@@ -197,8 +237,8 @@ export async function classifyTime(
     console.error("Error classifying time:", err);
 
     // Default fallback (last 12 months)
-    const start = getDateYearsAgo(1);
-    const end = getCurrentDate();
+    const start = getTimestampYearsAgo(1);
+    const end = getCurrentTimestamp();
 
     return {
       start,

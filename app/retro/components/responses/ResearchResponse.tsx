@@ -1,4 +1,5 @@
 import React from "react";
+import { Streamdown } from "streamdown";
 
 interface ResearchResponseProps {
   ragResponse: string;
@@ -16,9 +17,13 @@ export default function ResearchResponse({ ragResponse }: ResearchResponseProps)
 
       {/* Response Content */}
       <div className="border-2 border-[#7b6b4a] bg-[#e5d8b0] p-3 rounded-sm">
-        <div className="text-xs leading-relaxed text-[#2c1f18] whitespace-pre-wrap">
+        <Streamdown
+          className="retro-markdown"
+          controls={false}
+          parseIncompleteMarkdown={true}
+        >
           {ragResponse}
-        </div>
+        </Streamdown>
       </div>
     </div>
   );

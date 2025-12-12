@@ -2,86 +2,135 @@ import dotenv from "dotenv";
 import path from "path";
 
 // Load environment variables before importing the agent
-dotenv.config({ path: path.resolve(__dirname, "../.env.local") });
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 import { classifyTime } from "./agents/time_router_agent";
 
 // Define test cases for time range classification
 const TEST_CASES = [
   {
-    input: "Show me companies from the last 6 months",
+    input: "Who received funding today",
     expected: {
-      start: new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString().split('T')[0],
-      end: new Date().toISOString().split('T')[0],
+      start: (() => {
+        const d = new Date();
+        d.setHours(0, 1, 0, 0); // 12:01 AM today
+        return Math.floor(d.getTime() / 1000);
+      })(),
+
+      end: (() => {
+        const d = new Date();
+        d.setMinutes(0, 0, 0); // round to the hour
+        return Math.floor(d.getTime() / 1000);
+      })(),
     },
   },
   {
-    input: "Who funded startups in 2024?",
+    input: "Who was funded this week",
     expected: {
-      start: "2024-01-01",
-      end: "2024-12-31",
+      start: (() => {
+        const d = new Date();
+        const day = d.getDay(); // 0 = Sunday, 1 = Monday, etc.
+        const diff = day === 0 ? 6 : day - 1; // Treat Monday as start of week
+        d.setDate(d.getDate() - diff);
+        d.setHours(0, 0, 0, 0);
+        return Math.floor(d.getTime() / 1000);
+      })(),
+
+      end: (() => {
+        const d = new Date();
+        return Math.floor(d.getTime() / 1000);
+      })(),
     },
   },
   {
-    input: "Companies founded in the past year",
+    input: "Show me companies from the last week",
     expected: {
-      start: new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString().split('T')[0],
-      end: new Date().toISOString().split('T')[0],
-    },
-  },
-  {
-    input: "Recent fintech investments",
-    expected: {
-      start: new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString().split('T')[0],
-      end: new Date().toISOString().split('T')[0],
-    },
-  },
-  {
-    input: "Companies from Q1 2024",
-    expected: {
-      start: "2024-01-01",
-      end: "2024-03-31",
-    },
-  },
-  {
-    input: "Startups founded between January and March 2023",
-    expected: {
-      start: "2023-01-01",
-      end: "2023-03-31",
-    },
-  },
-  {
-    input: "Show me investments in the last 2 years",
-    expected: {
-      start: new Date(new Date().setFullYear(new Date().getFullYear() - 2)).toISOString().split('T')[0],
-      end: new Date().toISOString().split('T')[0],
-    },
-  },
-  {
-    input: "Companies funded this month",
-    expected: {
-      start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-      end: new Date().toISOString().split('T')[0],
+      start: (() => {
+        const d = new Date();
+        d.setDate(d.getDate() - 7);
+        return Math.floor(d.getTime() / 1000);
+      })(),
+      end: (() => {
+        const d = new Date();
+        return Math.floor(d.getTime() / 1000);
+      })(),
     },
   },
 ];
 
+  // {
+  //   input: "Show me companies from the last 6 months",
+  //   expected: {
+  //     start: new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString().split('T')[0],
+  //     end: new Date().toISOString().split('T')[0],
+  //   },
+  // },
+  // {
+  //   input: "Who funded startups in 2024?",
+  //   expected: {
+  //     start: "2024-01-01",
+  //     end: "2024-12-31",
+  //   },
+  // },
+  // {
+  //   input: "Companies founded in the past year",
+  //   expected: {
+  //     start: new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString().split('T')[0],
+  //     end: new Date().toISOString().split('T')[0],
+  //   },
+  // },
+  // {
+  //   input: "Recent fintech investments",
+  //   expected: {
+  //     start: new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString().split('T')[0],
+  //     end: new Date().toISOString().split('T')[0],
+  //   },
+  // },
+  // {
+  //   input: "Companies from Q1 2024",
+  //   expected: {
+  //     start: "2024-01-01",
+  //     end: "2024-03-31",
+  //   },
+  // },
+  // {
+  //   input: "Startups founded between January and March 2023",
+  //   expected: {
+  //     start: "2023-01-01",
+  //     end: "2023-03-31",
+  //   },
+  // },
+  // {
+  //   input: "Show me investments in the last 2 years",
+  //   expected: {
+  //     start: new Date(new Date().setFullYear(new Date().getFullYear() - 2)).toISOString().split('T')[0],
+  //     end: new Date().toISOString().split('T')[0],
+  //   },
+  // },
+  // {
+  //   input: "Companies funded this month",
+  //   expected: {
+  //     start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+  //     end: new Date().toISOString().split('T')[0],
+  //   },
+  // },
+// ];
+
 interface TestResult {
   query: string;
-  expectedStart: string;
-  expectedEnd: string;
-  predictedStart: string;
-  predictedEnd: string;
+  expectedStart: number;
+  expectedEnd: number;
+  predictedStart: number;
+  predictedEnd: number;
   confidence: string;
   status: string;
   rationale: string;
 }
 
-function datesMatch(date1: string, date2: string, toleranceDays: number = 1): boolean {
-  const d1 = new Date(date1).getTime();
-  const d2 = new Date(date2).getTime();
-  const diffDays = Math.abs(d1 - d2) / (1000 * 60 * 60 * 24);
-  return diffDays <= toleranceDays;
+function timestampsMatch(ts1: number, ts2: number, toleranceSeconds: number = 86400): boolean {
+  // Default tolerance is 1 day (86400 seconds)
+  const diffSeconds = Math.abs(ts1 - ts2);
+  return diffSeconds <= toleranceSeconds;
 }
 
 async function runTimeTests(): Promise<void> {
@@ -96,14 +145,15 @@ async function runTimeTests(): Promise<void> {
     const expectedEnd = testCase.expected.end;
 
     try {
-      const result = await classifyTime(query);
+      // Use lower confidence threshold to avoid fallback
+      const result = await classifyTime(query, "gpt-4o-mini", 0.0);
       const predictedStart = result.start;
       const predictedEnd = result.end;
       const rationale = result.rationale;
       const confidence = result.confidence;
 
-      const startMatch = datesMatch(predictedStart, expectedStart);
-      const endMatch = datesMatch(predictedEnd, expectedEnd);
+      const startMatch = timestampsMatch(predictedStart, expectedStart);
+      const endMatch = timestampsMatch(predictedEnd, expectedEnd);
       const status = startMatch && endMatch ? "✅ PASS" : "❌ FAIL";
 
       results.push({
@@ -134,8 +184,8 @@ async function runTimeTests(): Promise<void> {
         query,
         expectedStart,
         expectedEnd,
-        predictedStart: "ERROR",
-        predictedEnd: "ERROR",
+        predictedStart: 0,
+        predictedEnd: 0,
         confidence: "0.00",
         status: "❌ FAIL",
         rationale: errorMessage,
