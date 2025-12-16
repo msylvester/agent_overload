@@ -234,6 +234,9 @@ const workflow = new StateGraph({
 
 const app = workflow.compile();
 
+// Export the compiled graph for Mermaid diagram generation
+export { app };
+
 // ============================================================
 // PUBLIC API — same external signature as original
 // ============================================================

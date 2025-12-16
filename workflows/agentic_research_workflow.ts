@@ -203,6 +203,8 @@ const app = workflow.compile();
 // PUBLIC API
 // ============================================================
 
+export { app };
+
 export async function runResearchWorkflow(
   inputText: string,
   intent: "basic" | "research" | "time"
