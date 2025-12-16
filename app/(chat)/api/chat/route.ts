@@ -48,17 +48,36 @@ async function processWorkflowInBackground(
         let formattedText = "";
 
         if (temporalResponse?.time) {
-          // Convert Unix timestamps to readable dates
-          const startDate = new Date(temporalResponse.time.start * 1000).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          });
-          const endDate = new Date(temporalResponse.time.end * 1000).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          });
+          // Handle both ISO strings (from fromScratch.ts) and Unix timestamps (from legacy workflow)
+          let startDate: string;
+          let endDate: string;
+
+          if (typeof temporalResponse.time.start === 'string') {
+            // ISO string format (YYYY-MM-DD) from fromScratch.ts
+            startDate = new Date(temporalResponse.time.start).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+            endDate = new Date(temporalResponse.time.end).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+          } else {
+            // Unix timestamp (seconds) from legacy workflow
+            startDate = new Date(temporalResponse.time.start * 1000).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+            endDate = new Date(temporalResponse.time.end * 1000).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+          }
+
           formattedText += `**Time Period:** ${startDate} to ${endDate}\n\n`;
         }
 

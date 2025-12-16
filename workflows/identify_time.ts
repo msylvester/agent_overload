@@ -1,4 +1,4 @@
-import { classifyTime } from "./agents/time_agent";
+import { classifyTime } from "./fromScratch";
 
 // Define test cases for time range classification
 const TEST_CASES = [
@@ -56,6 +56,146 @@ const TEST_CASES = [
     expected: {
       start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
       end: new Date().toISOString().split('T')[0],
+    },
+  },
+  {
+    input: "Show me startups from Q2 2023",
+    expected: {
+      start: "2023-04-01",
+      end: "2023-06-30",
+    },
+  },
+  {
+    input: "Investments in the last 30 days",
+    expected: {
+      start: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
+      end: new Date().toISOString().split('T')[0],
+    },
+  },
+  {
+    input: "Companies founded in Q3 2024",
+    expected: {
+      start: "2024-07-01",
+      end: "2024-09-30",
+    },
+  },
+  {
+    input: "Ventures from Q4 2023",
+    expected: {
+      start: "2023-10-01",
+      end: "2023-12-31",
+    },
+  },
+  {
+    input: "Show me deals from the last 90 days",
+    expected: {
+      start: new Date(new Date().setDate(new Date().getDate() - 90)).toISOString().split('T')[0],
+      end: new Date().toISOString().split('T')[0],
+    },
+  },
+  {
+    input: "Startups founded in March 2024",
+    expected: {
+      start: "2024-03-01",
+      end: "2024-03-31",
+    },
+  },
+  {
+    input: "Companies from the last 18 months",
+    expected: {
+      start: new Date(new Date().setMonth(new Date().getMonth() - 18)).toISOString().split('T')[0],
+      end: new Date().toISOString().split('T')[0],
+    },
+  },
+  {
+    input: "Investments in 2023",
+    expected: {
+      start: "2023-01-01",
+      end: "2023-12-31",
+    },
+  },
+  {
+    input: "Show me companies from the past 3 years",
+    expected: {
+      start: new Date(new Date().setFullYear(new Date().getFullYear() - 3)).toISOString().split('T')[0],
+      end: new Date().toISOString().split('T')[0],
+    },
+  },
+  {
+    input: "Startups founded in December 2023",
+    expected: {
+      start: "2023-12-01",
+      end: "2023-12-31",
+    },
+  },
+  {
+    input: "Companies from the last 7 days",
+    expected: {
+      start: new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split('T')[0],
+      end: new Date().toISOString().split('T')[0],
+    },
+  },
+  {
+    input: "Ventures funded in the past 5 years",
+    expected: {
+      start: new Date(new Date().setFullYear(new Date().getFullYear() - 5)).toISOString().split('T')[0],
+      end: new Date().toISOString().split('T')[0],
+    },
+  },
+  {
+    input: "Show me investments from January to June 2024",
+    expected: {
+      start: "2024-01-01",
+      end: "2024-06-30",
+    },
+  },
+  {
+    input: "Companies founded this year",
+    expected: {
+      start: `${new Date().getFullYear()}-01-01`,
+      end: new Date().toISOString().split('T')[0],
+    },
+  },
+  {
+    input: "Startups from the last quarter",
+    expected: {
+      start: new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString().split('T')[0],
+      end: new Date().toISOString().split('T')[0],
+    },
+  },
+  {
+    input: "Companies funded in April 2023",
+    expected: {
+      start: "2023-04-01",
+      end: "2023-04-30",
+    },
+  },
+  {
+    input: "Show me deals from the last 60 days",
+    expected: {
+      start: new Date(new Date().setDate(new Date().getDate() - 60)).toISOString().split('T')[0],
+      end: new Date().toISOString().split('T')[0],
+    },
+  },
+  {
+    input: "Investments between July and September 2024",
+    expected: {
+      start: "2024-07-01",
+      end: "2024-09-30",
+    },
+  },
+  {
+    input: "Companies from the first half of 2024",
+    expected: {
+      start: "2024-01-01",
+      end: "2024-06-30",
+    },
+  },
+  {
+    input: "Show me startups from the second half of 2023",
+    expected: {
+      start: "2023-07-01",
+      end: "2023-12-31",
     },
   },
 ];

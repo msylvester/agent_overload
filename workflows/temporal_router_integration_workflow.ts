@@ -40,6 +40,25 @@ const SummarizeResultsSchema = z.object({
 });
 
 // ----------------------------
+// Validation Schemas
+// ----------------------------
+
+const TimestampValidationSchema = z.object({
+  startDate: z.string(),
+  endDate: z.string(),
+  startTimestamp: z.number(),
+  endTimestamp: z.number(),
+  isValid: z.boolean(),
+  validationErrors: z.array(z.string()),
+});
+
+const VerificationResultSchema = z.object({
+  isValid: z.boolean(),
+  errors: z.array(z.string()),
+  warnings: z.array(z.string()),
+});
+
+// ----------------------------
 // LLM (OpenRouter)
 // ----------------------------
 
@@ -50,6 +69,67 @@ function llm(model: string = "gpt-4o") {
     temperature: 0.0,
     configuration: { baseURL: "https://openrouter.ai/api/v1" },
   });
+}
+
+// ----------------------------
+// Timestamp Validation Helper
+// ----------------------------
+
+function validateTimestamps(
+  start: number,
+  end: number
+): { isValid: boolean; errors: string[]; startDate: string; endDate: string } {
+  const errors: string[] = [];
+
+  // Convert to dates
+  const startDate = new Date(start * 1000);
+  const endDate = new Date(end * 1000);
+
+  // Validation 1: Check if timestamps are valid numbers
+  if (isNaN(start) || isNaN(end)) {
+    errors.push("Invalid timestamp: start or end is NaN");
+  }
+
+  // Validation 2: Check if dates are valid
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    errors.push(
+      `Invalid date conversion: start=${start}, end=${end}, ` +
+      `startDate=${startDate}, endDate=${endDate}`
+    );
+  }
+
+  // Validation 3: Check if start < end
+  if (startDate >= endDate) {
+    errors.push(
+      `Start date (${startDate.toISOString()}) must be before ` +
+      `end date (${endDate.toISOString()})`
+    );
+  }
+
+  // Validation 4: Check reasonable date range (not before 1970 or too far in future)
+  const MIN_TIMESTAMP = 0; // Jan 1, 1970
+  const MAX_TIMESTAMP = 4102444800; // Jan 1, 2100
+
+  if (start < MIN_TIMESTAMP || start > MAX_TIMESTAMP) {
+    errors.push(
+      `Start timestamp ${start} (${startDate.toISOString()}) is outside ` +
+      `reasonable range (1970-2100)`
+    );
+  }
+
+  if (end < MIN_TIMESTAMP || end > MAX_TIMESTAMP) {
+    errors.push(
+      `End timestamp ${end} (${endDate.toISOString()}) is outside ` +
+      `reasonable range (1970-2100)`
+    );
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    startDate: startDate.toISOString(),
+    endDate: endDate.toISOString(),
+  };
 }
 
 // ----------------------------
@@ -71,18 +151,37 @@ async function temporalNode(state: {
   time: any;
 }) {
   if (!state.time) {
-    return { results: null };
+    console.warn("⚠️ No time classification found - returning null results");
+    return { results: null, validationErrors: ["No time classification provided"] };
   }
 
   const { start, end } = state.time;
 
-  // Convert Unix timestamps (seconds) to ISO date strings
-  const startDate = new Date(start * 1000).toISOString();
-  const endDate = new Date(end * 1000).toISOString();
+  // CRITICAL: Validate timestamp conversion before proceeding
+  const validation = validateTimestamps(start, end);
 
-  const temporalResults = await getTemporal(state.inputText, startDate, endDate);
+  if (!validation.isValid) {
+    console.error("❌ Timestamp validation failed:", validation.errors);
+    return {
+      results: null,
+      validationErrors: validation.errors
+    };
+  }
 
-  return { results: temporalResults };
+  console.log(
+    `✓ Timestamp validation passed: ${validation.startDate} to ${validation.endDate}`
+  );
+
+  const temporalResults = await getTemporal(
+    state.inputText,
+    validation.startDate,
+    validation.endDate
+  );
+
+  return {
+    results: temporalResults,
+    validationErrors: []
+  };
 }
 
 // ----------------------------
@@ -126,6 +225,84 @@ ${state.results.inference}
 }
 
 // ----------------------------
+// Node 4 — Final Verification
+// ----------------------------
+
+async function verificationNode(state: {
+  time: any;
+  results: { companies: string[]; inference: string } | null;
+  validationErrors?: string[];
+}) {
+  const errors: string[] = [...(state.validationErrors || [])];
+  const warnings: string[] = [];
+
+  // Verification 1: Check if we have time classification
+  if (!state.time) {
+    errors.push("Missing time classification in final output");
+  } else {
+    // Verify time fields are reasonable
+    if (state.time.confidence < 0.3) {
+      warnings.push(
+        `Low confidence time extraction (${state.time.confidence.toFixed(2)})`
+      );
+    }
+  }
+
+  // Verification 2: Check if we have results
+  if (!state.results) {
+    errors.push("No temporal results found - workflow returned null");
+  } else {
+    // Verify results content
+    if (!state.results.companies || state.results.companies.length === 0) {
+      warnings.push("No companies found in temporal search results");
+    }
+
+    if (!state.results.inference || state.results.inference.trim().length === 0) {
+      errors.push("Inference summary is empty or missing");
+    }
+
+    // Verify inference quality (basic checks)
+    if (state.results.inference && state.results.inference.length < 50) {
+      warnings.push(
+        `Inference summary is very short (${state.results.inference.length} chars) - ` +
+        `may be incomplete`
+      );
+    }
+  }
+
+  // Verification 3: Check workflow state consistency
+  if (state.time && !state.results) {
+    errors.push(
+      "Inconsistent state: time classification succeeded but temporal search failed"
+    );
+  }
+
+  const isValid = errors.length === 0;
+
+  if (!isValid) {
+    console.error("❌ Final verification failed:");
+    errors.forEach(e => console.error(`  - ${e}`));
+  }
+
+  if (warnings.length > 0) {
+    console.warn("⚠️ Verification warnings:");
+    warnings.forEach(w => console.warn(`  - ${w}`));
+  }
+
+  if (isValid && warnings.length === 0) {
+    console.log("✓ Final verification passed");
+  }
+
+  return {
+    verificationResult: {
+      isValid,
+      errors,
+      warnings,
+    },
+  };
+}
+
+// ----------------------------
 // Build LangGraph Workflow
 // ----------------------------
 
@@ -134,17 +311,24 @@ const workflow = new StateGraph({
     inputText: "string",
     time: z.any().nullable(),
     results: z.any().nullable(),
+    validationErrors: z.any().nullable(),
+    verificationResult: z.any().nullable(),
   },
 })
   .addNode("timeExtractor", timeNode)
   .addNode("temporalAnalysis", temporalNode)
   .addNode("summarizer", summaryNode)
+  .addNode("verification", verificationNode)
   .addEdge(START, "timeExtractor")
   .addEdge("timeExtractor", "temporalAnalysis")
   .addEdge("temporalAnalysis", "summarizer")
-  .addEdge("summarizer", END);
+  .addEdge("summarizer", "verification")
+  .addEdge("verification", END);
 
 const app = workflow.compile();
+
+// Export for Mermaid diagram generation
+export { app };
 
 // ----------------------------
 // PUBLIC API — same signature as original
@@ -157,8 +341,32 @@ export async function temporalIntent(
     inputText: input_text,
   });
 
+  // Check verification results
+  const verification = result.verificationResult as { isValid: boolean; errors: string[]; warnings: string[] } | null;
+
+  if (verification && !verification.isValid) {
+    console.error("❌ Workflow verification failed:");
+    verification.errors.forEach((e: string) =>
+      console.error(`  - ${e}`)
+    );
+
+    // Fail-fast strategy: throw error to force caller to handle
+    throw new Error(
+      `Temporal workflow verification failed: ${verification.errors.join('; ')}`
+    );
+  }
+
+  // Log warnings even if verification passed
+  if (verification && verification.warnings.length > 0) {
+    console.warn("⚠️ Verification warnings (non-blocking):");
+    verification.warnings.forEach((w: string) =>
+      console.warn(`  - ${w}`)
+    );
+  }
+
   return {
     time: result.time,
     results: result.results,
+    verificationResult: result.verificationResult,
   };
 }
