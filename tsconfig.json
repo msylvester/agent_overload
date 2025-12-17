@@ -30,5 +30,22 @@
     ".next/types/**/*.ts",
     "next.config.js"
   ],
-  "exclude": ["node_modules", "tests", "playwright.config.ts", "**/*.test.ts", "**/*.spec.ts"]
+  "exclude": [
+    "node_modules",
+    "tests",
+    "playwright.config.ts",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "web_yt_vid/langgraph",
+    "web_yt_vid/test_*.ts",
+    "workflows/agentic_three_rag.ts",
+    "workflows/agentic_two_rag.ts",
+    "workflows/*_harness.ts",
+    "workflows/identify_time.ts",
+    "workflows/newScratchHarness.ts",
+    "workflows/fromScratch_working.ts",
+    "workflows/rag_router_agent.ts",
+    "workflows/research_workflow.ts",
+    "workflows/mermaid_run.ts"
+  ]
 }

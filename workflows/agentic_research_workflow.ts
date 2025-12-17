@@ -36,6 +36,15 @@ function llm(model: string = "gpt-4o-mini") {
 // SCHEMAS
 // ============================================================
 
+// Define the workflow state interface
+interface WorkflowState {
+  query: string;
+  intent: string;
+  basicResponse?: string;
+  ragResults?: string;
+  temporalResponse?: any;
+}
+
 // RagCompanySchema removed - no longer needed with new agentic RAG
 
 const WorkflowOutputSchema = z.object({
@@ -153,17 +162,28 @@ async function routerNode(state: { intent: string }) {
 // WORKFLOW ORCHESTRATION
 // ============================================================
 
-const workflow = new StateGraph({
+const workflow = new StateGraph<WorkflowState>({
   channels: {
-    query: "string",
-    intent: "string",
-
-    basicResponse: z.string().optional(),
-
-    ragResults: z.string().optional(),  // Changed from z.any() - now a string
-    // webResults: z.any().optional(),  // REMOVED - not used anymore
-
-    temporalResponse: z.any().optional(),
+    query: {
+      value: (left?: string, right?: string) => right ?? left ?? "",
+      default: () => "",
+    },
+    intent: {
+      value: (left?: string, right?: string) => right ?? left ?? "",
+      default: () => "",
+    },
+    basicResponse: {
+      value: (left?: string, right?: string) => right ?? left,
+      default: () => undefined,
+    },
+    ragResults: {
+      value: (left?: string, right?: string) => right ?? left,
+      default: () => undefined,
+    },
+    temporalResponse: {
+      value: (left?: any, right?: any) => right ?? left,
+      default: () => undefined,
+    },
   },
 })
   .addNode("router", routerNode)
