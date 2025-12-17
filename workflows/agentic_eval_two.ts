@@ -6,8 +6,7 @@
  */
 
 import { buildGraph, invokeGraph } from "../web_yt_vid/agentic_two_rag.js";
-import type { AgentState } from "../web_yt_vid/agentic_three_rag.js";
-import type { CompiledStateGraph } from "@langchain/langgraph";
+import type { AgentState } from "../web_yt_vid/agentic_two_rag.js";
 import { HumanMessage } from "@langchain/core/messages";
 
 // ============================================================================
@@ -95,7 +94,7 @@ function checkKeywords(answer: string, keywords: string[]): {
 }
 
 async function evaluateQuery(
-  graph: CompiledStateGraph<AgentState>,
+  graph: Awaited<ReturnType<typeof buildGraph>>,
   testCase: TestCase
 ): Promise<{
   passed: boolean;

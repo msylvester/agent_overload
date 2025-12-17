@@ -49,8 +49,8 @@ async function processWorkflowInBackground(
 
         if (temporalResponse?.time) {
           // Handle both ISO strings (from fromScratch.ts) and Unix timestamps (from legacy workflow)
-          let startDate: string;
-          let endDate: string;
+          let startDate: string = '';
+          let endDate: string = '';
 
           if (typeof temporalResponse.time.start === 'string') {
             // ISO string format (YYYY-MM-DD) from fromScratch.ts
@@ -64,7 +64,7 @@ async function processWorkflowInBackground(
               month: 'long',
               day: 'numeric'
             });
-          } else {
+          } else if (typeof temporalResponse.time.start === 'number' && typeof temporalResponse.time.end === 'number') {
             // Unix timestamp (seconds) from legacy workflow
             startDate = new Date(temporalResponse.time.start * 1000).toLocaleDateString('en-US', {
               year: 'numeric',
@@ -78,7 +78,9 @@ async function processWorkflowInBackground(
             });
           }
 
-          formattedText += `**Time Period:** ${startDate} to ${endDate}\n\n`;
+          if (startDate && endDate) {
+            formattedText += `**Time Period:** ${startDate} to ${endDate}\n\n`;
+          }
         }
 
         if (temporalResponse?.results?.companies && temporalResponse.results.companies.length > 0) {
