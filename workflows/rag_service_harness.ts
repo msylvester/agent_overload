@@ -4,8 +4,7 @@
  * Standalone test runner for the RAG service agent.
  * Run with: pnpm tsx workflows/rag_service_harness.ts
  */
-
-import { buildGraph, invokeGraph } from "../web_yt_vid/agentic_two_rag.js";
+import { buildGraph, invokeGraph } from "./agentic_two_rag.js";
 // If you actually need these, you can use them; otherwise remove.
 // import type { AgentState } from "./agentic_two_rag.js";
 // import type { CompiledStateGraph } from "@langchain/langgraph";
