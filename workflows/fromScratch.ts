@@ -11,7 +11,7 @@ dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
 import { StateGraph, END } from "@langchain/langgraph";
-import { ResponseItem, getTemporal } from './agents/temporal_router_agent.ts';
+import { ResponseItem, getTemporal } from './agents/temporal_router_agent';
 
 /* ============================
    SCHEMA & TYPES
@@ -827,7 +827,7 @@ function routeAfterValidation(state: TimeExtractionState): 'finalize' | 'retry' 
    GRAPH
 ============================ */
 
-const agenticGraph = new StateGraph<TimeExtractionState>({
+const agenticGraph: any = new StateGraph<TimeExtractionState>({
   channels: {
     query: { value: null },
     model: { value: null },
@@ -848,7 +848,7 @@ const agenticGraph = new StateGraph<TimeExtractionState>({
     maxAttempts: { value: null },
     finalResult: { value: null },
   },
-});
+} as any);
 
 agenticGraph.addNode("extract", extractNode);
 agenticGraph.addNode("validate", validateNode);

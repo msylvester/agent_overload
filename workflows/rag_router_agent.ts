@@ -150,7 +150,7 @@ ${RAGQueryResponseSchema.toString()}
       response_format: zodResponseFormat(
         RAGQueryResponseSchema,
         "rag_output"
-      ),
+      ) as any,
     }
   );
 

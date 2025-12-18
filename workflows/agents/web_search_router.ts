@@ -117,7 +117,7 @@ ${WebResearchOutputSchema.toString()}
       response_format: zodResponseFormat(
         WebResearchOutputSchema,
         "web_research"
-      ),
+      ) as any,
     }
   );
 
@@ -136,10 +136,10 @@ ${WebResearchOutputSchema.toString()}
 const workflow = new StateGraph({
   channels: {
     companyNames: z.array(z.string()),
-    searchResults: z.record(z.array(z.any())),
-    companies: z.array(CompanyDetailsSchema),
+    searchResults: z.record(z.array(z.any())).nullable(),
+    companies: z.array(CompanyDetailsSchema).nullable(),
   },
-})
+} as any)
   .addNode("search", tavilySearchNode)
   .addNode("extract", llmExtractionNode)
 
@@ -163,6 +163,4 @@ export async function researchCompanies(
     companies: result.companies,
   };
 }
-
-export type { WebResearchAgentOutput, CompanyDetails };
 

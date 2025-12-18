@@ -20,7 +20,7 @@ import { buildGraph, invokeGraph } from "./agentic_two_rag";
 // WEB RESEARCH - Commented out (not used in current workflow)
 // import { researchCompanies, WebResearchAgentOutput } from "./agents/web_search_router";
 
-import { temporalIntent, TemporalOutput } from "./temporal_router_integration_workflow";
+import { temporalIntent } from "./temporal_router_integration_workflow";
 
 // ============================================================
 // LLM FOR BASIC RESPONSES (OpenRouter)

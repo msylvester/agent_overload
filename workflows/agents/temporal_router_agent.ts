@@ -195,7 +195,7 @@ Extract trends and produce final analysis.
       response_format: zodResponseFormat(
         TemporalAnalysisSchema,
         "temporal_analysis"
-      ),
+      ) as any,
     }
   );
 
@@ -211,21 +211,21 @@ Extract trends and produce final analysis.
 
 const workflow = new StateGraph({
   channels: {
-    query: "string",
-    startDate: "string",
-    endDate: "string",
-    domain: "string",
-    limit: "number",
-    model: "string",
+    query: z.string(),
+    startDate: z.string(),
+    endDate: z.string(),
+    domain: z.string(),
+    limit: z.number(),
+    model: z.string(),
 
     toolResult: z.object({
       companies: z.array(z.string()),
       details: z.array(z.any()),
-    }),
+    }).nullable(),
 
-    result: TemporalAnalysisSchema,
+    result: TemporalAnalysisSchema.nullable(),
   },
-})
+} as any)
   .addNode("search", temporalSearchNode)
   .addNode("analyze", analysisNode)
   .addEdge(START, "search")

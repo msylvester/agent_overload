@@ -254,13 +254,13 @@ async function postProcessNode(
 
 const workflow = new StateGraph({
   channels: {
-    query: "string",
-    model: "string",
-    minConfidence: "number",
-    extracted: TimeClassificationSchema,
-    result: TimeClassificationSchema,
+    query: z.string(),
+    model: z.string(),
+    minConfidence: z.number(),
+    extracted: TimeClassificationSchema.nullable(),
+    result: TimeClassificationSchema.nullable(),
   },
-})
+} as any)
   .addNode("extract", extractionNode)
   .addNode("postProcess", postProcessNode)
   .addEdge("extract", "postProcess")
