@@ -8,7 +8,7 @@ import type { TemporalOutput } from './temporal_integration_workflow';
 import { runResearchWorkflow } from './agentic_research_workflow';
 
 export interface OrchFlowOutput {
-  classifyResponse?: 'time' | 'basic' | 'research';
+  classifyResponse?: 'time' | 'basic' | 'research' | 'advice';
   basicResponse?: string;
   temporalResponse?: TemporalOutput;
   ragResults?: string;

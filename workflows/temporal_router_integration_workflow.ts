@@ -210,7 +210,7 @@ ${state.results.inference}
       response_format: zodResponseFormat(
         SummarizeResultsSchema,
         "summarize_results"
-      ),
+      ) as any,
     }
   );
 
@@ -308,13 +308,13 @@ async function verificationNode(state: {
 
 const workflow = new StateGraph({
   channels: {
-    inputText: "string",
+    inputText: z.string(),
     time: z.any().nullable(),
     results: z.any().nullable(),
     validationErrors: z.any().nullable(),
     verificationResult: z.any().nullable(),
   },
-})
+} as any)
   .addNode("timeExtractor", timeNode)
   .addNode("temporalAnalysis", temporalNode)
   .addNode("summarizer", summaryNode)
