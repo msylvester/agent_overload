@@ -12,7 +12,10 @@ import { zodResponseFormat } from "openai/helpers/zod";
 // import { runRagQuery, RAGQueryResponse } from "./rag_router_agent";
 
 // NEW: Agentic RAG using LangGraph, MongoDB Atlas, and OpenRouter
-import { buildGraph, invokeGraph } from "../web_yt_vid/agentic_two_rag";
+
+import { buildGraph, invokeGraph } from "./agentic_two_rag";
+
+
 
 // WEB RESEARCH - Commented out (not used in current workflow)
 // import { researchCompanies, WebResearchAgentOutput } from "./agents/web_search_router";

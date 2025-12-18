@@ -5,8 +5,8 @@
  * Evaluates retrieval quality and answer generation
  */
 
-import { buildGraph, invokeGraph } from "../web_yt_vid/agentic_two_rag.js";
-import type { AgentState } from "../web_yt_vid/agentic_two_rag.js";
+import { buildGraph, invokeGraph } from "./agentic_two_rag.js";
+import type { AgentState } from "./agentic_two_rag.js";
 import { HumanMessage } from "@langchain/core/messages";
 
 // ============================================================================

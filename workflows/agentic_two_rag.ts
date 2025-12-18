@@ -23,13 +23,9 @@
 
 import "dotenv/config";
 import { ChatOpenAI } from "@langchain/openai";
-
 import { MongoClient } from "mongodb";
 import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
-
-//import { createRetrieverTool } from "langchain/tools/retriever";
-
-import { createRetrieverTool } from "@langchain/core/tools";
+import { tool } from "@langchain/core/tools";
 import { StateGraph, END, START } from "@langchain/langgraph";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import {
@@ -101,8 +97,6 @@ const graphState = {
  * Chat client using OpenRouter via the OpenAI-compatible Chat API.
  * Uses @langchain/openai's ChatOpenAI, but points it at OpenRouter.
  */
-// import { ChatAnthropic } from "@langchain/anthropic";
-
 function createOpenRouterClient(model: string, temperature = 0) {
   if (!OPENROUTER_API_KEY) {
     throw new Error("OPENROUTER_API_KEY environment variable is not set");
@@ -124,7 +118,6 @@ function createOpenRouterClient(model: string, temperature = 0) {
   );
 }
 
-
 /**
  * Custom Embeddings implementation using OpenRouter's Embeddings API.
  *
@@ -136,7 +129,7 @@ class OpenRouterEmbeddings extends Embeddings {
   private apiKey: string;
 
   constructor(model: string) {
-    super();
+    super({});
     this.model = model;
     this.baseURL = `${OPENROUTER_BASE_URL}/embeddings`;
     this.apiKey = OPENROUTER_API_KEY;
@@ -249,7 +242,7 @@ async function setupRetriever() {
 
   // Create vector store instance for retrieval
   const vectorStoreInstance = new MongoDBAtlasVectorSearch(embeddings, {
-    collection,
+    collection: collection as any,
     indexName: MONGODB_INDEX_NAME,
     textKey: MONGODB_TEXT_FIELD,
     embeddingKey: MONGODB_VECTOR_FIELD,
@@ -341,12 +334,12 @@ async function retrieveNode(state: AgentState, _config?: RunnableConfig) {
   const formattedDocs = docs
     .map((doc) => {
       const { companyName = "Untitled Company",
-        title= "", 
-        sector = "", 
-        source = "", 
-        funding = "" 
-      } = doc.metadata || {};  
-         
+        title= "",
+        sector = "",
+        source = "",
+        funding = ""
+      } = doc.metadata || {};
+
         /*
       const companyName = doc.metadata.company_name || "Unknown Company";
       const title = doc.metadata.title || "";
@@ -409,14 +402,17 @@ async function rewriteNode(state: AgentState, _config?: RunnableConfig) {
   const messages = state.messages;
   const question = messages[0].content;
 
-  console.log("[REWRITE] Original query:", question);
+  // Convert question to string if it's not already
+  const questionString = typeof question === 'string' ? question : JSON.stringify(question);
+
+  console.log("[REWRITE] Original query:", questionString);
 
   const msg = new HumanMessage({
     content: `You are optimizing a search query for a vector database of company profiles and descriptions.
 
 Original user question:
 -------
-${question}
+${questionString}
 -------
 
 Rewrite this as a single, explicit search query that:
@@ -448,6 +444,10 @@ async function generateNode(state: AgentState, _config?: RunnableConfig) {
 
   const docs = (lastMessage as any).content;
 
+  // Convert docs and question to string if they're not already
+  const docsString = typeof docs === 'string' ? docs : JSON.stringify(docs);
+  const questionString = typeof question === 'string' ? question : JSON.stringify(question);
+
   // RAG prompt template
   const prompt = PromptTemplate.fromTemplate(
     `You are an assistant for question-answering tasks about companies and their businesses.
@@ -470,8 +470,8 @@ Answer:`
 
   // Generate response
   const response = await ragChain.invoke({
-    context: docs,
-    question: question,
+    context: docsString,
+    question: questionString,
   });
 
   return { messages: [new AIMessage(response)] };
@@ -522,6 +522,10 @@ Give a binary score 'yes' or 'no' to indicate whether the document is relevant t
   const question = messages[0].content;
   const docs = (lastMessage as any).content ?? "";
 
+  // Convert question and docs to string if they're not already
+  const questionString = typeof question === 'string' ? question : JSON.stringify(question);
+  const docsString = typeof docs === 'string' ? docs : JSON.stringify(docs);
+
   // Log what was retrieved
   console.log("\n[RETRIEVED] Documents retrieved from vector search:");
   if (typeof docs === "string") {
@@ -535,7 +539,7 @@ Give a binary score 'yes' or 'no' to indicate whether the document is relevant t
   console.log("");
 
   // If somehow docs are empty/undefined, avoid loops by just generating
-  if (!docs || (typeof docs === "string" && docs.trim().length === 0)) {
+  if (!docsString || docsString.trim().length === 0) {
     console.log(
       "[GRADE] No documents retrieved (empty context) → forcing GENERATE"
     );
@@ -543,8 +547,8 @@ Give a binary score 'yes' or 'no' to indicate whether the document is relevant t
   }
 
   const scoredResult = await chain.invoke({
-    question,
-    context: docs,
+    question: questionString,
+    context: docsString,
   });
 
   const score = scoredResult.binaryScore;
@@ -585,17 +589,24 @@ export async function buildGraph() {
   const { retriever, vectorStore: vs } = await setupRetriever();
   vectorStore = vs;
 
-  //
-  // Modern LangChain v0.2+:
-  // Retrievers ARE tools. No createRetrieverTool() wrapper needed.
-  //
-  retriever.name = "retrieve_company_info";
-  retriever.description =
-    "Search and return information about companies in the database. " +
-    "Use this to find company descriptions, sectors, funding information, " +
-    "technology details, and business focus areas. Returns relevant profiles.";
+  // Create retriever tool using the new tool() function (langchain v1.x)
+  retrieverTool = tool(
+    async (input: { query: string }) => {
+      const docs = await retriever.invoke(input.query);
+      return docs.map(doc => doc.pageContent).join("\n\n");
+    },
+    {
+      name: "retrieve_company_info",
+      description:
+        "Search and return information about companies in the database. " +
+        "Use this to find company descriptions, sectors, funding information, " +
+        "technology details, and business focus areas. Returns relevant company profiles based on the query.",
+      schema: z.object({
+        query: z.string().describe("The search query to find relevant company information"),
+      }),
+    }
+  );
 
-  retrieverTool = retriever;
   tools = [retrieverTool];
 
   // Create the graph
@@ -607,31 +618,30 @@ export async function buildGraph() {
   workflow.addNode("rewrite", rewriteNode);
   workflow.addNode("generate", generateNode);
 
-  // Agent starts first
-  workflow.addEdge(START, "agent");
+  // Add edges
+  workflow.addEdge(START as any, "agent" as any);
 
-  // After agent decision:
-  // - tool_calls → retrieve
-  // - otherwise → END
-  workflow.addConditionalEdges("agent", routeAfterAgent, {
+  // Conditional edge from agent
+  workflow.addConditionalEdges("agent" as any, routeAfterAgent as any, {
     tools: "retrieve",
-    [END]: END,
-  });
+    [END as any]: END as any,
+  } as any);
 
-  // After retrieve:
-  // gradeDocuments → "generate" or "rewrite"
-  workflow.addConditionalEdges("retrieve", gradeDocuments, {
+  // Conditional edge from retrieve:
+  // - "generate" → generate answer
+  // - "rewrite"  → rewrite then generate (no loop back to agent)
+  workflow.addConditionalEdges("retrieve" as any, gradeDocuments as any, {
     generate: "generate",
     rewrite: "rewrite",
-  });
+  } as any);
 
-  // Generate ends the workflow
-  workflow.addEdge("generate", END);
+  // After generation, end
+  workflow.addEdge("generate" as any, END as any);
 
-  // Rewrite → generate (single pass, no loops)
-  workflow.addEdge("rewrite", "generate");
+  // After rewrite, go directly to generate
+  workflow.addEdge("rewrite" as any, "generate" as any);
 
-  // Compile state graph into runnable computation pipeline
+  // Compile the graph
   return workflow.compile();
 }
 
