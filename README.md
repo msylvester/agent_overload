@@ -9,6 +9,7 @@
 
 <p align="center">
   <a href="https://chat-sdk.dev"><strong>Read Docs</strong></a> ·
+  <a href="#agents"><strong>Agents</strong></a> ·
   <a href="#features"><strong>Features</strong></a> ·
   <a href="#model-providers"><strong>Model Providers</strong></a> ·
   <a href="#deploy-your-own"><strong>Deploy Your Own</strong></a> ·
@@ -16,7 +17,20 @@
 </p>
 <br/>
 
-## Features
+## 🤖 Agents
+
+This SDK includes three specialized AI agents:
+
+### Basic Agent
+Standard conversational AI for general-purpose chat and question answering.
+
+### ⏰ Temporal Agent
+Time-aware agent that handles scheduling, reminders, and time-sensitive queries with built-in temporal reasoning.
+
+### 📚 Agentic RAG
+Retrieval-Augmented Generation agent that searches and synthesizes information from your knowledge base for accurate, sourced responses.
+
+## ✨ Features
 
 - [Next.js](https://nextjs.org) App Router
   - Advanced routing for seamless navigation and performance
@@ -34,7 +48,7 @@
 - [Auth.js](https://authjs.dev)
   - Simple and secure authentication
 
-## Model Providers
+## 🔌 Model Providers
 
 This template uses the [Vercel AI Gateway](https://vercel.com/docs/ai-gateway) to access multiple AI models through a unified interface. The default configuration includes [xAI](https://x.ai) models (`grok-2-vision-1212`, `grok-3-mini`) routed through the gateway.
 
@@ -46,13 +60,13 @@ This template uses the [Vercel AI Gateway](https://vercel.com/docs/ai-gateway) t
 
 With the [AI SDK](https://ai-sdk.dev/docs/introduction), you can also switch to direct LLM providers like [OpenAI](https://openai.com), [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), and [many more](https://ai-sdk.dev/providers/ai-sdk-providers) with just a few lines of code.
 
-## Deploy Your Own
+## 🚀 Deploy Your Own
 
 You can deploy your own version of the Next.js AI Chatbot to Vercel with one click:
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/templates/next.js/nextjs-ai-chatbot)
 
-## Running locally
+## 💻 Running locally
 
 You will need to use the environment variables [defined in `.env.example`](.env.example) to run Next.js AI Chatbot. It's recommended you use [Vercel Environment Variables](https://vercel.com/docs/projects/environment-variables) for this, but a `.env` file is all that is necessary.
 
