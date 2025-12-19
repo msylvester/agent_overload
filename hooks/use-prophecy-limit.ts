@@ -5,6 +5,7 @@ import { useLocalStorageSafe } from "./use-local-storage-safe";
 
 const PROPHECY_LIMIT = 5;
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+const DEV_MODE = process.env.NEXT_PUBLIC_DEV_MODE === "true";
 
 interface ProphecyData {
   count: number;
@@ -32,8 +33,8 @@ export function useProphecyLimit() {
   }, [data]);
 
   const prophecyCount = currentData.count;
-  const isLimitReached = prophecyCount >= PROPHECY_LIMIT;
-  const remainingProphecies = Math.max(0, PROPHECY_LIMIT - prophecyCount);
+  const isLimitReached = DEV_MODE ? false : prophecyCount >= PROPHECY_LIMIT;
+  const remainingProphecies = DEV_MODE ? 999 : Math.max(0, PROPHECY_LIMIT - prophecyCount);
 
   const incrementProphecy = useCallback(() => {
     setData((prev) => {

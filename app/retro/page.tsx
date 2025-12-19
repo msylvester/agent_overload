@@ -4,6 +4,7 @@ import Image from "next/image";
 import ProfileImage from './components/ProfileImage';
 import ScrollablePane from "./components/ScrollablePane";
 import { useRetroChat } from "@/hooks/use-retro-chat";
+import { useProphecyLimit } from "@/hooks/use-prophecy-limit";
 import type { ChatMessage } from "@/lib/types";
 import BasicResponse from "./components/responses/BasicResponse";
 import ResearchResponse from "./components/responses/ResearchResponse";
@@ -63,6 +64,7 @@ export default function KrystalBallZ() {
   const [input, setInput] = useState("");
   const [type, setType ] = useState("/fortune.png");
   const { sendMessage, response, error, isLoading, reset } = useRetroChat();
+  const { prophecyCount, incrementProphecy, isLimitReached, remainingProphecies } = useProphecyLimit();
 
   // Handle responses from the API
 useEffect(() => {
@@ -103,6 +105,19 @@ useEffect(() => {
 
     if (!input.trim()) return;
 
+    // Check rate limit before sending
+    if (isLimitReached) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          sender: "system",
+          content: <BasicResponse text="THE FATES HAVE SPOKEN... YOU HAVE REACHED YOUR DAILY LIMIT OF 5 PROPHECIES. RETURN WHEN THE SUN RISES ANEW." />,
+        },
+      ]);
+      return;
+    }
+
     const userText = input.trim();
     setInput("");
 
@@ -119,6 +134,8 @@ useEffect(() => {
     // Send to API
     try {
       await sendMessage(userText);
+      // Increment prophecy count on successful send
+      incrementProphecy();
     } catch (err) {
       // Error will be handled by the useEffect above
       console.error("Failed to send message:", err);
@@ -160,7 +177,7 @@ useEffect(() => {
             */}
             <div className="flex items-center gap-1.5">
               <span className="text-[#f8f8f0] mr-1">PROPHECIES</span>
-              <span className="min-w-4 text-right">{messages.filter(m => m.sender === "system").length}</span>
+              <span className="min-w-4 text-right">{remainingProphecies}/5</span>
             </div>
             {/*
             <div className="flex items-center gap-1.5">
@@ -229,7 +246,8 @@ useEffect(() => {
             <div className="flex gap-1.5 sm:justify-end">
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isLimitReached}
+                title={isLimitReached ? "Daily prophecy limit reached" : undefined}
               className="
     border-2 border-[#555555]
     bg-[linear-gradient(#373737,#181818)]
