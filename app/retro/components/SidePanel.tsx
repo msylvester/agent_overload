@@ -69,20 +69,20 @@ export default function SidePanel() {
       {/* About the Creator */}
       <SidePanelSection title="About the Creator">
         <div className="flex flex-col gap-1">
-          <LinkItem href="https://twitch.tv/mikress">
-            Twitch
-          </LinkItem>
-          <LinkItem href="https://github.com/mikress">
-            GitHub
-          </LinkItem>
-          <LinkItem href="https://linkedin.com/in/mikress">
-            LinkedIn
-          </LinkItem>
-          <LinkItem href="https://twitter.com/mikress">
+          <LinkItem href="https://x.com/MikeS47896459">
             X / Twitter
           </LinkItem>
-          <LinkItem href="https://youtube.com/@mikress">
-            YouTube
+          <LinkItem href="https://www.linkedin.com/in/msylvest55/">
+            LinkedIn
+          </LinkItem>
+          <LinkItem href="https://github.com/msylvester">
+            GitHub
+          </LinkItem>
+          <LinkItem href="https://www.twitch.tv/krystal_mess323">
+            Twitch
+          </LinkItem>
+          <LinkItem href="https://bsky.app/profile/krystalmess.bsky.social">
+            Bluesky
           </LinkItem>
         </div>
       </SidePanelSection>
