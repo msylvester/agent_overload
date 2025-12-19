@@ -1,6 +1,6 @@
-<a href="https://chat.vercel.ai/">
+<a href="https://www.krystalballz.xyz">
   <img alt="Next.js 14 and App Router-ready AI chatbot." src="krystal.png">
-  <h1 align="center">Chat SDK</h1>
+  <h1 align="center">Chat with KBZ live</h1>
 </a>
 
 ## About 
