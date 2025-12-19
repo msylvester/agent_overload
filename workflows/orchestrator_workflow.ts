@@ -3,7 +3,7 @@
 //
 //
 import { classifyIntent } from './agents/classify_agent_langgraph';
-import { classifyTime } from './fromScratch';
+import { classifyTime } from './agentic_time_workflow';
 import type { TemporalOutput } from './temporal_integration_workflow';
 import { runResearchWorkflow } from './agentic_research_workflow';
 
@@ -25,7 +25,7 @@ async function runOrchestratorWorkflow(input_text: string): Promise<OrchFlowOutp
 
   // Step 2: Based on classification, run appropriate workflow
   if (classification.intent === 'time') {
-    // Run temporal workflow for time-based queries using fromScratch.ts
+    // Run temporal workflow for time-based queries using agentic_time_workflow.ts
     const result = await classifyTime(input_text);
     const temporalResponse: TemporalOutput = {
       time: result.timeClassification,
