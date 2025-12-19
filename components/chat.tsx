@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useArtifactSelector } from "@/hooks/use-artifact";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
+import { useProphecyLimit } from "@/hooks/use-prophecy-limit";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { generateUUID } from "@/lib/utils";
@@ -55,6 +56,7 @@ export function Chat({
   const [usage, setUsage] = useState<AppUsage | undefined>(initialLastContext);
   const [showCreditCardAlert, setShowCreditCardAlert] = useState(false);
   const [currentModelId, setCurrentModelId] = useState(initialChatModel);
+  const { isLimitReached, incrementProphecy, remainingProphecies } = useProphecyLimit();
   const currentModelIdRef = useRef(currentModelId);
 
   // Custom message state management (replacing useChat)
@@ -107,6 +109,16 @@ export function Chat({
   // Custom sendMessage function that POSTs to local inference endpoint
   const sendMessage = useCallback(async (message: ChatMessage) => {
     console.log("[sendMessage] Called with:", message);
+
+    // Check prophecy limit before sending
+    if (isLimitReached) {
+      toast({
+        type: "error",
+        description: "You've reached your daily limit of 5 prophecies. Please come back tomorrow!",
+      });
+      return;
+    }
+
     setStatus("submitted");
 
     // Add user message to UI immediately
@@ -151,6 +163,9 @@ export function Chat({
       }
 
       mutate(unstable_serialize(getChatHistoryPaginationKey));
+
+      // Increment prophecy count on successful send
+      incrementProphecy();
     } catch (error) {
       console.error("Error sending message:", error);
       toast({
@@ -160,7 +175,7 @@ export function Chat({
     } finally {
       setStatus("ready");
     }
-  }, [id, visibilityType, mutate, pollJobStatus]);
+  }, [id, visibilityType, mutate, pollJobStatus, isLimitReached, incrementProphecy]);
 
   const stop = useCallback(async () => {
     setStatus("ready");
@@ -218,6 +233,7 @@ export function Chat({
               attachments={attachments}
               chatId={id}
               input={input}
+              isLimitReached={isLimitReached}
               messages={messages}
               onModelChange={setCurrentModelId}
               selectedModelId={currentModelId}

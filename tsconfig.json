@@ -53,6 +53,8 @@
     "workflows/fromScratch_working.ts",
     "workflows/rag_router_agent.ts",
     "workflows/research_workflow.ts",
-    "workflows/mermaid_run.ts"
+    "workflows/mermaid_run.ts",
+    "workflows/archive/**",
+    "workflows/harness/**"
   ]
 }
