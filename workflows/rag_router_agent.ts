@@ -140,14 +140,7 @@ ${JSON.stringify(state.metadatas)}
 Output MUST follow this schema:
 ${RAGQueryResponseSchema.toString()}
 `;
-  if(t === 2) {
-
-    console.log('hello')
-  }
-  else {
-    console.log('sdfef')
-  }
-  const result = await llm().invoke(
+ const result = await llm().invoke(
     [
       { role: "system", content: "Format the RAG response" },
       { role: "user", content: prompt },

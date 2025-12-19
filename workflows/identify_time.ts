@@ -1,4 +1,4 @@
-import { classifyTime } from "./fromScratch";
+import { classifyTime } from "./agentic_time_workflow";
 
 // Define test cases for time range classification
 const TEST_CASES = [
