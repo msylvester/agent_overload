@@ -162,9 +162,8 @@ useEffect(() => {
   const waiting = isLoading;
 
   return (
-    <div className="min-h-screen flex bg-[radial-gradient(circle_at_top,#1c2840_0%,#05040a_70%)] text-[#f0e6d2] p-4 box-border font-[var(--font-press-start),'Press_Start_2P',system-ui,-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif]">
-      {/* Main Oracle UI */}
-      <div className="[image-rendering:pixelated] flex-1 max-w-[1120px] border-4 border-[#2b2b2b] bg-[#141016] shadow-[0_0_0_4px_#4e4e4e,0_0_32px_rgba(0,0,0,0.7)] p-2">
+    <div className="min-h-screen flex justify-center bg-[radial-gradient(circle_at_top,#1c2840_0%,#05040a_70%)] text-[#f0e6d2] p-4 box-border font-[var(--font-press-start),'Press_Start_2P',system-ui,-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif]">
+      <div className="[image-rendering:pixelated] max-w-[1120px] w-full border-4 border-[#2b2b2b] bg-[#141016] shadow-[0_0_0_4px_#4e4e4e,0_0_32px_rgba(0,0,0,0.7)] p-2">
         {/* TOP BAR */}
         <div className="flex items-center justify-between border-[3px] border-[#5c5c5c] px-2.5 py-1.5 bg-[linear-gradient(#403b3b,#262020)] [text-shadow:1px_1px_#000] mb-2">
           <div className="text-base tracking-[2px] sm:text-xs">KRYSTAL BALL Z</div>
@@ -291,11 +290,11 @@ useEffect(() => {
             </div>
           </div>
         </form>
-      </div>
 
-      {/* Side Panel */}
-      <div className="hidden lg:block w-[280px] ml-4 flex-shrink-0">
-        <SidePanel />
+        {/* Info Panel */}
+        <div className="mt-2">
+          <SidePanel />
+        </div>
       </div>
     </div>
   );
