@@ -3,6 +3,7 @@ import React, { useState, KeyboardEvent, FormEvent, useEffect } from "react";
 import Image from "next/image";
 import ProfileImage from './components/ProfileImage';
 import ScrollablePane from "./components/ScrollablePane";
+import SidePanel from "./components/SidePanel";
 import { useRetroChat } from "@/hooks/use-retro-chat";
 import { useProphecyLimit } from "@/hooks/use-prophecy-limit";
 import type { ChatMessage } from "@/lib/types";
@@ -289,6 +290,11 @@ useEffect(() => {
             </div>
           </div>
         </form>
+
+        {/* Info Panel */}
+        <div className="mt-2">
+          <SidePanel />
+        </div>
       </div>
     </div>
   );

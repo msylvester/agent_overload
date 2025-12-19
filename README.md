@@ -22,3 +22,12 @@ Time-aware agent that handles scheduling, reminders, and time-sensitive queries 
 ### 📚 Agentic RAG
 Retrieval-Augmented Generation agent that searches and synthesizes information from your knowledge base for accurate, sourced responses.
 
+## Socials
+
+- [Twitch](https://www.twitch.tv/krystal_mess323)
+- [YouTube](https://www.youtube.com/@krystal_mess323)
+- [Twitter](https://x.com/MikeS47896459)
+- [LinkedIn](https://www.linkedin.com/in/msylvest55/)
+- [Bluesky](https://bsky.app/profile/krystalmess.bsky.social)
+- [GitHub](https://github.com/msylvester)
+
