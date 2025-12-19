@@ -63,7 +63,6 @@ function PureMultimodalInput({
   selectedModelId,
   onModelChange,
   usage,
-  isLimitReached = false,
 }: {
   chatId: string;
   input: string;
@@ -80,7 +79,6 @@ function PureMultimodalInput({
   selectedModelId: string;
   onModelChange?: (modelId: string) => void;
   usage?: AppUsage;
-  isLimitReached?: boolean;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -331,9 +329,8 @@ function PureMultimodalInput({
           ) : (
             <PromptInputSubmit
               className="size-8 rounded-full bg-primary text-primary-foreground transition-colors duration-200 hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
-              disabled={!input.trim() || uploadQueue.length > 0 || isLimitReached}
+              disabled={!input.trim() || uploadQueue.length > 0}
               status={status}
-              title={isLimitReached ? "Daily prophecy limit reached" : undefined}
             >
               <ArrowUpIcon size={14} />
             </PromptInputSubmit>
@@ -360,9 +357,6 @@ export const MultimodalInput = memo(
       return false;
     }
     if (prevProps.selectedModelId !== nextProps.selectedModelId) {
-      return false;
-    }
-    if (prevProps.isLimitReached !== nextProps.isLimitReached) {
       return false;
     }
 
