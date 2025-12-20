@@ -793,7 +793,7 @@ function routeAfterFinish(state: TimeExtractionState): 'temporal' | 'end' {
   const { validationPassed, currentExtraction } = state;
 
   // If validation passed and we have a good extraction, get temporal data
-  if (validationPassed && currentExtraction && currentExtraction.confidence >= 0.7) {
+  if (validationPassed && currentExtraction && currentExtraction.confidence >= 0.85) {
     console.log("[ROUTE AFTER FINISH] → TEMPORAL (validation passed with good confidence, fetching companies)");
     return 'temporal';
   }
@@ -909,9 +909,20 @@ export async function classifyTime(
       throw new Error("No extraction result available");
     }
 
+    // Handle case where temporalAdvice was skipped (low confidence or validation failed)
+    if (!res.results) {
+      return {
+        timeClassification: finalResult,
+        results: {
+          companies: [],
+          inference: "Try asking a different way or ask about the week or month",
+        },
+      };
+    }
+
     return {
       timeClassification: finalResult,
-      results: res.results || null,
+      results: res.results,
     };
   } catch (err) {
     console.error("Error classifying time:", err);
