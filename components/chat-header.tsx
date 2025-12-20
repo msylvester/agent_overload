@@ -53,7 +53,7 @@ function PureChatHeader({
       )} */}
 
       <div className="text-sm text-muted-foreground">
-        Queries remaining: {remainingProphecies}/5
+        Queries remaining: {remainingProphecies}/10
       </div>
 
       {/* <Button

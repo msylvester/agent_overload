@@ -114,7 +114,7 @@ export function Chat({
     if (isLimitReached) {
       toast({
         type: "error",
-        description: "You have reached your daily limit of 5 queries. Please try again tomorrow.",
+        description: "You have reached your daily limit of 10 queries. Please try again tomorrow.",
       });
       return;
     }
