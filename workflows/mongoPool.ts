@@ -72,7 +72,7 @@
 //     await cachedClient.close();
 //     cachedClient = null;
 //     cachedDb = null;
-//     console.log("MongoDB connection closed");
+//     debugLog("MongoDB connection closed");
 //   }
 // }
 
@@ -101,6 +101,7 @@
 // }
 
 import { MongoClient, Document } from "mongodb";
+import { debugLog } from '@/lib/utils';
 
 const DATABASE_NAME = "companies";
 
@@ -184,6 +185,6 @@ export async function closeConnection(): Promise<void> {
     const client = await global._mongoClientPromise;
     await client.close();
     global._mongoClientPromise = undefined;
-    console.log("MongoDB connection closed");
+    debugLog("MongoDB connection closed");
   }
 }

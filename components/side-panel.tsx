@@ -39,7 +39,7 @@ function LinkItem({ href, children, external = true }: LinkItemProps) {
   );
 }
 
-export default function SidePanel() {
+export function SidePanel() {
   return (
     <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 font-[var(--font-geist-mono),ui-monospace,monospace] text-[#c0c0c0]">
       {/* Project Links */}

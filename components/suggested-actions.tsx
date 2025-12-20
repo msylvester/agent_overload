@@ -15,9 +15,9 @@ type SuggestedActionsProps = {
 
 function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
   const suggestedActions = [
-    "who was funded in december",
-    "tell me about spacex",
-    "who raised the most money in november",
+    "any companies raise money this past week?",
+    "any companies doing fusion",
+    "any companies funded that do dev tools",
     "are there any companies creating nuclear reactors",
   ];
 

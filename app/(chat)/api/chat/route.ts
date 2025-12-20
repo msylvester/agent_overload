@@ -1,6 +1,7 @@
 import { waitUntil } from "@vercel/functions";
 
 import { runOrchestratorWorkflow, type OrchFlowOutput } from "@/workflows/orchestrator_workflow";
+import { debugLog, debugError } from "@/lib/utils";
 
 
 import type { VisibilityType } from "@/components/visibility-selector";
@@ -33,7 +34,7 @@ async function processWorkflowInBackground(
     // Mark job as processing
     await updateJobStatus({ id: jobId, status: "processing" });
 
-    console.log(`[Job ${jobId}] Starting workflow...`);
+    debugLog(`[Job ${jobId}] Starting workflow...`);
 
     const orchWorkflowOutput: OrchFlowOutput = await runOrchestratorWorkflow(userMessageText);
     const { classifyResponse } = orchWorkflowOutput;
@@ -132,7 +133,7 @@ async function processWorkflowInBackground(
       }
 
       default: {
-        console.error(`[Job ${jobId}] Unexpected classification: ${classifyResponse}`);
+        debugError(`[Job ${jobId}] Unexpected classification: ${classifyResponse}`);
 
         assistantMessage = {
           id: generateUUID(),
@@ -149,7 +150,7 @@ async function processWorkflowInBackground(
       }
     }
 
-    console.log(`[Job ${jobId}] Workflow completed`);
+    debugLog(`[Job ${jobId}] Workflow completed`);
 
     // Save assistant message
     await saveMessages({
@@ -172,9 +173,9 @@ async function processWorkflowInBackground(
       result: assistantMessage,
     });
 
-    console.log(`[Job ${jobId}] Completed successfully`);
+    debugLog(`[Job ${jobId}] Completed successfully`);
   } catch (error) {
-    console.error(`[Job ${jobId}] Failed:`, error);
+    debugError(`[Job ${jobId}] Failed:`, error);
     await updateJobStatus({
       id: jobId,
       status: "failed",
@@ -190,7 +191,7 @@ export async function POST(request: Request) {
     const json = await request.json();
     requestBody = postRequestBodySchema.parse(json);
   } catch (error) {
-    console.error("Schema validation failed:", error);
+    debugError("Schema validation failed:", error);
     return new ChatSDKError("bad_request:api").toResponse();
   }
 
@@ -283,7 +284,7 @@ export async function POST(request: Request) {
       return new ChatSDKError("bad_request:activate_gateway").toResponse();
     }
 
-    console.error("Unhandled error in chat API:", error, { vercelId });
+    debugError("Unhandled error in chat API:", error, { vercelId });
     return new ChatSDKError("offline:chat").toResponse();
   }
 }

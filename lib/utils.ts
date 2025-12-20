@@ -114,3 +114,25 @@ export function getTextFromMessage(message: ChatMessage): string {
     .map((part) => part.text)
     .join('');
 }
+
+/**
+ * Debug logging utility - only logs in development environment
+ */
+const isDev = process.env.NODE_ENV !== 'production';
+
+export function debugLog(...args: unknown[]): void {
+  if (isDev) {
+    console.log(...args);
+  }
+}
+
+export function debugWarn(...args: unknown[]): void {
+  if (isDev) {
+    console.warn(...args);
+  }
+}
+
+export function debugError(...args: unknown[]): void {
+  // Always log errors, even in production
+  console.error(...args);
+}
