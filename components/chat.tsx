@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useArtifactSelector } from "@/hooks/use-artifact";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
+import { useProphecyLimit } from "@/hooks/use-prophecy-limit";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { generateUUID } from "@/lib/utils";
@@ -50,6 +51,7 @@ export function Chat({
   });
 
   const { mutate } = useSWRConfig();
+  const { incrementProphecy, isLimitReached, remainingProphecies } = useProphecyLimit();
 
   const [input, setInput] = useState<string>("");
   const [usage, setUsage] = useState<AppUsage | undefined>(initialLastContext);
@@ -108,6 +110,15 @@ export function Chat({
   const sendMessage = useCallback(async (message: ChatMessage) => {
     console.log("[sendMessage] Called with:", message);
 
+    // Check rate limit before sending
+    if (isLimitReached) {
+      toast({
+        type: "error",
+        description: "You have reached your daily limit of 5 queries. Please try again tomorrow.",
+      });
+      return;
+    }
+
     setStatus("submitted");
 
     // Add user message to UI immediately
@@ -151,6 +162,8 @@ export function Chat({
         setMessages((prev) => [...prev, data.message]);
       }
 
+      // Increment query count on successful send
+      incrementProphecy();
       mutate(unstable_serialize(getChatHistoryPaginationKey));
     } catch (error) {
       console.error("Error sending message:", error);
@@ -161,7 +174,7 @@ export function Chat({
     } finally {
       setStatus("ready");
     }
-  }, [id, visibilityType, mutate, pollJobStatus]);
+  }, [id, visibilityType, mutate, pollJobStatus, isLimitReached, incrementProphecy]);
 
   const stop = useCallback(async () => {
     setStatus("ready");

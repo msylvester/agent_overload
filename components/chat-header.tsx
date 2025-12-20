@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { PlusIcon, VercelIcon } from "./icons";
 import { useSidebar } from "./ui/sidebar";
 import { VisibilitySelector, type VisibilityType } from "./visibility-selector";
+import { useProphecyLimit } from "@/hooks/use-prophecy-limit";
 
 function PureChatHeader({
   chatId,
@@ -21,11 +22,12 @@ function PureChatHeader({
 }) {
   const router = useRouter();
   const { open } = useSidebar();
+  const { remainingProphecies } = useProphecyLimit();
 
   const { width: windowWidth } = useWindowSize();
 
   return (
-    <header className="sticky top-0 flex items-center gap-2 bg-background px-2 py-1.5 md:px-2">
+    <header className="sticky top-0 flex items-center justify-between gap-2 bg-background px-2 py-1.5 md:px-2">
       {/* <SidebarToggle /> */}
 
       {/* {(!open || windowWidth < 768) && (
@@ -49,6 +51,10 @@ function PureChatHeader({
           selectedVisibilityType={selectedVisibilityType}
         />
       )} */}
+
+      <div className="text-sm text-muted-foreground">
+        Queries remaining: {remainingProphecies}/5
+      </div>
 
       {/* <Button
         asChild
