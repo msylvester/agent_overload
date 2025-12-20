@@ -5,8 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 // Client-side debug logging - only logs in development
 const isDev = process.env.NODE_ENV !== 'production';
-const debugLog = (...args: unknown[]) => { if (isDev) debugLog(...args); };
-const debugError = (...args: unknown[]) => { if (isDev) debugError(...args); };
+const debugLog = (...args: unknown[]) => { if (isDev) console.log(...args); };
+const debugError = (...args: unknown[]) => { if (isDev) console.error(...args); };
 import { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
 import { ChatHeader } from "@/components/chat-header";
