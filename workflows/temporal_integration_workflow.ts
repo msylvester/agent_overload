@@ -1,29 +1,28 @@
 import { Agent, run } from "@openai/agents";
-import { z } from "zod";
 import OpenAI from "openai";
-
-import { classifyTime } from "./agents/time_agent"; //time_router_agent
-import { getTemporal } from "./agents/temporal_agent"; //temporaal_router_agent
-
-import { ResponseItem } from "./agents/temporal_agent";
+import { z } from "zod";
+import { getTemporal, type ResponseItem } from "./agents/temporal_agent";
 import type { TimeClassification } from "./agents/time_agent";
+import { classifyTime } from "./agents/time_agent"; //time_router_agent
 
 const openai = new OpenAI();
 
 // --- Zod Schema ---
-const TemporalflowOutputSchema = z.object({
-  timeResults: z.object({
-    start: z.string().describe("Start date in ISO format (YYYY-MM-DD)"),
-    end: z.string().describe("End date in ISO format (YYYY-MM-DD)"),
-  }),
-  temporalResults: z.object({
-    companies: z.array(z.string()),
-    inference: z.string(),
-  }),
-  summarizeAndDisplayResult:z.object({
-    inference_summary: z.string(),
+const TemporalflowOutputSchema = z
+  .object({
+    timeResults: z.object({
+      start: z.string().describe("Start date in ISO format (YYYY-MM-DD)"),
+      end: z.string().describe("End date in ISO format (YYYY-MM-DD)"),
+    }),
+    temporalResults: z.object({
+      companies: z.array(z.string()),
+      inference: z.string(),
+    }),
+    summarizeAndDisplayResult: z.object({
+      inference_summary: z.string(),
+    }),
   })
-}).optional();
+  .optional();
 
 // --- Types ---
 type WorkflowInput = {
@@ -37,11 +36,13 @@ export type TemporalOutput = {
 
 export type SummarizeResults = {
   inference_summary: string;
-}
+};
 
 // --- Schema for Summarize Output ---
 const SummarizeResultsSchema = z.object({
-  inference_summary: z.string().describe("A concise summary of the inference analysis"),
+  inference_summary: z
+    .string()
+    .describe("A concise summary of the inference analysis"),
 });
 
 // --- Summarize and Display Agent ---
@@ -90,14 +91,18 @@ export async function getSummary(inference: string): Promise<SummarizeResults> {
  * @param input_text string
  * @returns TemporalOutput
  */
-export async function temporalIntent(input_text: string): Promise<TemporalOutput> {
+export async function temporalIntent(
+  input_text: string
+): Promise<TemporalOutput> {
   // Build the workflow input
   const workflowInput: WorkflowInput = {
     input_as_text: input_text,
   };
 
   // 1. Get time classification
-  const timeResult: TimeClassification | null = await classifyTime(workflowInput.input_as_text);
+  const timeResult: TimeClassification | null = await classifyTime(
+    workflowInput.input_as_text
+  );
 
   if (!timeResult) {
     return {
@@ -116,9 +121,11 @@ export async function temporalIntent(input_text: string): Promise<TemporalOutput
   );
 
   // 3. Summarize the inference from the temporal results
-  const summaryResult: SummarizeResults = await getSummary(temporalResult.inference);
-  //update the TemporalResult by overwrtiing the inference object with summarize result 
-  temporalResult.inference = summaryResult.inference_summary
+  const summaryResult: SummarizeResults = await getSummary(
+    temporalResult.inference
+  );
+  //update the TemporalResult by overwrtiing the inference object with summarize result
+  temporalResult.inference = summaryResult.inference_summary;
   console.log("=== Inference Summary ===");
   console.log(summaryResult.inference_summary);
   console.log("========================");

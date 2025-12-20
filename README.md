@@ -3,10 +3,20 @@
   <h1 align="center">Chat with KBZ live</h1>
 </a>
 
-## About 
+## About
 My name is Mike S and I built KBZ because I am curious about the flow of money to innovative startups. In short, I wanted to be able to ask questions like 'who was funded this month' OR 'any companies that do dev tools'.
 
-Simply put, I use KBZ most days, and, I thought I would make it availalbe to other folks! 
+Simply put, I use KBZ most days, and, I thought I would make it availalbe to other folks!
+
+## Example Use Cases
+
+Here are some questions you can ask KBZ:
+
+- "Tell me about companies that created a reactor"
+- "Who was funded this month?"
+- "Any companies that do dev tools?"
+- "Show me AI startups funded last week"
+- "What companies are working on nuclear energy?" 
 
 
 ## 🤖 Agents

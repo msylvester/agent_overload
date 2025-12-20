@@ -4,18 +4,21 @@
 
 import dotenv from "dotenv";
 import path from "path";
+
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
-import { z } from "zod";
+import { END, StateGraph } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
-import { StateGraph, END } from "@langchain/langgraph";
+import { z } from "zod";
 
 // =========================================================
 // SCHEMA
 // =========================================================
 
 const TimeClassificationSchema = z.object({
-  start: z.number().describe("Start date as Unix timestamp (seconds since epoch)"),
+  start: z
+    .number()
+    .describe("Start date as Unix timestamp (seconds since epoch)"),
   end: z.number().describe("End date as Unix timestamp (seconds since epoch)"),
   confidence: z.number().min(0).max(1),
   rationale: z.string(),
@@ -53,12 +56,17 @@ function getStartOfWeek(): number {
   const d = new Date();
   const day = d.getUTCDay(); // 0 = Sunday, 1 = Monday, etc.
   const diff = day === 0 ? 6 : day - 1; // Treat Monday as start of week
-  const startOfWeek = new Date(Date.UTC(
-    d.getUTCFullYear(),
-    d.getUTCMonth(),
-    d.getUTCDate() - diff,
-    0, 0, 0, 0
-  ));
+  const startOfWeek = new Date(
+    Date.UTC(
+      d.getUTCFullYear(),
+      d.getUTCMonth(),
+      d.getUTCDate() - diff,
+      0,
+      0,
+      0,
+      0
+    )
+  );
   return Math.floor(startOfWeek.getTime() / 1000);
 }
 
@@ -66,12 +74,17 @@ function getStartOfLastWeek(): number {
   const d = new Date();
   const day = d.getUTCDay();
   const diff = day === 0 ? 6 : day - 1;
-  const startOfLastWeek = new Date(Date.UTC(
-    d.getUTCFullYear(),
-    d.getUTCMonth(),
-    d.getUTCDate() - diff - 7,
-    0, 0, 0, 0
-  ));
+  const startOfLastWeek = new Date(
+    Date.UTC(
+      d.getUTCFullYear(),
+      d.getUTCMonth(),
+      d.getUTCDate() - diff - 7,
+      0,
+      0,
+      0,
+      0
+    )
+  );
   return Math.floor(startOfLastWeek.getTime() / 1000);
 }
 
@@ -79,12 +92,17 @@ function getEndOfLastWeek(): number {
   const d = new Date();
   const day = d.getUTCDay();
   const diff = day === 0 ? 6 : day - 1;
-  const endOfLastWeek = new Date(Date.UTC(
-    d.getUTCFullYear(),
-    d.getUTCMonth(),
-    d.getUTCDate() - diff - 1,
-    23, 59, 59, 999
-  ));
+  const endOfLastWeek = new Date(
+    Date.UTC(
+      d.getUTCFullYear(),
+      d.getUTCMonth(),
+      d.getUTCDate() - diff - 1,
+      23,
+      59,
+      59,
+      999
+    )
+  );
   return Math.floor(endOfLastWeek.getTime() / 1000);
 }
 
@@ -122,7 +140,15 @@ function buildSystemPrompt() {
 
   // Get day of week
   const dayOfWeek = new Date().getUTCDay();
-  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const dayNames = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
 
   return `
 You are a time range extraction expert.
@@ -199,10 +225,7 @@ If the query is unclear, return a low-confidence answer.
 // LANGGRAPH NODE — Calls the LLM
 // =========================================================
 
-async function extractionNode(state: {
-  query: string;
-  model: string;
-}) {
+async function extractionNode(state: { query: string; model: string }) {
   const llm = createLlm(state.model);
 
   // Use withStructuredOutput to get parsed JSON
@@ -220,12 +243,10 @@ async function extractionNode(state: {
 // LANGGRAPH NODE — Applies fallbacks based on confidence
 // =========================================================
 
-async function postProcessNode(
-  state: {
-    extracted: TimeClassification;
-    minConfidence: number;
-  }
-) {
+async function postProcessNode(state: {
+  extracted: TimeClassification;
+  minConfidence: number;
+}) {
   const { extracted, minConfidence } = state;
 
   if (extracted.confidence >= minConfidence) {
@@ -275,8 +296,8 @@ const app = workflow.compile();
 
 export async function classifyTime(
   query: string,
-  model: string = "gpt-4o-mini",
-  minConfidence: number = 0.6
+  model = "gpt-4o-mini",
+  minConfidence = 0.6
 ): Promise<TimeClassification> {
   try {
     const result = await app.invoke({
@@ -327,4 +348,3 @@ if (require.main === module) {
     console.log("\n=== Test Complete ===\n");
   })();
 }
-

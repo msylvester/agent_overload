@@ -16,20 +16,20 @@ const nextConfig: NextConfig = {
     if (!isServer) {
       config.resolve.alias = {
         ...config.resolve.alias,
-        '@xenova/transformers': false,
-        'sharp': false,
-        'onnxruntime-node': false,
+        "@xenova/transformers": false,
+        sharp: false,
+        "onnxruntime-node": false,
       };
     }
 
     // Handle MongoDB optional dependencies
     config.resolve.fallback = {
       ...config.resolve.fallback,
-      'aws4': false,
-      'mongodb-client-encryption': false,
-      'snappy': false,
-      'kerberos': false,
-      '@mongodb-js/zstd': false,
+      aws4: false,
+      "mongodb-client-encryption": false,
+      snappy: false,
+      kerberos: false,
+      "@mongodb-js/zstd": false,
     };
 
     return config;

@@ -4,15 +4,16 @@
 
 import dotenv from "dotenv";
 import path from "path";
+
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
-import { z } from "zod";
-import { Collection } from "mongodb";
-import { getMongoClient } from "../mongoPool";
-
-import { StateGraph, START, END } from "@langchain/langgraph";
+import { END, START, StateGraph } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
+import type { Collection } from "mongodb";
 import { zodResponseFormat } from "openai/helpers/zod";
+import { z } from "zod";
+import { debugError } from "@/lib/utils";
+import { getMongoClient } from "../mongoPool";
 
 // ============================================================
 // SCHEMA
@@ -37,7 +38,7 @@ async function getRecentCompanies(
   startDate: string,
   endDate: string,
   domain?: string,
-  limit: number = 40
+  limit = 40
 ): Promise<{ companies: string[]; details: any[] }> {
   const client = await getMongoClient();
   const collection: Collection = client
@@ -49,7 +50,7 @@ async function getRecentCompanies(
     const end = new Date(endDate);
 
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      throw new Error(`Invalid start/end date`);
+      throw new Error("Invalid start/end date");
     }
 
     const query: any = {
@@ -91,7 +92,7 @@ async function getRecentCompanies(
       })),
     };
   } catch (e) {
-    console.error("Error getRecentCompanies:", e);
+    debugError("Error getRecentCompanies:", e);
     return { companies: [], details: [] };
   }
 }
@@ -218,10 +219,12 @@ const workflow = new StateGraph({
     limit: z.number(),
     model: z.string(),
 
-    toolResult: z.object({
-      companies: z.array(z.string()),
-      details: z.array(z.any()),
-    }).nullable(),
+    toolResult: z
+      .object({
+        companies: z.array(z.string()),
+        details: z.array(z.any()),
+      })
+      .nullable(),
 
     result: TemporalAnalysisSchema.nullable(),
   },
@@ -245,9 +248,9 @@ export async function getTemporal(
   inputText: string,
   startDate: string,
   endDate: string,
-  domain: string = "",
-  limit: number = 40,
-  model: string = "gpt-4o"
+  domain = "",
+  limit = 40,
+  model = "gpt-4o"
 ): Promise<ResponseItem> {
   const res = await app.invoke({
     query: inputText,
@@ -263,4 +266,3 @@ export async function getTemporal(
     inference: res.result.inference,
   };
 }
-

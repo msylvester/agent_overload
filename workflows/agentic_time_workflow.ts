@@ -6,12 +6,14 @@
 
 import dotenv from "dotenv";
 import path from "path";
+
 dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 
-import { z } from "zod";
+import { END, StateGraph } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
-import { StateGraph, END } from "@langchain/langgraph";
-import { ResponseItem, getTemporal } from './agents/temporal_router_agent';
+import { z } from "zod";
+import { debugError, debugLog } from "@/lib/utils";
+import { getTemporal, type ResponseItem } from "./agents/temporal_router_agent";
 
 /* ============================
    SCHEMA & TYPES
@@ -27,8 +29,17 @@ const TimeClassificationSchema = z.object({
 export type TimeClassification = z.infer<typeof TimeClassificationSchema>;
 
 interface QueryPattern {
-  type: "relative_days" | "relative_months" | "relative_years" | "specific_month" |
-        "specific_year" | "quarter" | "specific_range" | "vague" | "this_year" | "half_year";
+  type:
+    | "relative_days"
+    | "relative_months"
+    | "relative_years"
+    | "specific_month"
+    | "specific_year"
+    | "quarter"
+    | "specific_range"
+    | "vague"
+    | "this_year"
+    | "half_year";
   expectedDuration?: number; // days
   toleranceFactor?: number;
   metadata?: Record<string, any>;
@@ -52,30 +63,30 @@ interface TimeExtractionState {
 ============================ */
 
 function todayISO(): string {
-  return new Date().toISOString().split('T')[0];
+  return new Date().toISOString().split("T")[0];
 }
 
 function daysAgoISO(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() - days);
-  return d.toISOString().split('T')[0];
+  return d.toISOString().split("T")[0];
 }
 
 function monthsAgoISO(months: number): string {
   const d = new Date();
   d.setMonth(d.getMonth() - months);
-  return d.toISOString().split('T')[0];
+  return d.toISOString().split("T")[0];
 }
 
 function yearsAgoISO(years: number): string {
   const d = new Date();
   d.setFullYear(d.getFullYear() - years);
-  return d.toISOString().split('T')[0];
+  return d.toISOString().split("T")[0];
 }
 
 function firstOfMonthISO(): string {
   const d = new Date();
-  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split("T")[0];
 }
 
 function daysBetween(start: string, end: string): number {
@@ -92,22 +103,34 @@ function classifyQueryPattern(query: string): QueryPattern {
   const q = query.toLowerCase();
 
   // Specific month (e.g., "in March 2024", "April 2023", "December 2023")
-  const monthNames = ['january', 'february', 'march', 'april', 'may', 'june',
-                      'july', 'august', 'september', 'october', 'november', 'december'];
+  const monthNames = [
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+  ];
   for (let i = 0; i < monthNames.length; i++) {
     if (q.includes(monthNames[i])) {
       const yearMatch = q.match(/\b(20\d{2})\b/);
       if (yearMatch) {
         return {
           type: "specific_month",
-          metadata: { month: i + 1, year: parseInt(yearMatch[1]) },
+          metadata: { month: i + 1, year: Number.parseInt(yearMatch[1]) },
         };
       }
     }
   }
 
   // This year (e.g., "founded this year", "companies this year")
-  if (q.includes('this year')) {
+  if (q.includes("this year")) {
     return {
       type: "this_year",
       metadata: { year: new Date().getFullYear() },
@@ -133,7 +156,7 @@ function classifyQueryPattern(query: string): QueryPattern {
         type: "half_year",
         metadata: {
           half: halfMatch[1],
-          year: parseInt(yearMatch[1])
+          year: Number.parseInt(yearMatch[1]),
         },
       };
     }
@@ -142,7 +165,7 @@ function classifyQueryPattern(query: string): QueryPattern {
   // Relative years (e.g., "last 2 years", "past year")
   const yearsMatch = q.match(/(?:last|past)\s+(\d+)\s+years?/);
   if (yearsMatch) {
-    const years = parseInt(yearsMatch[1]);
+    const years = Number.parseInt(yearsMatch[1]);
     return {
       type: "relative_years",
       expectedDuration: years * 365,
@@ -164,7 +187,7 @@ function classifyQueryPattern(query: string): QueryPattern {
   // Relative months (e.g., "last 6 months")
   const monthsMatch = q.match(/(?:last|past)\s+(\d+)\s+months?/);
   if (monthsMatch) {
-    const months = parseInt(monthsMatch[1]);
+    const months = Number.parseInt(monthsMatch[1]);
     return {
       type: "relative_months",
       expectedDuration: months * 30,
@@ -176,7 +199,7 @@ function classifyQueryPattern(query: string): QueryPattern {
   // Relative days (e.g., "last 30 days")
   const daysMatch = q.match(/(?:last|past)\s+(\d+)\s+days?/);
   if (daysMatch) {
-    const days = parseInt(daysMatch[1]);
+    const days = Number.parseInt(daysMatch[1]);
     return {
       type: "relative_days",
       expectedDuration: days,
@@ -188,8 +211,8 @@ function classifyQueryPattern(query: string): QueryPattern {
   // Quarter (e.g., "Q1 2024")
   const quarterMatch = q.match(/q([1-4])\s+(20\d{2})/);
   if (quarterMatch) {
-    const quarter = parseInt(quarterMatch[1]);
-    const year = parseInt(quarterMatch[2]);
+    const quarter = Number.parseInt(quarterMatch[1]);
+    const year = Number.parseInt(quarterMatch[2]);
     return {
       type: "quarter",
       metadata: { quarter, year },
@@ -197,19 +220,25 @@ function classifyQueryPattern(query: string): QueryPattern {
   }
 
   // Specific range (e.g., "between January and March 2023", "January to June 2024")
-  if ((q.includes('between') || q.includes(' to ')) && q.includes('and') || (q.includes('january') && q.includes('june')) || (q.includes('july') && q.includes('september'))) {
+  if (
+    ((q.includes("between") || q.includes(" to ")) && q.includes("and")) ||
+    (q.includes("january") && q.includes("june")) ||
+    (q.includes("july") && q.includes("september"))
+  ) {
     const yearMatch = q.match(/(20\d{2})/);
     if (yearMatch) {
       // Try to extract month names for validation
-      const firstMonth = monthNames.findIndex(m => q.includes(m));
-      const lastMonthIdx = monthNames.findIndex((m, idx) => idx > firstMonth && q.includes(m));
+      const firstMonth = monthNames.findIndex((m) => q.includes(m));
+      const lastMonthIdx = monthNames.findIndex(
+        (m, idx) => idx > firstMonth && q.includes(m)
+      );
 
       return {
         type: "specific_range",
         metadata: {
-          year: parseInt(yearMatch[1]),
+          year: Number.parseInt(yearMatch[1]),
           firstMonth: firstMonth >= 0 ? firstMonth + 1 : undefined,
-          lastMonth: lastMonthIdx >= 0 ? lastMonthIdx + 1 : undefined
+          lastMonth: lastMonthIdx >= 0 ? lastMonthIdx + 1 : undefined,
         },
       };
     }
@@ -217,15 +246,22 @@ function classifyQueryPattern(query: string): QueryPattern {
 
   // Specific year (e.g., "2024", "in 2024")
   const yearMatch = q.match(/\b(20\d{2})\b/);
-  if (yearMatch && !q.includes('between') && !q.includes('q1') && !q.includes('q2') && !q.includes('q3') && !q.includes('q4')) {
+  if (
+    yearMatch &&
+    !q.includes("between") &&
+    !q.includes("q1") &&
+    !q.includes("q2") &&
+    !q.includes("q3") &&
+    !q.includes("q4")
+  ) {
     return {
       type: "specific_year",
-      metadata: { year: parseInt(yearMatch[1]) },
+      metadata: { year: Number.parseInt(yearMatch[1]) },
     };
   }
 
   // This month (from 1st to today)
-  if (q.includes('this month')) {
+  if (q.includes("this month")) {
     const today = new Date();
     const dayOfMonth = today.getDate();
     return {
@@ -237,7 +273,7 @@ function classifyQueryPattern(query: string): QueryPattern {
   }
 
   // Vague (e.g., "recent", "recently")
-  if (q.includes('recent')) {
+  if (q.includes("recent")) {
     return {
       type: "vague",
       expectedDuration: 90, // Default to 3 months
@@ -317,9 +353,13 @@ function createLlm(model: string) {
    GRAPH NODES
 ============================ */
 
-async function extractNode(state: TimeExtractionState): Promise<Partial<TimeExtractionState>> {
-  console.log(`\n[EXTRACT] Attempt ${state.attemptCount + 1}/${state.maxAttempts}`);
-  console.log(`[EXTRACT] Query: "${state.query}"`);
+async function extractNode(
+  state: TimeExtractionState
+): Promise<Partial<TimeExtractionState>> {
+  debugLog(
+    `\n[EXTRACT] Attempt ${state.attemptCount + 1}/${state.maxAttempts}`
+  );
+  debugLog(`[EXTRACT] Query: "${state.query}"`);
 
   const llm = createLlm(state.model);
   const structured = llm.withStructuredOutput(TimeClassificationSchema);
@@ -329,26 +369,29 @@ async function extractNode(state: TimeExtractionState): Promise<Partial<TimeExtr
     { role: "user", content: state.query },
   ]);
 
-  console.log(`[EXTRACT] Result: start=${res.start}, end=${res.end}, confidence=${res.confidence.toFixed(2)}`);
+  debugLog(
+    `[EXTRACT] Result: start=${res.start}, end=${res.end}, confidence=${res.confidence.toFixed(2)}`
+  );
   const duration = daysBetween(res.start, res.end);
-  console.log(`[EXTRACT] Duration: ${duration.toFixed(1)} days`);
+  debugLog(`[EXTRACT] Duration: ${duration.toFixed(1)} days`);
 
   return { currentExtraction: res };
 }
-
 
 /*
  * temporalAdvice - Calls getTemporal to fetch companies and generate inference
  * @param TimeExtractionState
  * @return Partial<TimeExtractionState> with results populated
  */
-async function temporalAdvice(state: TimeExtractionState): Promise<Partial<TimeExtractionState>> {
-  console.log("\n[TEMPORAL ADVICE] Fetching companies and generating analysis...");
+async function temporalAdvice(
+  state: TimeExtractionState
+): Promise<Partial<TimeExtractionState>> {
+  debugLog("\n[TEMPORAL ADVICE] Fetching companies and generating analysis...");
 
   const { currentExtraction, query } = state;
 
   if (!currentExtraction) {
-    console.log("[TEMPORAL ADVICE] No extraction available, skipping");
+    debugLog("[TEMPORAL ADVICE] No extraction available, skipping");
     return { results: null };
   }
 
@@ -357,30 +400,37 @@ async function temporalAdvice(state: TimeExtractionState): Promise<Partial<TimeE
   try {
     // Call getTemporal with the extracted time range
     const result: ResponseItem = await getTemporal(
-      query,      // inputText
-      start,      // startDate
-      end,        // endDate
-      "",         // domain (empty for now)
-      40,         // limit
+      query, // inputText
+      start, // startDate
+      end, // endDate
+      "", // domain (empty for now)
+      40, // limit
       state.model // model
     );
 
-    console.log(`[TEMPORAL ADVICE] Found ${result.companies.length} companies`);
-    console.log(`[TEMPORAL ADVICE] Inference: ${result.inference.substring(0, 100)}...`);
+    debugLog(`[TEMPORAL ADVICE] Found ${result.companies.length} companies`);
+    debugLog(
+      `[TEMPORAL ADVICE] Inference: ${result.inference.substring(0, 100)}...`
+    );
 
     return { results: result };
   } catch (err) {
-    console.error("[TEMPORAL ADVICE] Error calling getTemporal:", err);
+    debugError("[TEMPORAL ADVICE] Error calling getTemporal:", err);
     return { results: null };
   }
 }
 
-async function validateNode(state: TimeExtractionState): Promise<Partial<TimeExtractionState>> {
-  console.log("\n[VALIDATE] Checking extraction...");
+async function validateNode(
+  state: TimeExtractionState
+): Promise<Partial<TimeExtractionState>> {
+  debugLog("\n[VALIDATE] Checking extraction...");
 
   const { currentExtraction, query } = state;
   if (!currentExtraction) {
-    return { validationPassed: false, validationErrors: ["No extraction to validate"] };
+    return {
+      validationPassed: false,
+      validationErrors: ["No extraction to validate"],
+    };
   }
 
   const { start, end } = currentExtraction;
@@ -401,7 +451,7 @@ async function validateNode(state: TimeExtractionState): Promise<Partial<TimeExt
 
   const duration = daysBetween(start, end);
   const pattern = classifyQueryPattern(query);
-  console.log(`[VALIDATE] Pattern detected: ${pattern.type}`);
+  debugLog(`[VALIDATE] Pattern detected: ${pattern.type}`);
 
   // Pattern-specific validation
   switch (pattern.type) {
@@ -412,7 +462,7 @@ async function validateNode(state: TimeExtractionState): Promise<Partial<TimeExt
       if (Math.abs(duration - expectedDuration) > tolerance) {
         errors.push(
           `Duration mismatch: expected ~${pattern.metadata!.days} days, ` +
-          `got ${duration.toFixed(1)} days. Off by ${Math.abs(duration - expectedDuration).toFixed(1)} days.`
+            `got ${duration.toFixed(1)} days. Off by ${Math.abs(duration - expectedDuration).toFixed(1)} days.`
         );
       }
 
@@ -429,15 +479,17 @@ async function validateNode(state: TimeExtractionState): Promise<Partial<TimeExt
 
       if (Math.abs(duration - expectedDuration) > tolerance) {
         errors.push(
-          `Duration mismatch: expected ~${pattern.metadata!.months || 'N'} months ` +
-          `(~${expectedDuration} days), got ${duration.toFixed(1)} days.`
+          `Duration mismatch: expected ~${pattern.metadata!.months || "N"} months ` +
+            `(~${expectedDuration} days), got ${duration.toFixed(1)} days.`
         );
       }
 
       if (!pattern.metadata?.thisMonth) {
         const today = todayISO();
         if (end !== today) {
-          errors.push(`End should be today (${today}) for relative periods, got ${end}`);
+          errors.push(
+            `End should be today (${today}) for relative periods, got ${end}`
+          );
         }
       }
       break;
@@ -450,7 +502,7 @@ async function validateNode(state: TimeExtractionState): Promise<Partial<TimeExt
       if (Math.abs(duration - expectedDuration) > tolerance) {
         errors.push(
           `Duration mismatch: expected ~${pattern.metadata!.years} year(s) ` +
-          `(~${expectedDuration} days), got ${duration.toFixed(1)} days.`
+            `(~${expectedDuration} days), got ${duration.toFixed(1)} days.`
         );
       }
 
@@ -467,7 +519,9 @@ async function validateNode(state: TimeExtractionState): Promise<Partial<TimeExt
       const expectedEnd = `${year}-12-31`;
 
       if (start !== expectedStart) {
-        errors.push(`Year ${year} should start on ${expectedStart}, got ${start}`);
+        errors.push(
+          `Year ${year} should start on ${expectedStart}, got ${start}`
+        );
       }
       if (end !== expectedEnd) {
         errors.push(`Year ${year} should end on ${expectedEnd}, got ${end}`);
@@ -492,10 +546,14 @@ async function validateNode(state: TimeExtractionState): Promise<Partial<TimeExt
       };
 
       if (start !== quarterStarts[quarter]) {
-        errors.push(`Q${quarter} ${year} should start on ${quarterStarts[quarter]}, got ${start}`);
+        errors.push(
+          `Q${quarter} ${year} should start on ${quarterStarts[quarter]}, got ${start}`
+        );
       }
       if (end !== quarterEnds[quarter]) {
-        errors.push(`Q${quarter} ${year} should end on ${quarterEnds[quarter]}, got ${end}`);
+        errors.push(
+          `Q${quarter} ${year} should end on ${quarterEnds[quarter]}, got ${end}`
+        );
       }
       break;
     }
@@ -504,14 +562,18 @@ async function validateNode(state: TimeExtractionState): Promise<Partial<TimeExt
       const month = pattern.metadata!.month;
       const year = pattern.metadata!.year;
       const daysInMonth = new Date(year, month, 0).getDate();
-      const expectedStart = `${year}-${String(month).padStart(2, '0')}-01`;
-      const expectedEnd = `${year}-${String(month).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+      const expectedStart = `${year}-${String(month).padStart(2, "0")}-01`;
+      const expectedEnd = `${year}-${String(month).padStart(2, "0")}-${String(daysInMonth).padStart(2, "0")}`;
 
       if (start !== expectedStart) {
-        errors.push(`Month ${month}/${year} should start on ${expectedStart}, got ${start}`);
+        errors.push(
+          `Month ${month}/${year} should start on ${expectedStart}, got ${start}`
+        );
       }
       if (end !== expectedEnd) {
-        errors.push(`Month ${month}/${year} should end on ${expectedEnd}, got ${end}`);
+        errors.push(
+          `Month ${month}/${year} should end on ${expectedEnd}, got ${end}`
+        );
       }
       break;
     }
@@ -522,7 +584,9 @@ async function validateNode(state: TimeExtractionState): Promise<Partial<TimeExt
       const today = todayISO();
 
       if (start !== expectedStart) {
-        errors.push(`"This year" should start on ${expectedStart}, got ${start}`);
+        errors.push(
+          `"This year" should start on ${expectedStart}, got ${start}`
+        );
       }
       if (end !== today) {
         errors.push(`"This year" should end on today (${today}), got ${end}`);
@@ -534,23 +598,31 @@ async function validateNode(state: TimeExtractionState): Promise<Partial<TimeExt
       const half = pattern.metadata!.half;
       const year = pattern.metadata!.year;
 
-      if (half === 'first') {
+      if (half === "first") {
         const expectedStart = `${year}-01-01`;
         const expectedEnd = `${year}-06-30`;
         if (start !== expectedStart) {
-          errors.push(`First half of ${year} should start on ${expectedStart}, got ${start}`);
+          errors.push(
+            `First half of ${year} should start on ${expectedStart}, got ${start}`
+          );
         }
         if (end !== expectedEnd) {
-          errors.push(`First half of ${year} should end on ${expectedEnd}, got ${end}`);
+          errors.push(
+            `First half of ${year} should end on ${expectedEnd}, got ${end}`
+          );
         }
-      } else if (half === 'second') {
+      } else if (half === "second") {
         const expectedStart = `${year}-07-01`;
         const expectedEnd = `${year}-12-31`;
         if (start !== expectedStart) {
-          errors.push(`Second half of ${year} should start on ${expectedStart}, got ${start}`);
+          errors.push(
+            `Second half of ${year} should start on ${expectedStart}, got ${start}`
+          );
         }
         if (end !== expectedEnd) {
-          errors.push(`Second half of ${year} should end on ${expectedEnd}, got ${end}`);
+          errors.push(
+            `Second half of ${year} should end on ${expectedEnd}, got ${end}`
+          );
         }
       }
       break;
@@ -563,9 +635,9 @@ async function validateNode(state: TimeExtractionState): Promise<Partial<TimeExt
       const lastMonth = pattern.metadata?.lastMonth;
 
       if (year && firstMonth && lastMonth) {
-        const expectedStart = `${year}-${String(firstMonth).padStart(2, '0')}-01`;
+        const expectedStart = `${year}-${String(firstMonth).padStart(2, "0")}-01`;
         const lastMonthDays = new Date(year, lastMonth, 0).getDate();
-        const expectedEnd = `${year}-${String(lastMonth).padStart(2, '0')}-${String(lastMonthDays).padStart(2, '0')}`;
+        const expectedEnd = `${year}-${String(lastMonth).padStart(2, "0")}-${String(lastMonthDays).padStart(2, "0")}`;
 
         if (start !== expectedStart) {
           errors.push(`Range should start on ${expectedStart}, got ${start}`);
@@ -575,7 +647,10 @@ async function validateNode(state: TimeExtractionState): Promise<Partial<TimeExt
         }
       } else if (year) {
         // Check if it's roughly the right year
-        if (!start.startsWith(year.toString()) && !start.startsWith((year - 1).toString())) {
+        if (
+          !start.startsWith(year.toString()) &&
+          !start.startsWith((year - 1).toString())
+        ) {
           errors.push(`Expected dates around ${year}, got ${start}`);
         }
       }
@@ -585,25 +660,28 @@ async function validateNode(state: TimeExtractionState): Promise<Partial<TimeExt
     case "vague": {
       // Lenient validation for vague queries
       if (duration < 7 || duration > 730) {
-        errors.push(`Vague queries typically mean 1 week to 2 years, got ${duration.toFixed(1)} days`);
+        errors.push(
+          `Vague queries typically mean 1 week to 2 years, got ${duration.toFixed(1)} days`
+        );
       }
       break;
     }
   }
 
   if (errors.length === 0) {
-    console.log("[VALIDATE] ✓ All checks passed");
+    debugLog("[VALIDATE] ✓ All checks passed");
     return { validationPassed: true, validationErrors: [] };
-  } else {
-    console.log(`[VALIDATE] ✗ Found ${errors.length} validation errors:`);
-    errors.forEach((err, i) => console.log(`  ${i + 1}. ${err}`));
-    return { validationPassed: false, validationErrors: errors };
   }
+  debugLog(`[VALIDATE] ✗ Found ${errors.length} validation errors:`);
+  errors.forEach((err, i) => debugLog(`  ${i + 1}. ${err}`));
+  return { validationPassed: false, validationErrors: errors };
 }
 
-async function retryNode(state: TimeExtractionState): Promise<Partial<TimeExtractionState>> {
-  console.log("\n[RETRY] Constructing feedback prompt...");
-  console.log(`[RETRY] Attempt ${state.attemptCount + 2}/${state.maxAttempts}`);
+async function retryNode(
+  state: TimeExtractionState
+): Promise<Partial<TimeExtractionState>> {
+  debugLog("\n[RETRY] Constructing feedback prompt...");
+  debugLog(`[RETRY] Attempt ${state.attemptCount + 2}/${state.maxAttempts}`);
 
   const { query, currentExtraction, validationErrors } = state;
   const pattern = classifyQueryPattern(query);
@@ -632,7 +710,10 @@ CORRECT CALCULATION FOR THIS QUERY:
 - Correct START: ${expectedStart} (approximately ${pattern.metadata.months} months ago)
 - Correct END: ${today} (today)
 `;
-  } else if (pattern.type === "relative_months" && pattern.metadata?.thisMonth) {
+  } else if (
+    pattern.type === "relative_months" &&
+    pattern.metadata?.thisMonth
+  ) {
     const expectedStart = firstOfMonthISO();
     calculationHint = `
 
@@ -664,10 +745,16 @@ CORRECT CALCULATION FOR THIS QUERY:
     const q = pattern.metadata!.quarter;
     const y = pattern.metadata!.year;
     const starts: Record<number, string> = {
-      1: `${y}-01-01`, 2: `${y}-04-01`, 3: `${y}-07-01`, 4: `${y}-10-01`
+      1: `${y}-01-01`,
+      2: `${y}-04-01`,
+      3: `${y}-07-01`,
+      4: `${y}-10-01`,
     };
     const ends: Record<number, string> = {
-      1: `${y}-03-31`, 2: `${y}-06-30`, 3: `${y}-09-30`, 4: `${y}-12-31`
+      1: `${y}-03-31`,
+      2: `${y}-06-30`,
+      3: `${y}-09-30`,
+      4: `${y}-12-31`,
     };
     calculationHint = `
 
@@ -680,8 +767,8 @@ CORRECT CALCULATION FOR THIS QUERY:
     const month = pattern.metadata!.month;
     const year = pattern.metadata!.year;
     const daysInMonth = new Date(year, month, 0).getDate();
-    const expectedStart = `${year}-${String(month).padStart(2, '0')}-01`;
-    const expectedEnd = `${year}-${String(month).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+    const expectedStart = `${year}-${String(month).padStart(2, "0")}-01`;
+    const expectedEnd = `${year}-${String(month).padStart(2, "0")}-${String(daysInMonth).padStart(2, "0")}`;
     calculationHint = `
 
 CORRECT CALCULATION FOR THIS QUERY:
@@ -702,7 +789,7 @@ CORRECT CALCULATION FOR THIS QUERY:
   } else if (pattern.type === "half_year") {
     const half = pattern.metadata!.half;
     const year = pattern.metadata!.year;
-    if (half === 'first') {
+    if (half === "first") {
       calculationHint = `
 
 CORRECT CALCULATION FOR THIS QUERY:
@@ -733,14 +820,14 @@ Previous extraction:
 - Rationale: ${currentExtraction!.rationale}
 
 VALIDATION ERRORS:
-${validationErrors.map((err, i) => `${i + 1}. ${err}`).join('\n')}
+${validationErrors.map((err, i) => `${i + 1}. ${err}`).join("\n")}
 ${calculationHint}
 
 CRITICAL: You must fix these errors! Use the exact dates provided above.
 Return dates in YYYY-MM-DD format.
 `;
 
-  console.log("[RETRY] Invoking LLM with feedback...");
+  debugLog("[RETRY] Invoking LLM with feedback...");
 
   const llm = createLlm(state.model);
   const structured = llm.withStructuredOutput(TimeClassificationSchema);
@@ -750,8 +837,12 @@ Return dates in YYYY-MM-DD format.
     { role: "user", content: feedbackPrompt },
   ]);
 
-  console.log(`[RETRY] New result: start=${res.start}, end=${res.end}, confidence=${res.confidence.toFixed(2)}`);
-  console.log(`[RETRY] Duration: ${daysBetween(res.start, res.end).toFixed(1)} days`);
+  debugLog(
+    `[RETRY] New result: start=${res.start}, end=${res.end}, confidence=${res.confidence.toFixed(2)}`
+  );
+  debugLog(
+    `[RETRY] Duration: ${daysBetween(res.start, res.end).toFixed(1)} days`
+  );
 
   return {
     currentExtraction: res,
@@ -760,17 +851,19 @@ Return dates in YYYY-MM-DD format.
   };
 }
 
-async function finalizeNode(state: TimeExtractionState): Promise<Partial<TimeExtractionState>> {
-  console.log("\n[FINALIZE] Packaging final result...");
+async function finalizeNode(
+  state: TimeExtractionState
+): Promise<Partial<TimeExtractionState>> {
+  debugLog("\n[FINALIZE] Packaging final result...");
 
   if (state.attemptCount > 0) {
-    console.log(`[FINALIZE] Used ${state.attemptCount} retries`);
+    debugLog(`[FINALIZE] Used ${state.attemptCount} retries`);
   }
 
-  if (!state.validationPassed) {
-    console.log("[FINALIZE] ⚠ Validation did not pass, using best attempt");
+  if (state.validationPassed) {
+    debugLog("[FINALIZE] ✓ Validation passed");
   } else {
-    console.log("[FINALIZE] ✓ Validation passed");
+    debugLog("[FINALIZE] ⚠ Validation did not pass, using best attempt");
   }
 
   return { finalResult: state.currentExtraction };
@@ -779,17 +872,19 @@ async function finalizeNode(state: TimeExtractionState): Promise<Partial<TimeExt
 /**
  * handleFailureNode - Sets fallback response when validation fails or confidence is too low
  */
-async function handleFailureNode(state: TimeExtractionState): Promise<Partial<TimeExtractionState>> {
-  console.log("\n[HANDLE FAILURE] Setting fallback response...");
+async function handleFailureNode(
+  state: TimeExtractionState
+): Promise<Partial<TimeExtractionState>> {
+  debugLog("\n[HANDLE FAILURE] Setting fallback response...");
   return {
     finalResult: null,
     results: {
       companies: [],
-      inference: "Try asking a different way or ask about the week or month",
+      inference:
+        "Try asking: any companies funded this past month? OR any companies funded this past week? OR ask about a specific month like: for the month of september what companies raised a round of funding?",
     },
   };
 }
-
 
 /* ============================
    ROUTING
@@ -801,40 +896,62 @@ async function handleFailureNode(state: TimeExtractionState): Promise<Partial<Ti
  * @param TimeExtractionState
  * @return 'temporal' to fetch companies, 'handleFailure' to set fallback message
  */
-function routeAfterFinish(state: TimeExtractionState): 'temporal' | 'handleFailure' {
-  console.log("\n[ROUTE AFTER FINISH] Deciding next step...");
+function routeAfterFinish(
+  state: TimeExtractionState
+): "temporal" | "handleFailure" {
+  debugLog("\n[ROUTE AFTER FINISH] Deciding next step...");
 
   const { validationPassed, currentExtraction } = state;
 
   // If validation passed and we have a good extraction, get temporal data
-  if (validationPassed && currentExtraction && currentExtraction.confidence >= 0.85) {
-    console.log("[ROUTE AFTER FINISH] → TEMPORAL (validation passed with good confidence, fetching companies)");
-    return 'temporal';
+  if (
+    validationPassed &&
+    currentExtraction &&
+    currentExtraction.confidence >= 0.85
+  ) {
+    debugLog(
+      "[ROUTE AFTER FINISH] → TEMPORAL (validation passed with good confidence, fetching companies)"
+    );
+    return "temporal";
   }
 
   // If validation failed but we still have an extraction with reasonable confidence
-  if (currentExtraction && currentExtraction.confidence >= 0.85 && validationPassed) {
-    console.log("[ROUTE AFTER FINISH] → TEMPORAL (using high confidence extraction)");
-    return 'temporal';
+  if (
+    currentExtraction &&
+    currentExtraction.confidence >= 0.85 &&
+    validationPassed
+  ) {
+    debugLog(
+      "[ROUTE AFTER FINISH] → TEMPORAL (using high confidence extraction)"
+    );
+    return "temporal";
   }
 
-  console.log("[ROUTE AFTER FINISH] → HANDLE FAILURE (low quality or low confidence extraction)");
-  return 'handleFailure';
+  debugLog(
+    "[ROUTE AFTER FINISH] → HANDLE FAILURE (low quality or low confidence extraction)"
+  );
+  return "handleFailure";
 }
 
-function routeAfterValidation(state: TimeExtractionState): 'finalize' | 'retry' {
+function routeAfterValidation(
+  state: TimeExtractionState
+): "finalize" | "retry" {
   if (state.validationPassed) {
-    console.log("[DECISION] → FINALIZE (validation passed)");
-    return 'finalize';
+    debugLog("[DECISION] → FINALIZE (validation passed)");
+    return "finalize";
   }
 
   if (state.attemptCount >= state.maxAttempts - 1) {
-    console.log(`[DECISION] → FINALIZE (max attempts ${state.maxAttempts} reached)`);
-    return 'finalize';
+    debugLog(
+      `[DECISION] → FINALIZE (max attempts ${state.maxAttempts} reached)`
+    );
+    return "finalize";
   }
 
-  console.log(`[DECISION] → RETRY (attempt ${state.attemptCount + 1}/${state.maxAttempts})`);
-  return 'retry';
+  debugLog(
+    `[DECISION] → RETRY (attempt ${state.attemptCount + 1}/${state.maxAttempts})`
+  );
+  return "retry";
 }
 
 /* ============================
@@ -904,7 +1021,10 @@ export { agenticApp };
 export async function classifyTime(
   query: string,
   model = "gpt-4o-mini"
-): Promise<{ timeClassification: TimeClassification | null; results: ResponseItem | null }> {
+): Promise<{
+  timeClassification: TimeClassification | null;
+  results: ResponseItem | null;
+}> {
   try {
     const res = await agenticApp.invoke({
       query,
@@ -925,7 +1045,7 @@ export async function classifyTime(
       results: res.results,
     };
   } catch (err) {
-    console.error("Error classifying time:", err);
+    debugError("Error classifying time:", err);
 
     // Fallback
     const today = todayISO();
@@ -936,7 +1056,8 @@ export async function classifyTime(
         start: sixMonthsAgo,
         end: today,
         confidence: 0,
-        rationale: "Fatal error during classification; defaulted to last 6 months.",
+        rationale:
+          "Fatal error during classification; defaulted to last 6 months.",
       },
       results: null,
     };

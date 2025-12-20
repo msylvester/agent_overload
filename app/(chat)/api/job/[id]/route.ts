@@ -1,6 +1,6 @@
+import { ensureAuthenticated } from "@/lib/auth-helpers";
 import { getJobById } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
-import { ensureAuthenticated } from "@/lib/auth-helpers";
 
 export async function GET(
   request: Request,
@@ -19,10 +19,7 @@ export async function GET(
     const job = await getJobById({ id });
 
     if (!job) {
-      return Response.json(
-        { error: "Job not found" },
-        { status: 404 }
-      );
+      return Response.json({ error: "Job not found" }, { status: 404 });
     }
 
     // Return job status
@@ -40,9 +37,6 @@ export async function GET(
     }
 
     console.error("Error fetching job status:", error);
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }

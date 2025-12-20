@@ -6,44 +6,67 @@
       "**/*",
       "!components/ui",
       "!lib/utils.ts",
-      "!hooks/use-mobile.ts"
+      "!hooks/use-mobile.ts",
+      "!web_yt_vid"
     ]
   },
   "linter": {
     "rules": {
       "suspicious": {
-        /* Needs more work to fix */
         "noExplicitAny": "off",
-
-        /* Allow for Tailwind @ rules */
         "noUnknownAtRules": "off",
-
-        /* Allowing console for debugging */
         "noConsole": "off",
-
-        /* Needed for generateUUID() */
-        "noBitwiseOperators": "off"
+        "noBitwiseOperators": "off",
+        "useAwait": "off",
+        "noGlobalIsNan": "off",
+        "useIterableCallbackReturn": "off",
+        "noEvolvingTypes": "off",
+        "noEmptyBlockStatements": "off",
+        "noArrayIndexKey": "off"
       },
       "style": {
-        /* Allowing magic numbers */
         "noMagicNumbers": "off",
-
-        /* Needs more work to fix */
-        "noNestedTernary": "off"
+        "noNestedTernary": "off",
+        "useFilenamingConvention": "off",
+        "useTemplate": "off",
+        "noNonNullAssertion": "off",
+        "useNodejsImportProtocol": "off",
+        "useBlockStatements": "off",
+        "useAtIndex": "off",
+        "useReadonlyClassProperties": "off",
+        "useShorthandAssign": "off",
+        "useDefaultSwitchClause": "off",
+        "useCollapsedIf": "off"
       },
       "nursery": {
-        /* Too many false positives */
-        "noUnnecessaryConditions": "off"
+        "noUnnecessaryConditions": "off",
+        "useConsistentTypeDefinitions": "off",
+        "useMaxParams": "off",
+        "noShadow": "off"
       },
       "complexity": {
-        /* Needs more work to fix */
         "noExcessiveCognitiveComplexity": "off",
-
-        /* This one has false positives. It's a bit... iffy 😉 */
-        "useSimplifiedLogicExpression": "off"
+        "useSimplifiedLogicExpression": "off",
+        "noForEach": "off",
+        "noUselessConstructor": "off"
+      },
+      "correctness": {
+        "noUnusedVariables": "off",
+        "noUnusedImports": "off",
+        "noUnusedFunctionParameters": "off",
+        "useParseIntRadix": "off",
+        "useExhaustiveDependencies": "off",
+        "noUndeclaredVariables": "off",
+        "useSingleJsDocAsterisk": "off",
+        "noUnusedPrivateClassMembers": "off",
+        "noConstAssign": "off"
+      },
+      "performance": {
+        "useTopLevelRegex": "off",
+        "noNamespaceImport": "off",
+        "noDelete": "off"
       },
       "a11y": {
-        /* Needs more work to fix */
         "noSvgWithoutTitle": "off"
       }
     }

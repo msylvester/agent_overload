@@ -1,5 +1,5 @@
-import { generateText } from './ai/transformers-model';
-import { DEFAULT_MODEL_ID, isValidModelId } from './ai/model-registry';
+import { DEFAULT_MODEL_ID, isValidModelId } from "./ai/model-registry";
+import { generateText } from "./ai/transformers-model";
 
 /**
  * Inference endpoint to make predictions using open-weight models
@@ -54,11 +54,11 @@ const inference = async (
 
     return result;
   } catch (error) {
-    console.error('Inference error:', error);
-    throw new Error(`Model inference failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error("Inference error:", error);
+    throw new Error(
+      `Model inference failed: ${error instanceof Error ? error.message : "Unknown error"}`
+    );
   }
 };
 
-export default inference; 
-
-
+export default inference;

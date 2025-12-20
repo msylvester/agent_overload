@@ -1,6 +1,6 @@
-import { z } from "zod";
-import { generateObject } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { generateObject } from "ai";
+import { z } from "zod";
 
 // ---------------------------------------------
 // 1. Zod Schema

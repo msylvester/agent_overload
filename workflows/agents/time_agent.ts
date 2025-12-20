@@ -5,10 +5,11 @@
  * It uses structured output to extract start and end dates with confidence scoring.
  */
 
-import dotenv from 'dotenv';
-import path from 'path';
+import dotenv from "dotenv";
+import path from "path";
+
 // Load environment variables before any other imports
-dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
 import OpenAI from "openai";
 import { z } from "zod";
@@ -20,8 +21,14 @@ import { z } from "zod";
 const TimeClassificationSchema = z.object({
   start: z.string().describe("Start date in ISO format (YYYY-MM-DD)"),
   end: z.string().describe("End date in ISO format (YYYY-MM-DD)"),
-  confidence: z.number().min(0).max(1).describe("Confidence score between 0 and 1"),
-  rationale: z.string().describe("Brief explanation for the date range extraction"),
+  confidence: z
+    .number()
+    .min(0)
+    .max(1)
+    .describe("Confidence score between 0 and 1"),
+  rationale: z
+    .string()
+    .describe("Brief explanation for the date range extraction"),
 });
 
 export type TimeClassification = z.infer<typeof TimeClassificationSchema>;
@@ -34,7 +41,7 @@ export type TimeClassification = z.infer<typeof TimeClassificationSchema>;
  * Get current date in ISO format (YYYY-MM-DD)
  */
 function getCurrentDate(): string {
-  return new Date().toISOString().split('T')[0];
+  return new Date().toISOString().split("T")[0];
 }
 
 /**
@@ -43,7 +50,7 @@ function getCurrentDate(): string {
 function getDateMonthsAgo(months: number): string {
   const date = new Date();
   date.setMonth(date.getMonth() - months);
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split("T")[0];
 }
 
 /**
@@ -52,7 +59,7 @@ function getDateMonthsAgo(months: number): string {
 function getDateYearsAgo(years: number): string {
   const date = new Date();
   date.setFullYear(date.getFullYear() - years);
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split("T")[0];
 }
 
 // ===============================
@@ -80,8 +87,8 @@ function getDateYearsAgo(years: number): string {
  */
 export async function classifyTime(
   query: string,
-  model: string = "gpt-4o-mini",
-  minConfidence: number = 0.6
+  model = "gpt-4o-mini",
+  minConfidence = 0.6
 ): Promise<TimeClassification> {
   try {
     // Step 1: Initialize OpenAI client (configured for OpenRouter)
@@ -92,7 +99,7 @@ export async function classifyTime(
 
     const client = new OpenAI({
       apiKey,
-      baseURL: "https://openrouter.ai/api/v1"
+      baseURL: "https://openrouter.ai/api/v1",
     });
 
     // Step 2: Create JSON schema for structured output
@@ -187,25 +194,25 @@ Remember: Extract the TIME PERIOD the user is asking about, not when they're ask
 
       console.warn(
         `Low confidence (${classification.confidence.toFixed(2)}) for time range, ` +
-        `using default: last 12 months (${defaultStart} to ${defaultEnd})`
+          `using default: last 12 months (${defaultStart} to ${defaultEnd})`
       );
 
       return {
         start: defaultStart,
         end: defaultEnd,
         confidence: 0.5,
-        rationale: `Original extraction uncertain (confidence ${classification.confidence.toFixed(2)}). ` +
-          `Defaulting to last 12 months.`,
+        rationale:
+          `Original extraction uncertain (confidence ${classification.confidence.toFixed(2)}). ` +
+          "Defaulting to last 12 months.",
       };
     }
 
     console.log(
       `Extracted time range: ${classification.start} to ${classification.end} ` +
-      `(confidence: ${classification.confidence.toFixed(2)})`
+        `(confidence: ${classification.confidence.toFixed(2)})`
     );
 
     return classification;
-
   } catch (error) {
     console.error("Error classifying time range:", error);
 

@@ -1,21 +1,23 @@
-import { pipeline, type TextGenerationPipeline } from '@huggingface/transformers';
 import {
-  getModelConfig,
+  pipeline,
+  type TextGenerationPipeline,
+} from "@huggingface/transformers";
+import {
   DEFAULT_MODEL_ID,
+  getModelConfig,
   isValidModelId,
-  type ModelConfig
-} from './model-registry';
+  type ModelConfig,
+} from "./model-registry";
 
 /**
  * Singleton pattern for loading text generation models
  * Supports multiple models with lazy loading and caching
  */
 
-
 class TransformersModelSingleton {
-
   private static instance: TransformersModelSingleton;
-  private modelPipelines: Map<string, Promise<TextGenerationPipeline>> = new Map();
+  private modelPipelines: Map<string, Promise<TextGenerationPipeline>> =
+    new Map();
 
   private constructor() {}
 
@@ -34,9 +36,13 @@ class TransformersModelSingleton {
    * @returns Promise<TextGenerationPipeline>
    * @throws Error if modelId is invalid
    */
-  async getModel(modelId: string = DEFAULT_MODEL_ID): Promise<TextGenerationPipeline> {
+  async getModel(
+    modelId: string = DEFAULT_MODEL_ID
+  ): Promise<TextGenerationPipeline> {
     if (!isValidModelId(modelId)) {
-      throw new Error(`Invalid model ID: ${modelId}. Use one of: ${Object.keys(getModelConfig)}`);
+      throw new Error(
+        `Invalid model ID: ${modelId}. Use one of: ${Object.keys(getModelConfig)}`
+      );
     }
 
     const config = getModelConfig(modelId);
@@ -45,18 +51,27 @@ class TransformersModelSingleton {
     }
 
     if (!this.modelPipelines.has(modelId)) {
-      console.log(`Loading model: ${config.transformersModelName} (${modelId})...`);
-      const modelPromise = pipeline('text-generation', config.transformersModelName);
+      console.log(
+        `Loading model: ${config.transformersModelName} (${modelId})...`
+      );
+      const modelPromise = pipeline(
+        "text-generation",
+        config.transformersModelName
+      );
       this.modelPipelines.set(modelId, modelPromise);
 
       // Log when loading completes
-      modelPromise.then(() => {
-        console.log(`Model ${config.transformersModelName} (${modelId}) loaded successfully`);
-      }).catch(error => {
-        console.error(`Failed to load model ${modelId}:`, error);
-        // Remove failed promise so it can be retried
-        this.modelPipelines.delete(modelId);
-      });
+      modelPromise
+        .then(() => {
+          console.log(
+            `Model ${config.transformersModelName} (${modelId}) loaded successfully`
+          );
+        })
+        .catch((error) => {
+          console.error(`Failed to load model ${modelId}:`, error);
+          // Remove failed promise so it can be retried
+          this.modelPipelines.delete(modelId);
+        });
     }
 
     return this.modelPipelines.get(modelId)!;
@@ -100,8 +115,8 @@ export async function generateText(
 
   try {
     //TODO: generate the text as a response to the query to agent_007;
-//    const model = await TransformersModelSingleton.getInstance().getModel(modelId);
-/**
+    //    const model = await TransformersModelSingleton.getInstance().getModel(modelId);
+    /**
     const result = await model(prompt, {
       max_new_tokens: maxNewTokens,
       temperature,
@@ -125,9 +140,9 @@ export async function generateText(
     return completion;
     */
     // TODO: Implement model inference - returning empty string for now
-    return '';
+    return "";
   } catch (error) {
-    console.error('Text generation error:', error);
+    console.error("Text generation error:", error);
     throw error;
   }
 }

@@ -72,7 +72,7 @@
 //     await cachedClient.close();
 //     cachedClient = null;
 //     cachedDb = null;
-//     console.log("MongoDB connection closed");
+//     debugLog("MongoDB connection closed");
 //   }
 // }
 
@@ -100,7 +100,8 @@
 //   var _mongoClientPromise: Promise<MongoClient> | undefined;
 // }
 
-import { MongoClient, Document } from "mongodb";
+import { type Document, MongoClient } from "mongodb";
+import { debugLog } from "@/lib/utils";
 
 const DATABASE_NAME = "companies";
 
@@ -170,7 +171,9 @@ export async function getDatabase() {
 /**
  * Get a typed collection from the database.
  */
-export async function getCollection<T extends Document = Document>(collectionName: string) {
+export async function getCollection<T extends Document = Document>(
+  collectionName: string
+) {
   const db = await getDatabase();
   return db.collection<T>(collectionName);
 }
@@ -184,6 +187,6 @@ export async function closeConnection(): Promise<void> {
     const client = await global._mongoClientPromise;
     await client.close();
     global._mongoClientPromise = undefined;
-    console.log("MongoDB connection closed");
+    debugLog("MongoDB connection closed");
   }
 }

@@ -1,10 +1,7 @@
 import { waitUntil } from "@vercel/functions";
-
-import { runOrchestratorWorkflow, type OrchFlowOutput } from "@/workflows/orchestrator_workflow";
-
-
 import type { VisibilityType } from "@/components/visibility-selector";
 import type { ChatModel } from "@/lib/ai/models";
+import { ensureAuthenticated } from "@/lib/auth-helpers";
 import {
   createJob,
   deleteChatById,
@@ -16,10 +13,13 @@ import {
 } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
 import type { ChatMessage } from "@/lib/types";
-import { generateUUID } from "@/lib/utils";
+import { debugError, debugLog, generateUUID } from "@/lib/utils";
+import {
+  type OrchFlowOutput,
+  runOrchestratorWorkflow,
+} from "@/workflows/orchestrator_workflow";
 import { generateTitleFromUserMessage } from "../../actions";
 import { type PostRequestBody, postRequestBodySchema } from "./schema";
-import { ensureAuthenticated } from "@/lib/auth-helpers";
 
 export const maxDuration = 60;
 
@@ -33,15 +33,16 @@ async function processWorkflowInBackground(
     // Mark job as processing
     await updateJobStatus({ id: jobId, status: "processing" });
 
-    console.log(`[Job ${jobId}] Starting workflow...`);
+    debugLog(`[Job ${jobId}] Starting workflow...`);
 
-    const orchWorkflowOutput: OrchFlowOutput = await runOrchestratorWorkflow(userMessageText);
+    const orchWorkflowOutput: OrchFlowOutput =
+      await runOrchestratorWorkflow(userMessageText);
     const { classifyResponse } = orchWorkflowOutput;
 
     let assistantMessage: ChatMessage;
 
     switch (classifyResponse) {
-      case 'time': {
+      case "time": {
         // Extract temporal data
         const temporalResponse = orchWorkflowOutput.temporalResponse;
 
@@ -49,32 +50,44 @@ async function processWorkflowInBackground(
 
         if (temporalResponse?.time) {
           // Handle both ISO strings (from fromScratch.ts) and Unix timestamps (from legacy workflow)
-          let startDate: string = '';
-          let endDate: string = '';
+          let startDate = "";
+          let endDate = "";
 
-          if (typeof temporalResponse.time.start === 'string') {
+          if (typeof temporalResponse.time.start === "string") {
             // ISO string format (YYYY-MM-DD) from fromScratch.ts
-            startDate = new Date(temporalResponse.time.start).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
+            startDate = new Date(
+              temporalResponse.time.start
+            ).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
             });
-            endDate = new Date(temporalResponse.time.end).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            });
-          } else if (typeof temporalResponse.time.start === 'number' && typeof temporalResponse.time.end === 'number') {
+            endDate = new Date(temporalResponse.time.end).toLocaleDateString(
+              "en-US",
+              {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }
+            );
+          } else if (
+            typeof temporalResponse.time.start === "number" &&
+            typeof temporalResponse.time.end === "number"
+          ) {
             // Unix timestamp (seconds) from legacy workflow
-            startDate = new Date(temporalResponse.time.start * 1000).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
+            startDate = new Date(
+              temporalResponse.time.start * 1000
+            ).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
             });
-            endDate = new Date(temporalResponse.time.end * 1000).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
+            endDate = new Date(
+              temporalResponse.time.end * 1000
+            ).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
             });
           }
 
@@ -83,12 +96,15 @@ async function processWorkflowInBackground(
           }
         }
 
-        if (temporalResponse?.results?.companies && temporalResponse.results.companies.length > 0) {
-          formattedText += `**Companies Found:**\n`;
-          temporalResponse.results.companies.forEach(company => {
+        if (
+          temporalResponse?.results?.companies &&
+          temporalResponse.results.companies.length > 0
+        ) {
+          formattedText += "**Companies Found:**\n";
+          temporalResponse.results.companies.forEach((company) => {
             formattedText += `• ${company}\n`;
           });
-          formattedText += `\n`;
+          formattedText += "\n";
         }
 
         if (temporalResponse?.results?.inference) {
@@ -107,9 +123,10 @@ async function processWorkflowInBackground(
         break;
       }
 
-      case 'basic': {
+      case "basic": {
         // Extract basic response
-        const basicText = orchWorkflowOutput.basicResponse || "No response available.";
+        const basicText =
+          orchWorkflowOutput.basicResponse || "No response available.";
 
         assistantMessage = {
           id: generateUUID(),
@@ -119,9 +136,10 @@ async function processWorkflowInBackground(
         break;
       }
 
-      case 'research': {
+      case "research": {
         // Extract RAG results text
-        const ragText = orchWorkflowOutput.ragResults || "No research results found.";
+        const ragText =
+          orchWorkflowOutput.ragResults || "No research results found.";
 
         assistantMessage = {
           id: generateUUID(),
@@ -132,12 +150,19 @@ async function processWorkflowInBackground(
       }
 
       default: {
-        console.error(`[Job ${jobId}] Unexpected classification: ${classifyResponse}`);
+        debugError(
+          `[Job ${jobId}] Unexpected classification: ${classifyResponse}`
+        );
 
         assistantMessage = {
           id: generateUUID(),
           role: "assistant",
-          parts: [{ type: "text" as const, text: "Sorry, I couldn't process your request." }],
+          parts: [
+            {
+              type: "text" as const,
+              text: "Sorry, I couldn't process your request.",
+            },
+          ],
         };
 
         await updateJobStatus({
@@ -149,7 +174,7 @@ async function processWorkflowInBackground(
       }
     }
 
-    console.log(`[Job ${jobId}] Workflow completed`);
+    debugLog(`[Job ${jobId}] Workflow completed`);
 
     // Save assistant message
     await saveMessages({
@@ -172,9 +197,9 @@ async function processWorkflowInBackground(
       result: assistantMessage,
     });
 
-    console.log(`[Job ${jobId}] Completed successfully`);
+    debugLog(`[Job ${jobId}] Completed successfully`);
   } catch (error) {
-    console.error(`[Job ${jobId}] Failed:`, error);
+    debugError(`[Job ${jobId}] Failed:`, error);
     await updateJobStatus({
       id: jobId,
       status: "failed",
@@ -190,7 +215,7 @@ export async function POST(request: Request) {
     const json = await request.json();
     requestBody = postRequestBodySchema.parse(json);
   } catch (error) {
-    console.error("Schema validation failed:", error);
+    debugError("Schema validation failed:", error);
     return new ChatSDKError("bad_request:api").toResponse();
   }
 
@@ -283,7 +308,7 @@ export async function POST(request: Request) {
       return new ChatSDKError("bad_request:activate_gateway").toResponse();
     }
 
-    console.error("Unhandled error in chat API:", error, { vercelId });
+    debugError("Unhandled error in chat API:", error, { vercelId });
     return new ChatSDKError("offline:chat").toResponse();
   }
 }

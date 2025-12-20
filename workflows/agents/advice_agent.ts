@@ -1,4 +1,4 @@
-import { RagResearchAgent } from './rag_research_agent';
+import { RagResearchAgent } from "./rag_research_agent";
 
 export interface AdviceResponse {
   investors: string[];
@@ -31,6 +31,6 @@ export async function getAdvice(query: string): Promise<AdviceResponse> {
   return {
     investors: uniqueInvestors,
     companies: uniqueCompanies,
-    query
+    query,
   };
 }

@@ -15,6 +15,7 @@ export const chatModels: ChatModel[] = [
   {
     id: "llama-3.1-8b-chat-model",
     name: "Llama 3.1 8B Instruct",
-    description: "Larger instruction-tuned Llama model with enhanced capabilities",
+    description:
+      "Larger instruction-tuned Llama model with enhanced capabilities",
   },
 ];

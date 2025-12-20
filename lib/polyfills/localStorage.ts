@@ -1,11 +1,11 @@
 // Polyfill for localStorage in Node.js environments where it may be broken or missing
 // This runs immediately when imported
 
-(function() {
+(() => {
   if (typeof globalThis === "undefined") return;
 
   const isServer = typeof window === "undefined";
-  
+
   if (!isServer) return;
 
   // Create a proper localStorage mock for server-side rendering

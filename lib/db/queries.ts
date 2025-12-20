@@ -24,8 +24,8 @@ import {
   chat,
   type DBMessage,
   document,
-  job,
   type Job,
+  job,
   message,
   type Suggestion,
   stream,
@@ -136,7 +136,7 @@ export async function deleteAllChatsByUserId({ userId }: { userId: string }) {
       return { deletedCount: 0 };
     }
 
-    const chatIds = userChats.map(c => c.id);
+    const chatIds = userChats.map((c) => c.id);
 
     await db.delete(vote).where(inArray(vote.chatId, chatIds));
     await db.delete(message).where(inArray(message.chatId, chatIds));

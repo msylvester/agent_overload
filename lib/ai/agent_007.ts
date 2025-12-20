@@ -53,7 +53,7 @@ Title: "${title}"`;
         method: "POST",
         headers,
         body: JSON.stringify(data),
-        signal: AbortSignal.timeout(30000), // 30 second timeout
+        signal: AbortSignal.timeout(30_000), // 30 second timeout
       }
     );
 

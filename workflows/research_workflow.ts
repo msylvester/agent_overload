@@ -3,20 +3,25 @@
  * Replaces the OpenAI Agent SDK orchestration layer.
  */
 
-import { z } from "zod";
-import { StateGraph, END } from "@langchain/langgraph";
+import { END, StateGraph } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 import { zodResponseFormat } from "openai/helpers/zod";
-
-import { runRagQuery, RAGQueryResponse } from "./rag_router_agent";
-import { researchCompanies, WebResearchAgentOutput } from "./agents/web_search_router";
-import { temporalIntent, TemporalOutput } from "./temporal_router_integration_workflow";
+import { z } from "zod";
+import {
+  researchCompanies,
+  WebResearchAgentOutput,
+} from "./agents/web_search_router";
+import { type RAGQueryResponse, runRagQuery } from "./rag_router_agent";
+import {
+  TemporalOutput,
+  temporalIntent,
+} from "./temporal_router_integration_workflow";
 
 // ============================================================
 // LLM FOR BASIC RESPONSES (OpenRouter)
 // ============================================================
 
-function llm(model: string = "gpt-4o-mini") {
+function llm(model = "gpt-4o-mini") {
   return new ChatOpenAI({
     apiKey: process.env.OPENROUTER_API_KEY!,
     model,
@@ -72,7 +77,8 @@ async function basicNode(state: { query: string }) {
   const response = await llm().invoke([
     {
       role: "system",
-      content: "You are a helpful startup advisor. Provide concise, actionable advice.",
+      content:
+        "You are a helpful startup advisor. Provide concise, actionable advice.",
     },
     { role: "user", content: state.query },
   ]);
@@ -93,10 +99,8 @@ async function ragNode(state: { query: string }) {
 }
 
 // Node 3 — Web Research
-async function webResearchNode(state: {
-  ragResults: RAGQueryResponse;
-}) {
-  const companyNames = state.ragResults.sources.map(s => s.companyName);
+async function webResearchNode(state: { ragResults: RAGQueryResponse }) {
+  const companyNames = state.ragResults.sources.map((s) => s.companyName);
 
   if (companyNames.length === 0) {
     console.log("⏭️ No companies found — skipping web research");

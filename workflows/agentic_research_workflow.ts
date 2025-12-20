@@ -3,10 +3,10 @@
  * Replaces the OpenAI Agent SDK orchestration layer.
  */
 
-import { z } from "zod";
-import { StateGraph, END } from "@langchain/langgraph";
+import { END, StateGraph } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 import { zodResponseFormat } from "openai/helpers/zod";
+import { z } from "zod";
 
 // OLD RAG - Replaced with agentic RAG (see agentic_two_rag.ts)
 // import { runRagQuery, RAGQueryResponse } from "./rag_router_agent";
@@ -14,8 +14,6 @@ import { zodResponseFormat } from "openai/helpers/zod";
 // NEW: Agentic RAG using LangGraph, MongoDB Atlas, and OpenRouter
 
 import { buildGraph, invokeGraph } from "./agentic_two_rag";
-
-
 
 // WEB RESEARCH - Commented out (not used in current workflow)
 // import { researchCompanies, WebResearchAgentOutput } from "./agents/web_search_router";
@@ -26,7 +24,7 @@ import { temporalIntent } from "./temporal_router_integration_workflow";
 // LLM FOR BASIC RESPONSES (OpenRouter)
 // ============================================================
 
-function llm(model: string = "gpt-4o-mini") {
+function llm(model = "gpt-4o-mini") {
   return new ChatOpenAI({
     apiKey: process.env.OPENROUTER_API_KEY!,
     model,
@@ -85,7 +83,8 @@ async function basicNode(state: { query: string }) {
   const response = await llm().invoke([
     {
       role: "system",
-      content: "You are a helpful startup advisor. Provide concise, actionable advice.",
+      content:
+        "You are a helpful startup advisor. Provide concise, actionable advice.",
     },
     { role: "user", content: state.query },
   ]);
@@ -177,15 +176,15 @@ const workflow = new StateGraph<WorkflowState>({
     },
     basicResponse: {
       value: (left?: string, right?: string) => right ?? left,
-      default: () => undefined,
+      default: () => {},
     },
     ragResults: {
       value: (left?: string, right?: string) => right ?? left,
-      default: () => undefined,
+      default: () => {},
     },
     temporalResponse: {
       value: (left?: any, right?: any) => right ?? left,
-      default: () => undefined,
+      default: () => {},
     },
   },
 })
@@ -213,12 +212,12 @@ const workflow = new StateGraph<WorkflowState>({
   })
 
   // Research workflow path - now goes directly to END
-  .addEdge("rag", END)  // Changed from "webResearch"
+  .addEdge("rag", END) // Changed from "webResearch"
 
   // All paths end
   .addEdge("basic", END)
   .addEdge("temporal", END);
-  // .addEdge("webResearch", END);  // DISABLED
+// .addEdge("webResearch", END);  // DISABLED
 
 const app = workflow.compile();
 

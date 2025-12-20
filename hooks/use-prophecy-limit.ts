@@ -34,7 +34,9 @@ export function useProphecyLimit() {
 
   const prophecyCount = currentData.count;
   const isLimitReached = DEV_MODE ? false : prophecyCount >= PROPHECY_LIMIT;
-  const remainingProphecies = DEV_MODE ? 999 : Math.max(0, PROPHECY_LIMIT - prophecyCount);
+  const remainingProphecies = DEV_MODE
+    ? 999
+    : Math.max(0, PROPHECY_LIMIT - prophecyCount);
 
   const incrementProphecy = useCallback(() => {
     setData((prev) => {

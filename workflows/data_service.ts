@@ -1,21 +1,18 @@
-
-
-
 //we want to DUMP the collection on to the hosted mongodb atlas via atlas
 //
 
-import { config } from 'dotenv';
-import { MongoClient, ObjectId } from 'mongodb';
-import OpenAI from 'openai';
-import * as path from 'path';
+import { config } from "dotenv";
+import { MongoClient, ObjectId } from "mongodb";
+import OpenAI from "openai";
+import * as path from "path";
 
 // Load environment variables from .env.local
-config({ path: path.resolve(__dirname, '../.env.local') });
+config({ path: path.resolve(__dirname, "../.env.local") });
 
 const uri = process.env.MONGODB_URI;
 
 if (!uri) {
-  throw new Error('MONGODB_URI is not defined in .env.local');
+  throw new Error("MONGODB_URI is not defined in .env.local");
 }
 
 const client = new MongoClient(uri);
@@ -37,7 +34,6 @@ export async function getRecords(): Promise<any[]> {
     await client.close();
 
     return records;
-
   } catch (e) {
     await client.close();
     throw new Error(`Cannot get documents: ${e}`);
@@ -51,16 +47,16 @@ export async function getRecords(): Promise<any[]> {
 async function makeEmbeddings() {
   //get records, loop through and call embed
   const records = await getRecords();
-  for (let record of records) {
+  for (const record of records) {
     //deconstruct and call embed
     const { _id: id, company_name, description } = record;
     await embed(id, company_name, description);
   }
 }
 type Embedding = {
-  id: ObjectId,
-  embedding: number[],
-}
+  id: ObjectId;
+  embedding: number[];
+};
 
 //embed_single_query takes in a query, embeds it and returns an embeddings
 // @param query: string
@@ -74,7 +70,7 @@ export async function embedSingle(query: string): Promise<Embedding> {
   const input = `Description: ${query}`;
 
   const response = await openaiClient.embeddings.create({
-    model: 'text-embedding-3-small',
+    model: "text-embedding-3-small",
     input,
   });
 
@@ -86,7 +82,6 @@ export async function embedSingle(query: string): Promise<Embedding> {
     embedding: embeddingVector,
   };
 }
-
 
 /**
  * embed - Generate embeddings for a company record
@@ -103,12 +98,14 @@ export async function embed(
   try {
     // Validate inputs
     if (!company_name?.trim() || !description?.trim()) {
-      throw new Error('Company name and description are required and cannot be empty');
+      throw new Error(
+        "Company name and description are required and cannot be empty"
+      );
     }
 
     // Create embedding using OpenAI
     const response = await openaiClient.embeddings.create({
-      model: 'text-embedding-3-small',
+      model: "text-embedding-3-small",
       input: `Company: ${company_name} Description: ${description}`,
     });
 
@@ -119,8 +116,8 @@ export async function embed(
     await client.connect();
 
     try {
-      const db = client.db('companies');
-      const collection = db.collection('funded_companies');
+      const db = client.db("companies");
+      const collection = db.collection("funded_companies");
 
       await collection.updateOne(
         { _id: uid },
@@ -137,19 +134,17 @@ export async function embed(
   } catch (error) {
     console.error(`Failed to create embedding for document ${uid}:`, error);
     throw new Error(
-      `Embedding creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Embedding creation failed: ${error instanceof Error ? error.message : "Unknown error"}`
     );
   }
 }
-
-
 
 async function dumpRecords(): Promise<Record<string, any>> {
   try {
     // TODO: Implement record dumping logic
     return {};
-  } catch(e) {
-    throw new Error(`there is an error ${e}`)
+  } catch (e) {
+    throw new Error(`there is an error ${e}`);
   }
 }
 
@@ -158,6 +153,3 @@ async function dumpRecords(): Promise<Record<string, any>> {
 //   const records = await getRecords();
 //   console.log(`Found ${records.length} records`);
 // })();
-
-
-
