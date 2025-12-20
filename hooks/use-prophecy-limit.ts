@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from "react";
 import { useLocalStorageSafe } from "./use-local-storage-safe";
 
-const PROPHECY_LIMIT = 5;
+const PROPHECY_LIMIT = 10;
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 const DEV_MODE = process.env.NEXT_PUBLIC_DEV_MODE === "true";
 

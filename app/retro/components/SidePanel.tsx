@@ -42,27 +42,12 @@ function LinkItem({ href, children, external = true }: LinkItemProps) {
 export default function SidePanel() {
   return (
     <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 font-[var(--font-geist-mono),ui-monospace,monospace] text-[#c0c0c0]">
-      {/* Project Links */}
-      <SidePanelSection title="Project Links">
-        <div className="flex flex-col gap-1">
-          <LinkItem href="https://github.com/msylvester/agent_overload">
-            GitHub Repository
-          </LinkItem>
-          <LinkItem href="https://github.com/msylvester/agent_overload/issues">
-            Report Issues
-          </LinkItem>
-          <LinkItem href="https://github.com/msylvester/agent_overload#readme">
-            Documentation
-          </LinkItem>
-        </div>
-      </SidePanelSection>
-
       {/* How To Use */}
       <SidePanelSection title="How To Use">
         <div className="text-[9px] leading-relaxed text-[#909090] space-y-1.5">
           <p>Type your question in the input field below.</p>
           <p>The oracle will divine your answer.</p>
-          <p>5 prophecies per day are granted.</p>
+          <p>10 prophecies per day are granted.</p>
         </div>
       </SidePanelSection>
 
@@ -83,6 +68,21 @@ export default function SidePanel() {
           </LinkItem>
           <LinkItem href="https://bsky.app/profile/krystalmess.bsky.social">
             Bluesky
+          </LinkItem>
+        </div>
+      </SidePanelSection>
+
+      {/* Project Links */}
+      <SidePanelSection title="Project Links">
+        <div className="flex flex-col gap-1">
+          <LinkItem href="https://github.com/msylvester/agent_overload">
+            GitHub Repository
+          </LinkItem>
+          <LinkItem href="https://github.com/msylvester/agent_overload/issues">
+            Report Issues
+          </LinkItem>
+          <LinkItem href="https://github.com/msylvester/agent_overload#readme">
+            Documentation
           </LinkItem>
         </div>
       </SidePanelSection>

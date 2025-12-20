@@ -21,7 +21,23 @@ const initialMessages: Message[] = [
   {
     id: 1,
     sender: "system",
-    content: "THE CRYSTAL BALL GLOWS, HOW CAN I ASSIST YOU, TRAVELER?",
+    content: (
+      <div className="text-[13px] leading-loose tracking-wide text-[#f5edd5] font-medium space-y-2">
+        <p>Type your question in the input field below.</p>
+        <p>The oracle will divine your answer.</p>
+        <p>10 prophecies per day are granted.</p>
+        <div className="mt-5 p-4 bg-[#22222a] border border-[#2a2a2a] rounded-sm opacity-50">
+          <p className="text-[#d4c090] mb-3 text-[11px] uppercase tracking-wider font-semibold">Example queries:</p>
+          <ul className="text-[#c0d8f0] text-[13px] leading-relaxed font-medium space-y-2.5 pl-1">
+            <li>• Any companies funded that created a reactor?</li>
+            <li>• Recent examples of companies that raised a round of funding</li>
+            <li>• Researching companies that created dev tools?</li>
+            <li>• Tell me the companies that raised a round of funding in december</li>
+            <li>• Any finnish companies receive funding?</li>
+          </ul>
+        </div>
+      </div>
+    ),
   },
 ];
 
@@ -113,7 +129,7 @@ useEffect(() => {
         {
           id: Date.now(),
           sender: "system",
-          content: <BasicResponse text="THE FATES HAVE SPOKEN... YOU HAVE REACHED YOUR DAILY LIMIT OF 5 PROPHECIES. RETURN WHEN THE SUN RISES ANEW." />,
+          content: <BasicResponse text="THE FATES HAVE SPOKEN... YOU HAVE REACHED YOUR DAILY LIMIT OF 10 PROPHECIES. RETURN WHEN THE SUN RISES ANEW." />,
         },
       ]);
       return;
@@ -178,7 +194,7 @@ useEffect(() => {
             */}
             <div className="flex items-center gap-1.5">
               <span className="text-[#f8f8f0] mr-1">PROPHECIES</span>
-              <span className="min-w-4 text-right">{remainingProphecies}/5</span>
+              <span className="min-w-4 text-right">{remainingProphecies}/10</span>
             </div>
             {/*
             <div className="flex items-center gap-1.5">
