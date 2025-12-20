@@ -12,6 +12,7 @@ import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
 import { StateGraph, END } from "@langchain/langgraph";
 import { ResponseItem, getTemporal } from './agents/temporal_router_agent';
+import { debugLog, debugError } from '@/lib/utils';
 
 /* ============================
    SCHEMA & TYPES
@@ -318,8 +319,8 @@ function createLlm(model: string) {
 ============================ */
 
 async function extractNode(state: TimeExtractionState): Promise<Partial<TimeExtractionState>> {
-  console.log(`\n[EXTRACT] Attempt ${state.attemptCount + 1}/${state.maxAttempts}`);
-  console.log(`[EXTRACT] Query: "${state.query}"`);
+  debugLog(`\n[EXTRACT] Attempt ${state.attemptCount + 1}/${state.maxAttempts}`);
+  debugLog(`[EXTRACT] Query: "${state.query}"`);
 
   const llm = createLlm(state.model);
   const structured = llm.withStructuredOutput(TimeClassificationSchema);
@@ -329,9 +330,9 @@ async function extractNode(state: TimeExtractionState): Promise<Partial<TimeExtr
     { role: "user", content: state.query },
   ]);
 
-  console.log(`[EXTRACT] Result: start=${res.start}, end=${res.end}, confidence=${res.confidence.toFixed(2)}`);
+  debugLog(`[EXTRACT] Result: start=${res.start}, end=${res.end}, confidence=${res.confidence.toFixed(2)}`);
   const duration = daysBetween(res.start, res.end);
-  console.log(`[EXTRACT] Duration: ${duration.toFixed(1)} days`);
+  debugLog(`[EXTRACT] Duration: ${duration.toFixed(1)} days`);
 
   return { currentExtraction: res };
 }
@@ -343,12 +344,12 @@ async function extractNode(state: TimeExtractionState): Promise<Partial<TimeExtr
  * @return Partial<TimeExtractionState> with results populated
  */
 async function temporalAdvice(state: TimeExtractionState): Promise<Partial<TimeExtractionState>> {
-  console.log("\n[TEMPORAL ADVICE] Fetching companies and generating analysis...");
+  debugLog("\n[TEMPORAL ADVICE] Fetching companies and generating analysis...");
 
   const { currentExtraction, query } = state;
 
   if (!currentExtraction) {
-    console.log("[TEMPORAL ADVICE] No extraction available, skipping");
+    debugLog("[TEMPORAL ADVICE] No extraction available, skipping");
     return { results: null };
   }
 
@@ -365,18 +366,18 @@ async function temporalAdvice(state: TimeExtractionState): Promise<Partial<TimeE
       state.model // model
     );
 
-    console.log(`[TEMPORAL ADVICE] Found ${result.companies.length} companies`);
-    console.log(`[TEMPORAL ADVICE] Inference: ${result.inference.substring(0, 100)}...`);
+    debugLog(`[TEMPORAL ADVICE] Found ${result.companies.length} companies`);
+    debugLog(`[TEMPORAL ADVICE] Inference: ${result.inference.substring(0, 100)}...`);
 
     return { results: result };
   } catch (err) {
-    console.error("[TEMPORAL ADVICE] Error calling getTemporal:", err);
+    debugError("[TEMPORAL ADVICE] Error calling getTemporal:", err);
     return { results: null };
   }
 }
 
 async function validateNode(state: TimeExtractionState): Promise<Partial<TimeExtractionState>> {
-  console.log("\n[VALIDATE] Checking extraction...");
+  debugLog("\n[VALIDATE] Checking extraction...");
 
   const { currentExtraction, query } = state;
   if (!currentExtraction) {
@@ -401,7 +402,7 @@ async function validateNode(state: TimeExtractionState): Promise<Partial<TimeExt
 
   const duration = daysBetween(start, end);
   const pattern = classifyQueryPattern(query);
-  console.log(`[VALIDATE] Pattern detected: ${pattern.type}`);
+  debugLog(`[VALIDATE] Pattern detected: ${pattern.type}`);
 
   // Pattern-specific validation
   switch (pattern.type) {
@@ -592,18 +593,18 @@ async function validateNode(state: TimeExtractionState): Promise<Partial<TimeExt
   }
 
   if (errors.length === 0) {
-    console.log("[VALIDATE] ✓ All checks passed");
+    debugLog("[VALIDATE] ✓ All checks passed");
     return { validationPassed: true, validationErrors: [] };
   } else {
-    console.log(`[VALIDATE] ✗ Found ${errors.length} validation errors:`);
-    errors.forEach((err, i) => console.log(`  ${i + 1}. ${err}`));
+    debugLog(`[VALIDATE] ✗ Found ${errors.length} validation errors:`);
+    errors.forEach((err, i) => debugLog(`  ${i + 1}. ${err}`));
     return { validationPassed: false, validationErrors: errors };
   }
 }
 
 async function retryNode(state: TimeExtractionState): Promise<Partial<TimeExtractionState>> {
-  console.log("\n[RETRY] Constructing feedback prompt...");
-  console.log(`[RETRY] Attempt ${state.attemptCount + 2}/${state.maxAttempts}`);
+  debugLog("\n[RETRY] Constructing feedback prompt...");
+  debugLog(`[RETRY] Attempt ${state.attemptCount + 2}/${state.maxAttempts}`);
 
   const { query, currentExtraction, validationErrors } = state;
   const pattern = classifyQueryPattern(query);
@@ -740,7 +741,7 @@ CRITICAL: You must fix these errors! Use the exact dates provided above.
 Return dates in YYYY-MM-DD format.
 `;
 
-  console.log("[RETRY] Invoking LLM with feedback...");
+  debugLog("[RETRY] Invoking LLM with feedback...");
 
   const llm = createLlm(state.model);
   const structured = llm.withStructuredOutput(TimeClassificationSchema);
@@ -750,8 +751,8 @@ Return dates in YYYY-MM-DD format.
     { role: "user", content: feedbackPrompt },
   ]);
 
-  console.log(`[RETRY] New result: start=${res.start}, end=${res.end}, confidence=${res.confidence.toFixed(2)}`);
-  console.log(`[RETRY] Duration: ${daysBetween(res.start, res.end).toFixed(1)} days`);
+  debugLog(`[RETRY] New result: start=${res.start}, end=${res.end}, confidence=${res.confidence.toFixed(2)}`);
+  debugLog(`[RETRY] Duration: ${daysBetween(res.start, res.end).toFixed(1)} days`);
 
   return {
     currentExtraction: res,
@@ -761,16 +762,16 @@ Return dates in YYYY-MM-DD format.
 }
 
 async function finalizeNode(state: TimeExtractionState): Promise<Partial<TimeExtractionState>> {
-  console.log("\n[FINALIZE] Packaging final result...");
+  debugLog("\n[FINALIZE] Packaging final result...");
 
   if (state.attemptCount > 0) {
-    console.log(`[FINALIZE] Used ${state.attemptCount} retries`);
+    debugLog(`[FINALIZE] Used ${state.attemptCount} retries`);
   }
 
   if (!state.validationPassed) {
-    console.log("[FINALIZE] ⚠ Validation did not pass, using best attempt");
+    debugLog("[FINALIZE] ⚠ Validation did not pass, using best attempt");
   } else {
-    console.log("[FINALIZE] ✓ Validation passed");
+    debugLog("[FINALIZE] ✓ Validation passed");
   }
 
   return { finalResult: state.currentExtraction };
@@ -780,12 +781,12 @@ async function finalizeNode(state: TimeExtractionState): Promise<Partial<TimeExt
  * handleFailureNode - Sets fallback response when validation fails or confidence is too low
  */
 async function handleFailureNode(state: TimeExtractionState): Promise<Partial<TimeExtractionState>> {
-  console.log("\n[HANDLE FAILURE] Setting fallback response...");
+  debugLog("\n[HANDLE FAILURE] Setting fallback response...");
   return {
     finalResult: null,
     results: {
       companies: [],
-      inference: "Try asking a different way or ask about the week or month",
+      inference: "Try asking: any companies funded this past month? OR any companies funded this past week? OR ask about a specific month like: for the month of september what companies raised a round of funding?",
     },
   };
 }
@@ -802,38 +803,38 @@ async function handleFailureNode(state: TimeExtractionState): Promise<Partial<Ti
  * @return 'temporal' to fetch companies, 'handleFailure' to set fallback message
  */
 function routeAfterFinish(state: TimeExtractionState): 'temporal' | 'handleFailure' {
-  console.log("\n[ROUTE AFTER FINISH] Deciding next step...");
+  debugLog("\n[ROUTE AFTER FINISH] Deciding next step...");
 
   const { validationPassed, currentExtraction } = state;
 
   // If validation passed and we have a good extraction, get temporal data
   if (validationPassed && currentExtraction && currentExtraction.confidence >= 0.85) {
-    console.log("[ROUTE AFTER FINISH] → TEMPORAL (validation passed with good confidence, fetching companies)");
+    debugLog("[ROUTE AFTER FINISH] → TEMPORAL (validation passed with good confidence, fetching companies)");
     return 'temporal';
   }
 
   // If validation failed but we still have an extraction with reasonable confidence
   if (currentExtraction && currentExtraction.confidence >= 0.85 && validationPassed) {
-    console.log("[ROUTE AFTER FINISH] → TEMPORAL (using high confidence extraction)");
+    debugLog("[ROUTE AFTER FINISH] → TEMPORAL (using high confidence extraction)");
     return 'temporal';
   }
 
-  console.log("[ROUTE AFTER FINISH] → HANDLE FAILURE (low quality or low confidence extraction)");
+  debugLog("[ROUTE AFTER FINISH] → HANDLE FAILURE (low quality or low confidence extraction)");
   return 'handleFailure';
 }
 
 function routeAfterValidation(state: TimeExtractionState): 'finalize' | 'retry' {
   if (state.validationPassed) {
-    console.log("[DECISION] → FINALIZE (validation passed)");
+    debugLog("[DECISION] → FINALIZE (validation passed)");
     return 'finalize';
   }
 
   if (state.attemptCount >= state.maxAttempts - 1) {
-    console.log(`[DECISION] → FINALIZE (max attempts ${state.maxAttempts} reached)`);
+    debugLog(`[DECISION] → FINALIZE (max attempts ${state.maxAttempts} reached)`);
     return 'finalize';
   }
 
-  console.log(`[DECISION] → RETRY (attempt ${state.attemptCount + 1}/${state.maxAttempts})`);
+  debugLog(`[DECISION] → RETRY (attempt ${state.attemptCount + 1}/${state.maxAttempts})`);
   return 'retry';
 }
 
@@ -925,7 +926,7 @@ export async function classifyTime(
       results: res.results,
     };
   } catch (err) {
-    console.error("Error classifying time:", err);
+    debugError("Error classifying time:", err);
 
     // Fallback
     const today = todayISO();

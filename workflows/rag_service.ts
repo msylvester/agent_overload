@@ -11,6 +11,7 @@ import { RagResearchAgent } from "./agents/rag_research_agent";
 import OpenAI from "openai";
 import { config } from 'dotenv';
 import * as path from 'path';
+import { debugLog, debugError } from '@/lib/utils';
 
 // Load environment variables from .env.local
 config({ path: path.resolve(__dirname, '../.env.local') });
@@ -43,7 +44,7 @@ function getOpenAIClient(): OpenAI {
 
 export function resetRagAgent(): void {
   _ragAgentInstance = null;
-  console.log("🔄 RagAgent singleton reset - will reinitialize on next access");
+  debugLog("🔄 RagAgent singleton reset - will reinitialize on next access");
 }
 
 // ===============================
@@ -120,7 +121,7 @@ export async function ragSemanticSearch(
       count: filteredResults.length,
     };
   } catch (error) {
-    console.error("Error in ragSemanticSearch:", error);
+    debugError("Error in ragSemanticSearch:", error);
     return {
       documents: [],
       metadatas: [],
@@ -191,7 +192,7 @@ Please synthesize the information from these documents to answer the query. Be s
 
     return completion.choices[0]?.message?.content || "Unable to generate a response.";
   } catch (error) {
-    console.error("Error in ragGenerateReasoning:", error);
+    debugError("Error in ragGenerateReasoning:", error);
     return `Error generating reasoning: ${error instanceof Error ? error.message : String(error)}`;
   }
 }
@@ -348,7 +349,7 @@ export async function runRagQuery(question: string): Promise<RAGQueryResponse> {
   return {
     answer: result.finalOutput.answer,
     sources: result.finalOutput.sources.map(source => {
-      console.log('Document:', JSON.stringify(source, null, 2));
+      debugLog('Document:', JSON.stringify(source, null, 2));
       return ({
       companyName: source.companyName,
       investors: source.investors,
@@ -388,8 +389,8 @@ export function getRagTools() {
 // ===============================
 
 if (require.main === module) {
-  console.log("Testing RAG Service Agent...");
-  console.log("=".repeat(50));
+  debugLog("Testing RAG Service Agent...");
+  debugLog("=".repeat(50));
 
   const testQueries = [
     "data storage infastrucutre comanies", // should at least select Vast Data
@@ -400,22 +401,22 @@ if (require.main === module) {
 
   (async () => {
     for (const query of testQueries) {
-      console.log(`\nQuery: ${query}`);
-      console.log("-".repeat(50));
+      debugLog(`\nQuery: ${query}`);
+      debugLog("-".repeat(50));
 
       try {
         const result = await runRagQuery(query);
-        console.log(`Answer: ${result.answer.substring(0, 200)}...`);
-        console.log(`Confidence: ${result.confidenceScore}`);
-        console.log(`Sources: ${result.sources.length} documents`);
+        debugLog(`Answer: ${result.answer.substring(0, 200)}...`);
+        debugLog(`Confidence: ${result.confidenceScore}`);
+        debugLog(`Sources: ${result.sources.length} documents`);
         result.sources.slice(0, 3).forEach(source => {
-          console.log(`  - ${source.companyName} (relevance: ${source.relevanceScore.toFixed(2)})`);
+          debugLog(`  - ${source.companyName} (relevance: ${source.relevanceScore.toFixed(2)})`);
         });
       } catch (error) {
-        console.error(`Error: ${error}`);
+        debugError(`Error: ${error}`);
       }
 
-      console.log("=".repeat(50));
+      debugLog("=".repeat(50));
     }
   })();
 }

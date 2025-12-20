@@ -9,6 +9,7 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 import { z } from "zod";
 import { Collection } from "mongodb";
 import { getMongoClient } from "../mongoPool";
+import { debugError } from '@/lib/utils';
 
 import { StateGraph, START, END } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
@@ -91,7 +92,7 @@ async function getRecentCompanies(
       })),
     };
   } catch (e) {
-    console.error("Error getRecentCompanies:", e);
+    debugError("Error getRecentCompanies:", e);
     return { companies: [], details: [] };
   }
 }
