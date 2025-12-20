@@ -776,6 +776,20 @@ async function finalizeNode(state: TimeExtractionState): Promise<Partial<TimeExt
   return { finalResult: state.currentExtraction };
 }
 
+/**
+ * handleFailureNode - Sets fallback response when validation fails or confidence is too low
+ */
+async function handleFailureNode(state: TimeExtractionState): Promise<Partial<TimeExtractionState>> {
+  console.log("\n[HANDLE FAILURE] Setting fallback response...");
+  return {
+    finalResult: null,
+    results: {
+      companies: [],
+      inference: "Try asking a different way or ask about the week or month",
+    },
+  };
+}
+
 
 /* ============================
    ROUTING
@@ -783,11 +797,11 @@ async function finalizeNode(state: TimeExtractionState): Promise<Partial<TimeExt
 
 /**
  * routeAfterFinish is a conditional route (edge)
- * after validating the time range, decides whether to fetch temporal data or end
+ * after validating the time range, decides whether to fetch temporal data or handle failure
  * @param TimeExtractionState
- * @return 'temporal' to fetch companies, 'end' to skip and finish
+ * @return 'temporal' to fetch companies, 'handleFailure' to set fallback message
  */
-function routeAfterFinish(state: TimeExtractionState): 'temporal' | 'end' {
+function routeAfterFinish(state: TimeExtractionState): 'temporal' | 'handleFailure' {
   console.log("\n[ROUTE AFTER FINISH] Deciding next step...");
 
   const { validationPassed, currentExtraction } = state;
@@ -804,8 +818,8 @@ function routeAfterFinish(state: TimeExtractionState): 'temporal' | 'end' {
     return 'temporal';
   }
 
-  console.log("[ROUTE AFTER FINISH] → END (skipping temporal fetch due to low quality or low confidence extraction)");
-  return 'end';
+  console.log("[ROUTE AFTER FINISH] → HANDLE FAILURE (low quality or low confidence extraction)");
+  return 'handleFailure';
 }
 
 function routeAfterValidation(state: TimeExtractionState): 'finalize' | 'retry' {
@@ -855,8 +869,9 @@ agenticGraph.addNode("validate", validateNode);
 agenticGraph.addNode("retry", retryNode);
 agenticGraph.addNode("finalize", finalizeNode);
 agenticGraph.addNode("temporalAdvice", temporalAdvice);
+agenticGraph.addNode("handleFailure", handleFailureNode);
 
-//conddtionally connect to the temporalAdvice node if the Start/End in state are correct and validated 
+//conddtionally connect to the temporalAdvice node if the Start/End in state are correct and validated
 //
 agenticGraph.addConditionalEdges("validate", routeAfterValidation, {
   finalize: "finalize",
@@ -865,14 +880,15 @@ agenticGraph.addConditionalEdges("validate", routeAfterValidation, {
 
 agenticGraph.addEdge("extract", "validate");
 
-// Conditional edge from finalize to temporalAdvice or END
+// Conditional edge from finalize to temporalAdvice or handleFailure
 agenticGraph.addConditionalEdges("finalize", routeAfterFinish, {
   temporal: "temporalAdvice",
-  end: END,
+  handleFailure: "handleFailure",
 });
 
 agenticGraph.addEdge("retry", "validate");
 agenticGraph.addEdge("temporalAdvice", END);
+agenticGraph.addEdge("handleFailure", END);
 
 agenticGraph.setEntryPoint("extract");
 
@@ -888,7 +904,7 @@ export { agenticApp };
 export async function classifyTime(
   query: string,
   model = "gpt-4o-mini"
-): Promise<{ timeClassification: TimeClassification; results: ResponseItem | null }> {
+): Promise<{ timeClassification: TimeClassification | null; results: ResponseItem | null }> {
   try {
     const res = await agenticApp.invoke({
       query,
@@ -903,25 +919,9 @@ export async function classifyTime(
       finalResult: null,
     });
 
-    const finalResult = res.finalResult;
-
-    if (!finalResult) {
-      throw new Error("No extraction result available");
-    }
-
-    // Handle case where temporalAdvice was skipped (low confidence or validation failed)
-    if (!res.results) {
-      return {
-        timeClassification: finalResult,
-        results: {
-          companies: [],
-          inference: "Try asking a different way or ask about the week or month",
-        },
-      };
-    }
-
+    // handleFailureNode sets finalResult to null and results to the fallback message
     return {
-      timeClassification: finalResult,
+      timeClassification: res.finalResult,
       results: res.results,
     };
   } catch (err) {
