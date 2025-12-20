@@ -21,7 +21,17 @@ const initialMessages: Message[] = [
   {
     id: 1,
     sender: "system",
-    content: "THE CRYSTAL BALL GLOWS, HOW CAN I ASSIST YOU, TRAVELER?",
+    content: "THE CRYSTAL BALL GLOWS... FIRST, SPEAK A TIME PERIOD. THEN, NAME YOUR QUARRY.",
+  },
+  {
+    id: 2,
+    sender: "system",
+    content: "\"WHO WAS FUNDED THIS PAST WEEK?\"",
+  },
+  {
+    id: 3,
+    sender: "system",
+    content: "\"WAIT, WHAT, WHO IS SUNO?\"",
   },
 ];
 

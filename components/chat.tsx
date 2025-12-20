@@ -25,6 +25,7 @@ import { Artifact } from "./artifact";
 import { Messages } from "./messages";
 import { MultimodalInput } from "./multimodal-input";
 import { getChatHistoryPaginationKey } from "./sidebar-history";
+import { SidePanel } from "./side-panel";
 import { toast } from "./toast";
 import type { VisibilityType } from "./visibility-selector";
 
@@ -245,6 +246,11 @@ export function Chat({
               usage={usage}
             />
           )}
+        </div>
+
+        {/* Bottom Info Panel */}
+        <div className="mx-auto w-full max-w-4xl px-2 pb-4 md:px-4">
+          <SidePanel />
         </div>
       </div>
 
