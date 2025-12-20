@@ -1,6 +1,7 @@
 import { getJobById } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
 import { ensureAuthenticated } from "@/lib/auth-helpers";
+import { logger } from "@/lib/logger";
 
 export async function GET(
   request: Request,
@@ -39,7 +40,7 @@ export async function GET(
       return error.toResponse();
     }
 
-    console.error("Error fetching job status:", error);
+    logger.error("Error fetching job status:", error);
     return Response.json(
       { error: "Internal server error" },
       { status: 500 }

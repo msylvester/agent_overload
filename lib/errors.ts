@@ -20,6 +20,8 @@ export type Surface =
 
 export type ErrorCode = `${ErrorType}:${Surface}`;
 
+import { logger } from "@/lib/logger";
+
 export type ErrorVisibility = "response" | "log" | "none";
 
 export const visibilityBySurface: Record<Surface, ErrorVisibility> = {
@@ -59,7 +61,7 @@ export class ChatSDKError extends Error {
     const { message, cause, statusCode } = this;
 
     if (visibility === "log") {
-      console.error({
+      logger.error({
         code,
         message,
         cause,

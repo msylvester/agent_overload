@@ -1,5 +1,6 @@
 import "server-only";
 
+import { logger } from "@/lib/logger";
 import {
   and,
   asc,
@@ -518,7 +519,7 @@ export async function updateChatLastContextById({
       .set({ lastContext: context })
       .where(eq(chat.id, chatId));
   } catch (error) {
-    console.warn("Failed to update lastContext for chat", chatId, error);
+    logger.warn("Failed to update lastContext for chat", chatId, error);
     return;
   }
 }

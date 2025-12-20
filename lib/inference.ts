@@ -1,5 +1,6 @@
 import { generateText } from './ai/transformers-model';
 import { DEFAULT_MODEL_ID, isValidModelId } from './ai/model-registry';
+import { logger } from "@/lib/logger";
 
 /**
  * Inference endpoint to make predictions using open-weight models
@@ -45,7 +46,7 @@ const inference = async (
       );
     }
 
-    console.log(`Using model: ${modelId}`);
+    logger.log(`Using model: ${modelId}`);
 
     const result = await generateText(prompt, {
       ...options,
@@ -54,7 +55,7 @@ const inference = async (
 
     return result;
   } catch (error) {
-    console.error('Inference error:', error);
+    logger.error('Inference error:', error);
     throw new Error(`Model inference failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 };
