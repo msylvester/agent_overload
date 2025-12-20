@@ -45,13 +45,13 @@ export default function SidePanel() {
       {/* Project Links */}
       <SidePanelSection title="Project Links">
         <div className="flex flex-col gap-1">
-          <LinkItem href="https://github.com/mikress/agent_overload">
+          <LinkItem href="https://github.com/msylvester/agent_overload">
             GitHub Repository
           </LinkItem>
-          <LinkItem href="https://github.com/mikress/agent_overload/issues">
+          <LinkItem href="https://github.com/msylvester/agent_overload/issues">
             Report Issues
           </LinkItem>
-          <LinkItem href="https://github.com/mikress/agent_overload#readme">
+          <LinkItem href="https://github.com/msylvester/agent_overload#readme">
             Documentation
           </LinkItem>
         </div>
