@@ -179,7 +179,9 @@ export const job = pgTable("Job", {
     .notNull()
     .references(() => chat.id),
   messageId: uuid("messageId").notNull(), // The user message that triggered the job
-  status: varchar("status", { enum: ["pending", "processing", "completed", "failed"] })
+  status: varchar("status", {
+    enum: ["pending", "processing", "completed", "failed"],
+  })
     .notNull()
     .default("pending"),
   result: json("result"), // Stores the assistant message when completed

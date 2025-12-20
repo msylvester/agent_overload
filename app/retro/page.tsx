@@ -1,15 +1,16 @@
 "use client";
-import React, { useState, KeyboardEvent, FormEvent, useEffect } from "react";
 import Image from "next/image";
-import ProfileImage from './components/ProfileImage';
-import ScrollablePane from "./components/ScrollablePane";
-import SidePanel from "./components/SidePanel";
-import { useRetroChat } from "@/hooks/use-retro-chat";
+import type React from "react";
+import { type FormEvent, type KeyboardEvent, useEffect, useState } from "react";
 import { useProphecyLimit } from "@/hooks/use-prophecy-limit";
+import { useRetroChat } from "@/hooks/use-retro-chat";
 import type { ChatMessage } from "@/lib/types";
+import ProfileImage from "./components/ProfileImage";
 import BasicResponse from "./components/responses/BasicResponse";
 import ResearchResponse from "./components/responses/ResearchResponse";
 import TemporalResponse from "./components/responses/TemporalResponse";
+import ScrollablePane from "./components/ScrollablePane";
+import SidePanel from "./components/SidePanel";
 
 type Message = {
   id: number;
@@ -21,17 +22,18 @@ const initialMessages: Message[] = [
   {
     id: 1,
     sender: "system",
-    content: "THE CRYSTAL BALL GLOWS... FIRST, SPEAK A TIME PERIOD. THEN, NAME YOUR QUARRY.",
+    content:
+      "THE CRYSTAL BALL GLOWS... FIRST, SPEAK A TIME PERIOD. THEN, NAME YOUR QUARRY.",
   },
   {
     id: 2,
     sender: "system",
-    content: "\"WHO WAS FUNDED THIS PAST WEEK?\"",
+    content: '"WHO WAS FUNDED THIS PAST WEEK?"',
   },
   {
     id: 3,
     sender: "system",
-    content: "\"WAIT, WHAT, WHO IS SUNO?\"",
+    content: '"WAIT, WHAT, WHO IS SUNO?"',
   },
 ];
 
@@ -45,7 +47,7 @@ function renderResponse(message: ChatMessage): {
 
   // Research response
   if (text.includes("**Dragon**")) {
-    //substring the dragonian 
+    //substring the dragonian
     const result = text.replace("**Dragon**", "");
 
     return {
@@ -69,32 +71,36 @@ function renderResponse(message: ChatMessage): {
   };
 }
 
-
 export default function KrystalBallZ() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
-  const [type, setType ] = useState("/fortune.png");
+  const [type, setType] = useState("/fortune.png");
   const { sendMessage, response, error, isLoading, reset } = useRetroChat();
-  const { prophecyCount, incrementProphecy, isLimitReached, remainingProphecies } = useProphecyLimit();
+  const {
+    prophecyCount,
+    incrementProphecy,
+    isLimitReached,
+    remainingProphecies,
+  } = useProphecyLimit();
 
   // Handle responses from the API
-useEffect(() => {
-  if (response) {
-    const { node, newType } = renderResponse(response);
-    setType(newType);
+  useEffect(() => {
+    if (response) {
+      const { node, newType } = renderResponse(response);
+      setType(newType);
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        sender: "system",
-        content: node,
-      },
-    ]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          sender: "system",
+          content: node,
+        },
+      ]);
 
-    reset();
-  }
-}, [response, reset]);
+      reset();
+    }
+  }, [response, reset]);
 
   // Handle errors
   useEffect(() => {
@@ -104,7 +110,11 @@ useEffect(() => {
         {
           id: Date.now(),
           sender: "system",
-          content: <BasicResponse text={`THE CRYSTAL BALL GROWS DARK... ${error.message}`} />,
+          content: (
+            <BasicResponse
+              text={`THE CRYSTAL BALL GROWS DARK... ${error.message}`}
+            />
+          ),
         },
       ]);
       reset(); // Reset the hook state for next message
@@ -123,7 +133,9 @@ useEffect(() => {
         {
           id: Date.now(),
           sender: "system",
-          content: <BasicResponse text="THE FATES HAVE SPOKEN... YOU HAVE REACHED YOUR DAILY LIMIT OF 5 PROPHECIES. RETURN WHEN THE SUN RISES ANEW." />,
+          content: (
+            <BasicResponse text="THE FATES HAVE SPOKEN... YOU HAVE REACHED YOUR DAILY LIMIT OF 5 PROPHECIES. RETURN WHEN THE SUN RISES ANEW." />
+          ),
         },
       ]);
       return;
@@ -172,14 +184,16 @@ useEffect(() => {
   const waiting = isLoading;
 
   return (
-    <div className="min-h-screen flex justify-center bg-[radial-gradient(circle_at_top,#1c2840_0%,#05040a_70%)] text-[#f0e6d2] p-4 box-border font-[var(--font-press-start),'Press_Start_2P',system-ui,-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif]">
-      <div className="[image-rendering:pixelated] max-w-[1120px] w-full border-4 border-[#2b2b2b] bg-[#141016] shadow-[0_0_0_4px_#4e4e4e,0_0_32px_rgba(0,0,0,0.7)] p-2">
+    <div className="box-border flex min-h-screen justify-center bg-[radial-gradient(circle_at_top,#1c2840_0%,#05040a_70%)] p-4 font-[var(--font-press-start),'Press_Start_2P',system-ui,-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif] text-[#f0e6d2]">
+      <div className="w-full max-w-[1120px] border-4 border-[#2b2b2b] bg-[#141016] p-2 shadow-[0_0_0_4px_#4e4e4e,0_0_32px_rgba(0,0,0,0.7)] [image-rendering:pixelated]">
         {/* TOP BAR */}
-        <div className="flex items-center justify-between border-[3px] border-[#5c5c5c] px-2.5 py-1.5 bg-[linear-gradient(#403b3b,#262020)] [text-shadow:1px_1px_#000] mb-2">
-          <div className="text-base tracking-[2px] sm:text-xs">KRYSTAL BALL Z</div>
-        
-          <div className="flex gap-4 items-center text-[10px] sm:gap-2.5 sm:text-[9px]">
-          {/*<div className="flex items-center gap-1.5">
+        <div className="mb-2 flex items-center justify-between border-[#5c5c5c] border-[3px] bg-[linear-gradient(#403b3b,#262020)] px-2.5 py-1.5 [text-shadow:1px_1px_#000]">
+          <div className="text-base tracking-[2px] sm:text-xs">
+            KRYSTAL BALL Z
+          </div>
+
+          <div className="flex items-center gap-4 text-[10px] sm:gap-2.5 sm:text-[9px]">
+            {/*<div className="flex items-center gap-1.5">
               <span className="text-[#f8f8f0]">ENERGY</span>
               <div className="w-[110px] h-2.5 border-2 border-[#272727] bg-[#1b2916] p-px box-border sm:w-20">
                 <div className="w-[85%] h-full bg-[linear-gradient(#32ff5d,#0e8d2b)]" />
@@ -187,8 +201,10 @@ useEffect(() => {
             </div>
             */}
             <div className="flex items-center gap-1.5">
-              <span className="text-[#f8f8f0] mr-1">PROPHECIES</span>
-              <span className="min-w-4 text-right">{remainingProphecies}/5</span>
+              <span className="mr-1 text-[#f8f8f0]">PROPHECIES</span>
+              <span className="min-w-4 text-right">
+                {remainingProphecies}/5
+              </span>
             </div>
             {/*
             <div className="flex items-center gap-1.5">
@@ -200,34 +216,36 @@ useEffect(() => {
         </div>
 
         {/* MAIN AREA */}
-        <div className="grid grid-cols-1 md:grid-cols-[1.1fr_2fr] gap-2 mb-2">
+        <div className="mb-2 grid grid-cols-1 gap-2 md:grid-cols-[1.1fr_2fr]">
           {/* LEFT: BAR MAIDEN OR CRYSTAL BALL */}
           {waiting ? (
             <div className="flex flex-col gap-1.5">
-              <div className="border-[3px] border-[#6b6b6b] bg-[#171217] shadow-[inset_0_0_0_2px_#2b2b2b] relative p-1.5 h-80 flex items-center justify-center bg-[radial-gradient(circle_at_top,#172141_0%,#050509_80%)] max-md:h-[260px]">
-                <div className="relative w-full max-w-[280px] h-full flex items-center justify-center">
+              <div className="relative flex h-80 items-center justify-center border-[#6b6b6b] border-[3px] bg-[#171217] bg-[radial-gradient(circle_at_top,#172141_0%,#050509_80%)] p-1.5 shadow-[inset_0_0_0_2px_#2b2b2b] max-md:h-[260px]">
+                <div className="relative flex h-full w-full max-w-[280px] items-center justify-center">
                   <Image
-                    src="/fortune.png"
                     alt="crystal ball"
+                    className="animate-crystal-pulse object-contain [filter:drop-shadow(0_0_20px_rgba(93,172,255,0.6))_drop-shadow(0_0_40px_rgba(125,205,255,0.4))]"
                     fill
                     sizes="(max-width: 768px) 100vw, 280px"
-                    className="object-contain [filter:drop-shadow(0_0_20px_rgba(93,172,255,0.6))_drop-shadow(0_0_40px_rgba(125,205,255,0.4))] animate-crystal-pulse"
+                    src="/fortune.png"
                   />
                 </div>
               </div>
             </div>
-          ) : 
-
-//render a compoennt called Image
-          (<ProfileImage type={type} />)}
-         {/* RIGHT: CHAT / LOG */}
-          <div className="flex flex-col h-80 max-md:h-[260px]">
-            <div className="border-[3px] border-[#6b6b6b] bg-[#171217] shadow-[inset_0_0_0_2px_#2b2b2b] relative h-full p-1.5 bg-[#1a1516]">
+          ) : (
+            //render a compoennt called Image
+            <ProfileImage type={type} />
+          )}
+          {/* RIGHT: CHAT / LOG */}
+          <div className="flex h-80 flex-col max-md:h-[260px]">
+            <div className="relative h-full border-[#6b6b6b] border-[3px] bg-[#171217] bg-[#1a1516] p-1.5 shadow-[inset_0_0_0_2px_#2b2b2b]">
               <ScrollablePane>
                 {messages.map((m) => (
-                  <div key={m.id} className="mb-2">
+                  <div className="mb-2" key={m.id}>
                     {m.sender === "user" ? (
-                      <div className="text-xs text-[#174c7e]">&gt; {m.content}</div>
+                      <div className="text-[#174c7e] text-xs">
+                        &gt; {m.content}
+                      </div>
                     ) : (
                       <div>{m.content}</div>
                     )}
@@ -239,61 +257,41 @@ useEffect(() => {
         </div>
 
         {/* INPUT BAR */}
-        <form className="border-[3px] border-[#666666] bg-[#101014] px-2.5 py-1.5 pb-2 flex flex-col gap-1" onSubmit={handleSubmit}>
-          <div className="text-[10px] text-[#e8dfb2] [text-shadow:1px_1px_#000] mb-0.5">
+        <form
+          className="flex flex-col gap-1 border-[#666666] border-[3px] bg-[#101014] px-2.5 py-1.5 pb-2"
+          onSubmit={handleSubmit}
+        >
+          <div className="mb-0.5 text-[#e8dfb2] text-[10px] [text-shadow:1px_1px_#000]">
             <span>WHAT WISDOM DO YOU SEEK?</span>
           </div>
           <div className="flex items-center justify-between gap-2 sm:flex-col sm:items-stretch">
-            <div className="flex-1 flex items-center gap-1 border-2 border-[#474747] px-1.5 py-1 bg-[#050608]">
-              <span className="text-[11px] text-[#f5f5dc]">&gt;</span>
+            <div className="flex flex-1 items-center gap-1 border-2 border-[#474747] bg-[#050608] px-1.5 py-1">
+              <span className="text-[#f5f5dc] text-[11px]">&gt;</span>
               <input
-                className="flex-1 bg-transparent border-none outline-none text-[#f5f5dc] text-[11px] font-[inherit] uppercase placeholder:text-[#6e6e6e]"
-                value={input}
+                className="flex-1 border-none bg-transparent font-[inherit] text-[#f5f5dc] text-[11px] uppercase outline-none placeholder:text-[#6e6e6e]"
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="TYPE COMMAND..."
+                value={input}
               />
             </div>
             <div className="flex gap-1.5 sm:justify-end">
               <button
-                type="submit"
+                className="cursor-pointer border-2 border-[#555555] bg-[linear-gradient(#373737,#181818)] px-2.5 py-1 text-[#f5f5dc] text-[10px] uppercase shadow-[0_2px_0_#000] [text-shadow:1px_1px_#000] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
                 disabled={isLoading || isLimitReached}
-                title={isLimitReached ? "Daily prophecy limit reached" : undefined}
-              className="
-    border-2 border-[#555555]
-    bg-[linear-gradient(#373737,#181818)]
-    text-[#f5f5dc]
-    px-2.5 py-1 text-[10px] uppercase
-    [text-shadow:1px_1px_#000]
-    shadow-[0_2px_0_#000]
-
-    cursor-pointer
-    disabled:cursor-not-allowed
-    disabled:opacity-50
-    disabled:shadow-none
-  "
+                title={
+                  isLimitReached ? "Daily prophecy limit reached" : undefined
+                }
+                type="submit"
               >
                 ASK
               </button>
               <button
-                type="button"
+                className="cursor-pointer border-2 border-[#555555] bg-[linear-gradient(#373737,#181818)] px-2.5 py-1 text-[#f5f5dc] text-[10px] uppercase shadow-[0_2px_0_#000] [text-shadow:1px_1px_#000] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
                 disabled={isLoading}
-             className="
-    border-2 border-[#555555]
-    bg-[linear-gradient(#373737,#181818)]
-    text-[#f5f5dc]
-    px-2.5 py-1 text-[10px] uppercase
-    [text-shadow:1px_1px_#000]
-    shadow-[0_2px_0_#000]
-
-    cursor-pointer
-    disabled:cursor-not-allowed
-    disabled:opacity-50
-    disabled:shadow-none
-  "
-           
-                // className="border-2 border-[#555555] bg-[linear-gradient(#373737,#181818)] text-[#f5f5dc] px-2.5 py-1 text-[10px] uppercase cursor-pointer [text-shadow:1px_1px_#000] shadow-[0_2px_0_#000] active:translate-y-px active:shadow-[0_1px_0_#000]"
                 onClick={handleReset}
+                // className="border-2 border-[#555555] bg-[linear-gradient(#373737,#181818)] text-[#f5f5dc] px-2.5 py-1 text-[10px] uppercase cursor-pointer [text-shadow:1px_1px_#000] shadow-[0_2px_0_#000] active:translate-y-px active:shadow-[0_1px_0_#000]"
+                type="button"
               >
                 RESET
               </button>

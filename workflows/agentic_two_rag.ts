@@ -1,4 +1,3 @@
-
 /**
  * Agentic RAG with MongoDB Atlas, LangGraph and OpenRouter
  *
@@ -22,23 +21,23 @@
  */
 
 import "dotenv/config";
-import { ChatOpenAI } from "@langchain/openai";
-import { MongoClient } from "mongodb";
-import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
-import { tool } from "@langchain/core/tools";
-import { StateGraph, END, START } from "@langchain/langgraph";
-import { ToolNode } from "@langchain/langgraph/prebuilt";
+import { Embeddings } from "@langchain/core/embeddings";
 import {
-  BaseMessage,
-  HumanMessage,
   AIMessage,
+  type BaseMessage,
+  HumanMessage,
   ToolMessage,
 } from "@langchain/core/messages";
-import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import { z } from "zod";
+import { PromptTemplate } from "@langchain/core/prompts";
 import type { RunnableConfig } from "@langchain/core/runnables";
-import { Embeddings } from "@langchain/core/embeddings";
+import { tool } from "@langchain/core/tools";
+import { END, START, StateGraph } from "@langchain/langgraph";
+import { ToolNode } from "@langchain/langgraph/prebuilt";
+import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
+import { ChatOpenAI } from "@langchain/openai";
+import { MongoClient } from "mongodb";
+import { z } from "zod";
 
 // ============================================================================
 // CONFIGURATION
@@ -139,9 +138,7 @@ class OpenRouterEmbeddings extends Embeddings {
     }
   }
 
-  private async embedInternal(
-    input: string | string[]
-  ): Promise<number[][]> {
+  private async embedInternal(input: string | string[]): Promise<number[][]> {
     const isSingle = typeof input === "string";
     const payload = {
       model: this.model,
@@ -162,9 +159,7 @@ class OpenRouterEmbeddings extends Embeddings {
     if (!res.ok) {
       const text = await res.text();
       throw new Error(
-        `OpenRouter embeddings error (${res.status}): ${
-          text || res.statusText
-        }`
+        `OpenRouter embeddings error (${res.status}): ${text || res.statusText}`
       );
     }
 
@@ -235,9 +230,11 @@ async function setupRetriever() {
   // If filtering by company, show count
   if (FILTER_COMPANY_NAME) {
     const companyCount = await collection.countDocuments({
-      company_name: FILTER_COMPANY_NAME
+      company_name: FILTER_COMPANY_NAME,
     });
-    console.log(`[INFO] Documents for '${FILTER_COMPANY_NAME}': ${companyCount}`);
+    console.log(
+      `[INFO] Documents for '${FILTER_COMPANY_NAME}': ${companyCount}`
+    );
   }
 
   // Create vector store instance for retrieval
@@ -250,7 +247,7 @@ async function setupRetriever() {
 
   // Create retriever with optional company filter
   const retrieverConfig: any = {
-    k: 20,  // Retrieve top 20 for filtering
+    k: 20, // Retrieve top 20 for filtering
   };
 
   if (FILTER_COMPANY_NAME) {
@@ -310,8 +307,10 @@ async function retrieveNode(state: AgentState, _config?: RunnableConfig) {
     .filter(([doc]) => {
       // Exclude generic contact pages or placeholder content
       const title = doc.metadata.title || "";
-      return !title.toLowerCase().includes("get in touch") &&
-             !title.toLowerCase().includes("contact us");
+      return (
+        !title.toLowerCase().includes("get in touch") &&
+        !title.toLowerCase().includes("contact us")
+      );
     })
     .slice(0, 4);
 
@@ -333,14 +332,15 @@ async function retrieveNode(state: AgentState, _config?: RunnableConfig) {
   const docs = docsWithScores.map(([doc]) => doc);
   const formattedDocs = docs
     .map((doc) => {
-      const { companyName = "Untitled Company",
-        title= "",
+      const {
+        companyName = "Untitled Company",
+        title = "",
         sector = "",
         source = "",
-        funding = ""
+        funding = "",
       } = doc.metadata || {};
 
-        /*
+      /*
       const companyName = doc.metadata.company_name || "Unknown Company";
       const title = doc.metadata.title || "";
       const sector = doc.metadata.sector || "";
@@ -403,7 +403,8 @@ async function rewriteNode(state: AgentState, _config?: RunnableConfig) {
   const question = messages[0].content;
 
   // Convert question to string if it's not already
-  const questionString = typeof question === 'string' ? question : JSON.stringify(question);
+  const questionString =
+    typeof question === "string" ? question : JSON.stringify(question);
 
   console.log("[REWRITE] Original query:", questionString);
 
@@ -445,8 +446,9 @@ async function generateNode(state: AgentState, _config?: RunnableConfig) {
   const docs = (lastMessage as any).content;
 
   // Convert docs and question to string if they're not already
-  const docsString = typeof docs === 'string' ? docs : JSON.stringify(docs);
-  const questionString = typeof question === 'string' ? question : JSON.stringify(question);
+  const docsString = typeof docs === "string" ? docs : JSON.stringify(docs);
+  const questionString =
+    typeof question === "string" ? question : JSON.stringify(question);
 
   // RAG prompt template
   const prompt = PromptTemplate.fromTemplate(
@@ -496,7 +498,9 @@ async function gradeDocuments(
 
   // Define grading schema
   const gradeSchema = z.object({
-    binaryScore: z.enum(["yes", "no"]).describe("Relevance score 'yes' or 'no'"),
+    binaryScore: z
+      .enum(["yes", "no"])
+      .describe("Relevance score 'yes' or 'no'"),
   });
 
   const model = createOpenRouterClient(GRADER_MODEL);
@@ -523,8 +527,9 @@ Give a binary score 'yes' or 'no' to indicate whether the document is relevant t
   const docs = (lastMessage as any).content ?? "";
 
   // Convert question and docs to string if they're not already
-  const questionString = typeof question === 'string' ? question : JSON.stringify(question);
-  const docsString = typeof docs === 'string' ? docs : JSON.stringify(docs);
+  const questionString =
+    typeof question === "string" ? question : JSON.stringify(question);
+  const docsString = typeof docs === "string" ? docs : JSON.stringify(docs);
 
   // Log what was retrieved
   console.log("\n[RETRIEVED] Documents retrieved from vector search:");
@@ -557,11 +562,10 @@ Give a binary score 'yes' or 'no' to indicate whether the document is relevant t
     console.log("[GRADE] Documents marked as: RELEVANT");
     console.log("[DECISION] → GENERATE");
     return "generate";
-  } else {
-    console.log("[GRADE] Documents marked as: NOT RELEVANT");
-    console.log("[DECISION] → REWRITE (single pass)");
-    return "rewrite";
   }
+  console.log("[GRADE] Documents marked as: NOT RELEVANT");
+  console.log("[DECISION] → REWRITE (single pass)");
+  return "rewrite";
 }
 
 /**
@@ -572,7 +576,10 @@ function routeAfterAgent(state: AgentState): string {
   const lastMessage = messages[messages.length - 1] as AIMessage;
 
   // If there are tool calls, go to tools
-  if ((lastMessage as any).tool_calls && (lastMessage as any).tool_calls.length > 0) {
+  if (
+    (lastMessage as any).tool_calls &&
+    (lastMessage as any).tool_calls.length > 0
+  ) {
     return "tools";
   }
 
@@ -593,7 +600,7 @@ export async function buildGraph() {
   retrieverTool = tool(
     async (input: { query: string }) => {
       const docs = await retriever.invoke(input.query);
-      return docs.map(doc => doc.pageContent).join("\n\n");
+      return docs.map((doc) => doc.pageContent).join("\n\n");
     },
     {
       name: "retrieve_company_info",
@@ -602,7 +609,9 @@ export async function buildGraph() {
         "Use this to find company descriptions, sectors, funding information, " +
         "technology details, and business focus areas. Returns relevant company profiles based on the query.",
       schema: z.object({
-        query: z.string().describe("The search query to find relevant company information"),
+        query: z
+          .string()
+          .describe("The search query to find relevant company information"),
       }),
     }
   );
@@ -622,18 +631,26 @@ export async function buildGraph() {
   workflow.addEdge(START as any, "agent" as any);
 
   // Conditional edge from agent
-  workflow.addConditionalEdges("agent" as any, routeAfterAgent as any, {
-    tools: "retrieve",
-    [END as any]: END as any,
-  } as any);
+  workflow.addConditionalEdges(
+    "agent" as any,
+    routeAfterAgent as any,
+    {
+      tools: "retrieve",
+      [END as any]: END as any,
+    } as any
+  );
 
   // Conditional edge from retrieve:
   // - "generate" → generate answer
   // - "rewrite"  → rewrite then generate (no loop back to agent)
-  workflow.addConditionalEdges("retrieve" as any, gradeDocuments as any, {
-    generate: "generate",
-    rewrite: "rewrite",
-  } as any);
+  workflow.addConditionalEdges(
+    "retrieve" as any,
+    gradeDocuments as any,
+    {
+      generate: "generate",
+      rewrite: "rewrite",
+    } as any
+  );
 
   // After generation, end
   workflow.addEdge("generate" as any, END as any);
@@ -675,7 +692,8 @@ export async function invokeGraph(
   // Handle different message types
   if (typeof lastMessage === "string") {
     return lastMessage;
-  } else if (lastMessage.content) {
+  }
+  if (lastMessage.content) {
     return typeof lastMessage.content === "string"
       ? lastMessage.content
       : JSON.stringify(lastMessage.content);
@@ -761,4 +779,3 @@ async function main() {
 //   console.error("ERROR:", error);
 //   process.exit(1);
 // });
-

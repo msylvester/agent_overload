@@ -100,8 +100,8 @@
 //   var _mongoClientPromise: Promise<MongoClient> | undefined;
 // }
 
-import { MongoClient, Document } from "mongodb";
-import { debugLog } from '@/lib/utils';
+import { type Document, MongoClient } from "mongodb";
+import { debugLog } from "@/lib/utils";
 
 const DATABASE_NAME = "companies";
 
@@ -171,7 +171,9 @@ export async function getDatabase() {
 /**
  * Get a typed collection from the database.
  */
-export async function getCollection<T extends Document = Document>(collectionName: string) {
+export async function getCollection<T extends Document = Document>(
+  collectionName: string
+) {
   const db = await getDatabase();
   return db.collection<T>(collectionName);
 }

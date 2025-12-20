@@ -5,8 +5,10 @@ const TEST_CASES = [
   {
     input: "Show me companies from the last 6 months",
     expected: {
-      start: new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString().split('T')[0],
-      end: new Date().toISOString().split('T')[0],
+      start: new Date(new Date().setMonth(new Date().getMonth() - 6))
+        .toISOString()
+        .split("T")[0],
+      end: new Date().toISOString().split("T")[0],
     },
   },
   {
@@ -19,15 +21,19 @@ const TEST_CASES = [
   {
     input: "Companies founded in the past year",
     expected: {
-      start: new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString().split('T')[0],
-      end: new Date().toISOString().split('T')[0],
+      start: new Date(new Date().setFullYear(new Date().getFullYear() - 1))
+        .toISOString()
+        .split("T")[0],
+      end: new Date().toISOString().split("T")[0],
     },
   },
   {
     input: "Recent fintech investments",
     expected: {
-      start: new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString().split('T')[0],
-      end: new Date().toISOString().split('T')[0],
+      start: new Date(new Date().setMonth(new Date().getMonth() - 3))
+        .toISOString()
+        .split("T")[0],
+      end: new Date().toISOString().split("T")[0],
     },
   },
   {
@@ -47,15 +53,19 @@ const TEST_CASES = [
   {
     input: "Show me investments in the last 2 years",
     expected: {
-      start: new Date(new Date().setFullYear(new Date().getFullYear() - 2)).toISOString().split('T')[0],
-      end: new Date().toISOString().split('T')[0],
+      start: new Date(new Date().setFullYear(new Date().getFullYear() - 2))
+        .toISOString()
+        .split("T")[0],
+      end: new Date().toISOString().split("T")[0],
     },
   },
   {
     input: "Companies funded this month",
     expected: {
-      start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-      end: new Date().toISOString().split('T')[0],
+      start: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+        .toISOString()
+        .split("T")[0],
+      end: new Date().toISOString().split("T")[0],
     },
   },
   {
@@ -68,8 +78,10 @@ const TEST_CASES = [
   {
     input: "Investments in the last 30 days",
     expected: {
-      start: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
-      end: new Date().toISOString().split('T')[0],
+      start: new Date(new Date().setDate(new Date().getDate() - 30))
+        .toISOString()
+        .split("T")[0],
+      end: new Date().toISOString().split("T")[0],
     },
   },
   {
@@ -89,8 +101,10 @@ const TEST_CASES = [
   {
     input: "Show me deals from the last 90 days",
     expected: {
-      start: new Date(new Date().setDate(new Date().getDate() - 90)).toISOString().split('T')[0],
-      end: new Date().toISOString().split('T')[0],
+      start: new Date(new Date().setDate(new Date().getDate() - 90))
+        .toISOString()
+        .split("T")[0],
+      end: new Date().toISOString().split("T")[0],
     },
   },
   {
@@ -103,8 +117,10 @@ const TEST_CASES = [
   {
     input: "Companies from the last 18 months",
     expected: {
-      start: new Date(new Date().setMonth(new Date().getMonth() - 18)).toISOString().split('T')[0],
-      end: new Date().toISOString().split('T')[0],
+      start: new Date(new Date().setMonth(new Date().getMonth() - 18))
+        .toISOString()
+        .split("T")[0],
+      end: new Date().toISOString().split("T")[0],
     },
   },
   {
@@ -117,8 +133,10 @@ const TEST_CASES = [
   {
     input: "Show me companies from the past 3 years",
     expected: {
-      start: new Date(new Date().setFullYear(new Date().getFullYear() - 3)).toISOString().split('T')[0],
-      end: new Date().toISOString().split('T')[0],
+      start: new Date(new Date().setFullYear(new Date().getFullYear() - 3))
+        .toISOString()
+        .split("T")[0],
+      end: new Date().toISOString().split("T")[0],
     },
   },
   {
@@ -131,15 +149,19 @@ const TEST_CASES = [
   {
     input: "Companies from the last 7 days",
     expected: {
-      start: new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split('T')[0],
-      end: new Date().toISOString().split('T')[0],
+      start: new Date(new Date().setDate(new Date().getDate() - 7))
+        .toISOString()
+        .split("T")[0],
+      end: new Date().toISOString().split("T")[0],
     },
   },
   {
     input: "Ventures funded in the past 5 years",
     expected: {
-      start: new Date(new Date().setFullYear(new Date().getFullYear() - 5)).toISOString().split('T')[0],
-      end: new Date().toISOString().split('T')[0],
+      start: new Date(new Date().setFullYear(new Date().getFullYear() - 5))
+        .toISOString()
+        .split("T")[0],
+      end: new Date().toISOString().split("T")[0],
     },
   },
   {
@@ -153,14 +175,16 @@ const TEST_CASES = [
     input: "Companies founded this year",
     expected: {
       start: `${new Date().getFullYear()}-01-01`,
-      end: new Date().toISOString().split('T')[0],
+      end: new Date().toISOString().split("T")[0],
     },
   },
   {
     input: "Startups from the last quarter",
     expected: {
-      start: new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString().split('T')[0],
-      end: new Date().toISOString().split('T')[0],
+      start: new Date(new Date().setMonth(new Date().getMonth() - 3))
+        .toISOString()
+        .split("T")[0],
+      end: new Date().toISOString().split("T")[0],
     },
   },
   {
@@ -173,8 +197,10 @@ const TEST_CASES = [
   {
     input: "Show me deals from the last 60 days",
     expected: {
-      start: new Date(new Date().setDate(new Date().getDate() - 60)).toISOString().split('T')[0],
-      end: new Date().toISOString().split('T')[0],
+      start: new Date(new Date().setDate(new Date().getDate() - 60))
+        .toISOString()
+        .split("T")[0],
+      end: new Date().toISOString().split("T")[0],
     },
   },
   {
@@ -211,7 +237,7 @@ interface TestResult {
   rationale: string;
 }
 
-function datesMatch(date1: string, date2: string, toleranceDays: number = 1): boolean {
+function datesMatch(date1: string, date2: string, toleranceDays = 1): boolean {
   const d1 = new Date(date1).getTime();
   const d2 = new Date(date2).getTime();
   const diffDays = Math.abs(d1 - d2) / (1000 * 60 * 60 * 24);
@@ -256,14 +282,17 @@ async function runTimeTests(): Promise<void> {
       console.log(`  Query: ${query}`);
       console.log(`  Expected Start: ${expectedStart}`);
       console.log(`  Expected End: ${expectedEnd}`);
-      console.log(`  Predicted Start: ${predictedStart} ${startMatch ? "✓" : "✗"}`);
+      console.log(
+        `  Predicted Start: ${predictedStart} ${startMatch ? "✓" : "✗"}`
+      );
       console.log(`  Predicted End: ${predictedEnd} ${endMatch ? "✓" : "✗"}`);
       console.log(`  Confidence: ${confidence.toFixed(2)}`);
       console.log(`  Status: ${status}`);
       console.log(`  Rationale: ${rationale}`);
       console.log();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       results.push({
         query,
         expectedStart,
@@ -280,10 +309,10 @@ async function runTimeTests(): Promise<void> {
       console.log(`  Query: ${query}`);
       console.log(`  Expected Start: ${expectedStart}`);
       console.log(`  Expected End: ${expectedEnd}`);
-      console.log(`  Predicted Start: ERROR`);
-      console.log(`  Predicted End: ERROR`);
-      console.log(`  Confidence: 0.00`);
-      console.log(`  Status: ❌ FAIL`);
+      console.log("  Predicted Start: ERROR");
+      console.log("  Predicted End: ERROR");
+      console.log("  Confidence: 0.00");
+      console.log("  Status: ❌ FAIL");
       console.log(`  Rationale: ${errorMessage}`);
       console.log();
     }

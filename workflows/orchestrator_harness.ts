@@ -19,7 +19,7 @@ const TEST_DATA = [
   {
     input: "Who was funded in December",
     min_expected: 14,
-  }
+  },
   //   {
   //     input: "who has been funded in the lsat week",
   //     min_expected: 1

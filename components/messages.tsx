@@ -1,7 +1,7 @@
-import type { Dispatch, SetStateAction } from "react";
 import equal from "fast-deep-equal";
 import { AnimatePresence } from "framer-motion";
 import { ArrowDownIcon } from "lucide-react";
+import type { Dispatch, SetStateAction } from "react";
 import { memo, useEffect } from "react";
 import { useMessages } from "@/hooks/use-messages";
 import type { Vote } from "@/lib/db/schema";

@@ -17,9 +17,5 @@ export default function RetroLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <div className={`${pressStart2P.variable}`}>
-      {children}
-    </div>
-  );
+  return <div className={`${pressStart2P.variable}`}>{children}</div>;
 }

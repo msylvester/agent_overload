@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import type React from "react";
 
 interface SidePanelSectionProps {
   title: string;
@@ -10,8 +10,8 @@ interface SidePanelSectionProps {
 function SidePanelSection({ title, children }: SidePanelSectionProps) {
   return (
     <div className="border border-[#3a3a3a] bg-[#0d0d10]">
-      <div className="border-b border-[#3a3a3a] px-3 py-2 bg-[linear-gradient(#252525,#1a1a1a)]">
-        <h2 className="text-[10px] text-[#8a8a8a] uppercase tracking-wider">
+      <div className="border-[#3a3a3a] border-b bg-[linear-gradient(#252525,#1a1a1a)] px-3 py-2">
+        <h2 className="text-[#8a8a8a] text-[10px] uppercase tracking-wider">
           {title}
         </h2>
       </div>
@@ -29,10 +29,10 @@ interface LinkItemProps {
 function LinkItem({ href, children, external = true }: LinkItemProps) {
   return (
     <a
+      className="block py-0.5 text-[#7a9ec2] text-[10px] transition-colors duration-150 hover:text-[#a8c8e8]"
       href={href}
-      target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      className="block text-[10px] text-[#7a9ec2] hover:text-[#a8c8e8] transition-colors duration-150 py-0.5"
+      target={external ? "_blank" : undefined}
     >
       {children}
     </a>
@@ -41,7 +41,7 @@ function LinkItem({ href, children, external = true }: LinkItemProps) {
 
 export function SidePanel() {
   return (
-    <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 font-[var(--font-geist-mono),ui-monospace,monospace] text-[#c0c0c0]">
+    <div className="grid w-full grid-cols-1 gap-2 font-[var(--font-geist-mono),ui-monospace,monospace] text-[#c0c0c0] md:grid-cols-2 lg:grid-cols-4">
       {/* Project Links */}
       <SidePanelSection title="Project Links">
         <div className="flex flex-col gap-1">
@@ -59,7 +59,7 @@ export function SidePanel() {
 
       {/* How To Use */}
       <SidePanelSection title="How To Use">
-        <div className="text-[9px] leading-relaxed text-[#909090] space-y-1.5">
+        <div className="space-y-1.5 text-[#909090] text-[9px] leading-relaxed">
           <p>Type your question in the input field below.</p>
           <p>The oracle will divine your answer.</p>
           <p>5 prophecies per day are granted.</p>
@@ -69,15 +69,11 @@ export function SidePanel() {
       {/* About the Creator */}
       <SidePanelSection title="About the Creator">
         <div className="flex flex-col gap-1">
-          <LinkItem href="https://x.com/MikeS47896459">
-            X / Twitter
-          </LinkItem>
+          <LinkItem href="https://x.com/MikeS47896459">X / Twitter</LinkItem>
           <LinkItem href="https://www.linkedin.com/in/msylvest55/">
             LinkedIn
           </LinkItem>
-          <LinkItem href="https://github.com/msylvester">
-            GitHub
-          </LinkItem>
+          <LinkItem href="https://github.com/msylvester">GitHub</LinkItem>
           <LinkItem href="https://www.twitch.tv/krystal_mess323">
             Twitch
           </LinkItem>
@@ -89,7 +85,7 @@ export function SidePanel() {
 
       {/* App Status */}
       <SidePanelSection title="App Status">
-        <div className="text-[9px] text-[#707070] space-y-1">
+        <div className="space-y-1 text-[#707070] text-[9px]">
           <div className="flex justify-between">
             <span>Version</span>
             <span className="text-[#909090]">0.1.0</span>

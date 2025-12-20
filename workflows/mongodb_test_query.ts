@@ -11,7 +11,7 @@
  *   npx tsx mongodb_test_query.ts myCollection 2024-01-01 2024-12-31 createdAt
  */
 
-import { getCollection, closeConnection } from "./mongoPool";
+import { closeConnection, getCollection } from "./mongoPool";
 
 interface QueryOptions {
   collectionName: string;
@@ -77,7 +77,9 @@ async function queryByDateRange(options: QueryOptions) {
 function parseDate(dateString: string): Date {
   const date = new Date(dateString);
   if (isNaN(date.getTime())) {
-    throw new Error(`Invalid date format: ${dateString}. Use YYYY-MM-DD format.`);
+    throw new Error(
+      `Invalid date format: ${dateString}. Use YYYY-MM-DD format.`
+    );
   }
   return date;
 }
@@ -107,7 +109,8 @@ async function main() {
     process.exit(args.includes("--help") || args.includes("-h") ? 0 : 1);
   }
 
-  const [collectionName, startDateStr, endDateStr, dateField = "createdAt"] = args;
+  const [collectionName, startDateStr, endDateStr, dateField = "createdAt"] =
+    args;
 
   try {
     const startDate = parseDate(startDateStr);

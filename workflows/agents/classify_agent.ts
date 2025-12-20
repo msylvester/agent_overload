@@ -55,7 +55,9 @@ Provide your classification along with brief reasoning.
   outputType: IntentSchema,
 });
 
-export async function classifyIntent(query: string): Promise<IntentClassificationSchema> {
+export async function classifyIntent(
+  query: string
+): Promise<IntentClassificationSchema> {
   const result = await run(intent_classifier_agent, query);
 
   if (!result.finalOutput) {
@@ -67,4 +69,3 @@ export async function classifyIntent(query: string): Promise<IntentClassificatio
     reasoning: result.finalOutput.reasoning,
   };
 }
-

@@ -6,10 +6,10 @@ import { memo } from "react";
 import { useWindowSize } from "usehooks-ts";
 // import { SidebarToggle } from "@/components/sidebar-toggle";
 import { Button } from "@/components/ui/button";
+import { useProphecyLimit } from "@/hooks/use-prophecy-limit";
 import { PlusIcon, VercelIcon } from "./icons";
 import { useSidebar } from "./ui/sidebar";
 import { VisibilitySelector, type VisibilityType } from "./visibility-selector";
-import { useProphecyLimit } from "@/hooks/use-prophecy-limit";
 
 function PureChatHeader({
   chatId,
@@ -52,7 +52,7 @@ function PureChatHeader({
         />
       )} */}
 
-      <div className="text-sm text-muted-foreground">
+      <div className="text-muted-foreground text-sm">
         Queries remaining: {remainingProphecies}/5
       </div>
 

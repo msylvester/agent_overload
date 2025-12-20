@@ -1,11 +1,7 @@
 import { waitUntil } from "@vercel/functions";
-
-import { runOrchestratorWorkflow, type OrchFlowOutput } from "@/workflows/orchestrator_workflow";
-import { debugLog, debugError } from "@/lib/utils";
-
-
 import type { VisibilityType } from "@/components/visibility-selector";
 import type { ChatModel } from "@/lib/ai/models";
+import { ensureAuthenticated } from "@/lib/auth-helpers";
 import {
   createJob,
   deleteChatById,
@@ -17,10 +13,13 @@ import {
 } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
 import type { ChatMessage } from "@/lib/types";
-import { generateUUID } from "@/lib/utils";
+import { debugError, debugLog, generateUUID } from "@/lib/utils";
+import {
+  type OrchFlowOutput,
+  runOrchestratorWorkflow,
+} from "@/workflows/orchestrator_workflow";
 import { generateTitleFromUserMessage } from "../../actions";
 import { type PostRequestBody, postRequestBodySchema } from "./schema";
-import { ensureAuthenticated } from "@/lib/auth-helpers";
 
 export const maxDuration = 60;
 
@@ -36,13 +35,14 @@ async function processWorkflowInBackground(
 
     debugLog(`[Job ${jobId}] Starting workflow...`);
 
-    const orchWorkflowOutput: OrchFlowOutput = await runOrchestratorWorkflow(userMessageText);
+    const orchWorkflowOutput: OrchFlowOutput =
+      await runOrchestratorWorkflow(userMessageText);
     const { classifyResponse } = orchWorkflowOutput;
 
     let assistantMessage: ChatMessage;
 
     switch (classifyResponse) {
-      case 'time': {
+      case "time": {
         // Extract temporal data
         const temporalResponse = orchWorkflowOutput.temporalResponse;
 
@@ -50,32 +50,44 @@ async function processWorkflowInBackground(
 
         if (temporalResponse?.time) {
           // Handle both ISO strings (from fromScratch.ts) and Unix timestamps (from legacy workflow)
-          let startDate: string = '';
-          let endDate: string = '';
+          let startDate = "";
+          let endDate = "";
 
-          if (typeof temporalResponse.time.start === 'string') {
+          if (typeof temporalResponse.time.start === "string") {
             // ISO string format (YYYY-MM-DD) from fromScratch.ts
-            startDate = new Date(temporalResponse.time.start).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
+            startDate = new Date(
+              temporalResponse.time.start
+            ).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
             });
-            endDate = new Date(temporalResponse.time.end).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            });
-          } else if (typeof temporalResponse.time.start === 'number' && typeof temporalResponse.time.end === 'number') {
+            endDate = new Date(temporalResponse.time.end).toLocaleDateString(
+              "en-US",
+              {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }
+            );
+          } else if (
+            typeof temporalResponse.time.start === "number" &&
+            typeof temporalResponse.time.end === "number"
+          ) {
             // Unix timestamp (seconds) from legacy workflow
-            startDate = new Date(temporalResponse.time.start * 1000).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
+            startDate = new Date(
+              temporalResponse.time.start * 1000
+            ).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
             });
-            endDate = new Date(temporalResponse.time.end * 1000).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
+            endDate = new Date(
+              temporalResponse.time.end * 1000
+            ).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
             });
           }
 
@@ -84,12 +96,15 @@ async function processWorkflowInBackground(
           }
         }
 
-        if (temporalResponse?.results?.companies && temporalResponse.results.companies.length > 0) {
-          formattedText += `**Companies Found:**\n`;
-          temporalResponse.results.companies.forEach(company => {
+        if (
+          temporalResponse?.results?.companies &&
+          temporalResponse.results.companies.length > 0
+        ) {
+          formattedText += "**Companies Found:**\n";
+          temporalResponse.results.companies.forEach((company) => {
             formattedText += `• ${company}\n`;
           });
-          formattedText += `\n`;
+          formattedText += "\n";
         }
 
         if (temporalResponse?.results?.inference) {
@@ -108,9 +123,10 @@ async function processWorkflowInBackground(
         break;
       }
 
-      case 'basic': {
+      case "basic": {
         // Extract basic response
-        const basicText = orchWorkflowOutput.basicResponse || "No response available.";
+        const basicText =
+          orchWorkflowOutput.basicResponse || "No response available.";
 
         assistantMessage = {
           id: generateUUID(),
@@ -120,9 +136,10 @@ async function processWorkflowInBackground(
         break;
       }
 
-      case 'research': {
+      case "research": {
         // Extract RAG results text
-        const ragText = orchWorkflowOutput.ragResults || "No research results found.";
+        const ragText =
+          orchWorkflowOutput.ragResults || "No research results found.";
 
         assistantMessage = {
           id: generateUUID(),
@@ -133,12 +150,19 @@ async function processWorkflowInBackground(
       }
 
       default: {
-        debugError(`[Job ${jobId}] Unexpected classification: ${classifyResponse}`);
+        debugError(
+          `[Job ${jobId}] Unexpected classification: ${classifyResponse}`
+        );
 
         assistantMessage = {
           id: generateUUID(),
           role: "assistant",
-          parts: [{ type: "text" as const, text: "Sorry, I couldn't process your request." }],
+          parts: [
+            {
+              type: "text" as const,
+              text: "Sorry, I couldn't process your request.",
+            },
+          ],
         };
 
         await updateJobStatus({

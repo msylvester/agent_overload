@@ -269,16 +269,24 @@ const PurePreviewMessage = ({
             }
 
             if (type === "data-researchResponse") {
-              const { company_name, description, industry, founded, headquarters, companySize, website } = part.data;
+              const {
+                company_name,
+                description,
+                industry,
+                founded,
+                headquarters,
+                companySize,
+                website,
+              } = part.data;
               return (
                 <ResearchResponse
-                  key={key}
                   company_name={company_name}
+                  companySize={companySize}
                   description={description}
-                  industry={industry}
                   founded={founded}
                   headquarters={headquarters}
-                  companySize={companySize}
+                  industry={industry}
+                  key={key}
                   website={website}
                 />
               );
@@ -345,12 +353,9 @@ export const ThinkingMessage = () => {
         </div>
 
         <div className="flex w-full flex-col gap-2 md:gap-4">
-          <div className="p-0 text-muted-foreground text-sm">
-            Thinking...
-          </div>
+          <div className="p-0 text-muted-foreground text-sm">Thinking...</div>
         </div>
       </div>
     </motion.div>
   );
 };
-

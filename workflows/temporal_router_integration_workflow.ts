@@ -4,31 +4,35 @@
 
 import dotenv from "dotenv";
 import path from "path";
+
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
-import { z } from "zod";
-import { StateGraph, START, END } from "@langchain/langgraph";
+import { END, START, StateGraph } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 import { zodResponseFormat } from "openai/helpers/zod";
-
-import { classifyTime } from "./agents/time_router_agent";
+import { z } from "zod";
 import { getTemporal } from "./agents/temporal_router_agent";
+import { classifyTime } from "./agents/time_router_agent";
 
 // ----------------------------
 // OUTPUT SCHEMA
 // ----------------------------
 
 const WorkflowOutputSchema = z.object({
-  time: z.object({
-    start: z.string(),
-    end: z.string(),
-    confidence: z.number(),
-    rationale: z.string()
-  }).nullable(),
-  results: z.object({
-    companies: z.array(z.string()),
-    inference: z.string()
-  }).nullable(),
+  time: z
+    .object({
+      start: z.string(),
+      end: z.string(),
+      confidence: z.number(),
+      rationale: z.string(),
+    })
+    .nullable(),
+  results: z
+    .object({
+      companies: z.array(z.string()),
+      inference: z.string(),
+    })
+    .nullable(),
 });
 
 // ----------------------------
@@ -62,7 +66,7 @@ const VerificationResultSchema = z.object({
 // LLM (OpenRouter)
 // ----------------------------
 
-function llm(model: string = "gpt-4o") {
+function llm(model = "gpt-4o") {
   return new ChatOpenAI({
     apiKey: process.env.OPENROUTER_API_KEY,
     model,
@@ -94,7 +98,7 @@ function validateTimestamps(
   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
     errors.push(
       `Invalid date conversion: start=${start}, end=${end}, ` +
-      `startDate=${startDate}, endDate=${endDate}`
+        `startDate=${startDate}, endDate=${endDate}`
     );
   }
 
@@ -102,25 +106,25 @@ function validateTimestamps(
   if (startDate >= endDate) {
     errors.push(
       `Start date (${startDate.toISOString()}) must be before ` +
-      `end date (${endDate.toISOString()})`
+        `end date (${endDate.toISOString()})`
     );
   }
 
   // Validation 4: Check reasonable date range (not before 1970 or too far in future)
   const MIN_TIMESTAMP = 0; // Jan 1, 1970
-  const MAX_TIMESTAMP = 4102444800; // Jan 1, 2100
+  const MAX_TIMESTAMP = 4_102_444_800; // Jan 1, 2100
 
   if (start < MIN_TIMESTAMP || start > MAX_TIMESTAMP) {
     errors.push(
       `Start timestamp ${start} (${startDate.toISOString()}) is outside ` +
-      `reasonable range (1970-2100)`
+        "reasonable range (1970-2100)"
     );
   }
 
   if (end < MIN_TIMESTAMP || end > MAX_TIMESTAMP) {
     errors.push(
       `End timestamp ${end} (${endDate.toISOString()}) is outside ` +
-      `reasonable range (1970-2100)`
+        "reasonable range (1970-2100)"
     );
   }
 
@@ -146,13 +150,13 @@ async function timeNode(state: { inputText: string }) {
 // Node 2 — Temporal Search + Trend Analysis
 // ----------------------------
 
-async function temporalNode(state: {
-  inputText: string;
-  time: any;
-}) {
+async function temporalNode(state: { inputText: string; time: any }) {
   if (!state.time) {
     console.warn("⚠️ No time classification found - returning null results");
-    return { results: null, validationErrors: ["No time classification provided"] };
+    return {
+      results: null,
+      validationErrors: ["No time classification provided"],
+    };
   }
 
   const { start, end } = state.time;
@@ -164,7 +168,7 @@ async function temporalNode(state: {
     console.error("❌ Timestamp validation failed:", validation.errors);
     return {
       results: null,
-      validationErrors: validation.errors
+      validationErrors: validation.errors,
     };
   }
 
@@ -180,7 +184,7 @@ async function temporalNode(state: {
 
   return {
     results: temporalResults,
-    validationErrors: []
+    validationErrors: [],
   };
 }
 
@@ -237,27 +241,28 @@ async function verificationNode(state: {
   const warnings: string[] = [];
 
   // Verification 1: Check if we have time classification
-  if (!state.time) {
-    errors.push("Missing time classification in final output");
-  } else {
+  if (state.time) {
     // Verify time fields are reasonable
     if (state.time.confidence < 0.3) {
       warnings.push(
         `Low confidence time extraction (${state.time.confidence.toFixed(2)})`
       );
     }
+  } else {
+    errors.push("Missing time classification in final output");
   }
 
   // Verification 2: Check if we have results
-  if (!state.results) {
-    errors.push("No temporal results found - workflow returned null");
-  } else {
+  if (state.results) {
     // Verify results content
     if (!state.results.companies || state.results.companies.length === 0) {
       warnings.push("No companies found in temporal search results");
     }
 
-    if (!state.results.inference || state.results.inference.trim().length === 0) {
+    if (
+      !state.results.inference ||
+      state.results.inference.trim().length === 0
+    ) {
       errors.push("Inference summary is empty or missing");
     }
 
@@ -265,9 +270,11 @@ async function verificationNode(state: {
     if (state.results.inference && state.results.inference.length < 50) {
       warnings.push(
         `Inference summary is very short (${state.results.inference.length} chars) - ` +
-        `may be incomplete`
+          "may be incomplete"
       );
     }
+  } else {
+    errors.push("No temporal results found - workflow returned null");
   }
 
   // Verification 3: Check workflow state consistency
@@ -281,12 +288,12 @@ async function verificationNode(state: {
 
   if (!isValid) {
     console.error("❌ Final verification failed:");
-    errors.forEach(e => console.error(`  - ${e}`));
+    errors.forEach((e) => console.error(`  - ${e}`));
   }
 
   if (warnings.length > 0) {
     console.warn("⚠️ Verification warnings:");
-    warnings.forEach(w => console.warn(`  - ${w}`));
+    warnings.forEach((w) => console.warn(`  - ${w}`));
   }
 
   if (isValid && warnings.length === 0) {
@@ -334,34 +341,32 @@ export { app };
 // PUBLIC API — same signature as original
 // ----------------------------
 
-export async function temporalIntent(
-  input_text: string
-) {
+export async function temporalIntent(input_text: string) {
   const result = await app.invoke({
     inputText: input_text,
   });
 
   // Check verification results
-  const verification = result.verificationResult as { isValid: boolean; errors: string[]; warnings: string[] } | null;
+  const verification = result.verificationResult as {
+    isValid: boolean;
+    errors: string[];
+    warnings: string[];
+  } | null;
 
   if (verification && !verification.isValid) {
     console.error("❌ Workflow verification failed:");
-    verification.errors.forEach((e: string) =>
-      console.error(`  - ${e}`)
-    );
+    verification.errors.forEach((e: string) => console.error(`  - ${e}`));
 
     // Fail-fast strategy: throw error to force caller to handle
     throw new Error(
-      `Temporal workflow verification failed: ${verification.errors.join('; ')}`
+      `Temporal workflow verification failed: ${verification.errors.join("; ")}`
     );
   }
 
   // Log warnings even if verification passed
   if (verification && verification.warnings.length > 0) {
     console.warn("⚠️ Verification warnings (non-blocking):");
-    verification.warnings.forEach((w: string) =>
-      console.warn(`  - ${w}`)
-    );
+    verification.warnings.forEach((w: string) => console.warn(`  - ${w}`));
   }
 
   return {

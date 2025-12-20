@@ -2,17 +2,18 @@
  * Web Research Agent — LangGraph + Tavily (No OpenAI Agent SDK)
  */
 
-import { config } from 'dotenv';
-import { resolve } from 'path';
+import { config } from "dotenv";
+import { resolve } from "path";
 
 // Load .env.local file
-config({ path: resolve(process.cwd(), '.env.local') });
+config({ path: resolve(process.cwd(), ".env.local") });
 
-import { z } from "zod";
-import { StateGraph, END } from "@langchain/langgraph";
+import { END, StateGraph } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 import { zodResponseFormat } from "openai/helpers/zod";
-// @ts-ignore - using require for compatibility
+import { z } from "zod";
+
+// @ts-expect-error - using require for compatibility
 const { TavilyClient } = require("tavily");
 
 // ----------------------------
@@ -163,4 +164,3 @@ export async function researchCompanies(
     companies: result.companies,
   };
 }
-

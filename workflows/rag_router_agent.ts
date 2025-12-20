@@ -2,10 +2,10 @@
  * RAG Workflow — LangGraph + OpenRouter Rewrite
  */
 
-import { z } from "zod";
-import { StateGraph, END } from "@langchain/langgraph";
+import { END, StateGraph } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 import { zodResponseFormat } from "openai/helpers/zod";
+import { z } from "zod";
 
 import { RagResearchAgent } from "./agents/rag_research_agent";
 
@@ -38,7 +38,7 @@ function llm() {
     apiKey: process.env.OPENROUTER_API_KEY!,
     model: "gpt-4o",
     temperature: 0.3,
-    configuration: { baseURL: "https://openrouter.ai/api/v1" }
+    configuration: { baseURL: "https://openrouter.ai/api/v1" },
   });
 }
 
@@ -52,12 +52,11 @@ async function semanticSearchNode(state: { query: string }) {
 
   const results = await rag.testVectorSearch(state.query);
 
-  const filtered = results
-    .filter(r => r.distance <= 0.3)
-    .slice(0, 5);
+  const filtered = results.filter((r) => r.distance <= 0.3).slice(0, 5);
 
-  const documents = filtered.map(r =>
-    `Company: ${r.company_name}\nDescription: ${r.description}\nDistance: ${r.distance}`
+  const documents = filtered.map(
+    (r) =>
+      `Company: ${r.company_name}\nDescription: ${r.description}\nDistance: ${r.distance}`
   );
 
   const metadatas = filtered.map((r, idx) => ({
@@ -67,7 +66,7 @@ async function semanticSearchNode(state: { query: string }) {
     documentSnippet: r.description?.slice(0, 300) ?? "",
   }));
 
-  const distances = filtered.map(r => r.distance);
+  const distances = filtered.map((r) => r.distance);
 
   return { documents, metadatas, distances };
 }
@@ -81,7 +80,6 @@ async function reasoningNode(state: {
   documents: string[];
   distances: number[];
 }) {
-
   if (!state.documents.length) {
     return {
       answer: "No relevant documents found.",
@@ -111,7 +109,7 @@ Synthesise a complete RAG answer:
 
   const completion = await llm().invoke([
     { role: "system", content: "You are a RAG reasoning engine." },
-    { role: "user", content: prompt }
+    { role: "user", content: prompt },
   ]);
 
   return {
@@ -123,11 +121,7 @@ Synthesise a complete RAG answer:
 // NODE 3 — Format Output Node
 // ============================================================
 
-async function formatNode(state: {
-  rawAnswer: string;
-  metadatas: any[];
-}) {
-
+async function formatNode(state: { rawAnswer: string; metadatas: any[] }) {
   const prompt = `
 Format the following RAG reasoning into strict JSON:
 
@@ -140,7 +134,7 @@ ${JSON.stringify(state.metadatas)}
 Output MUST follow this schema:
 ${RAGQueryResponseSchema.toString()}
 `;
- const result = await llm().invoke(
+  const result = await llm().invoke(
     [
       { role: "system", content: "Format the RAG response" },
       { role: "user", content: prompt },
@@ -154,9 +148,10 @@ ${RAGQueryResponseSchema.toString()}
   );
 
   // Parse the JSON content from the LLM response
-  const parsedContent = typeof result.content === 'string'
-    ? JSON.parse(result.content)
-    : result.content;
+  const parsedContent =
+    typeof result.content === "string"
+      ? JSON.parse(result.content)
+      : result.content;
 
   return { final: parsedContent };
 }
@@ -173,7 +168,7 @@ const workflow = new StateGraph({
     distances: z.array(z.number()),
     rawAnswer: "string",
     final: RAGQueryResponseSchema,
-  }
+  },
 })
   .addNode("semanticSearch", semanticSearchNode)
   .addNode("reasoning", reasoningNode)
@@ -194,5 +189,3 @@ export async function runRagQuery(query: string): Promise<RAGQueryResponse> {
   const result = await app.invoke({ query });
   return result.final;
 }
-
-

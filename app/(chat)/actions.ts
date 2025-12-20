@@ -1,7 +1,7 @@
 "use server";
 
-import { cookies } from "next/headers";
 import type { UIMessage } from "ai";
+import { cookies } from "next/headers";
 import type { VisibilityType } from "@/components/visibility-selector";
 import {
   deleteMessagesByChatIdAfterTimestamp,
@@ -20,9 +20,8 @@ export async function generateTitleFromUserMessage({
   message: UIMessage;
 }) {
   // Extract first text part from the message
-  const firstText = message.parts
-    ?.find((part) => part.type === "text")
-    ?.text || "New Chat";
+  const firstText =
+    message.parts?.find((part) => part.type === "text")?.text || "New Chat";
 
   // Take first 80 chars and trim
   let title = firstText.slice(0, 80).trim();

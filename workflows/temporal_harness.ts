@@ -1,10 +1,10 @@
-import dotenv from 'dotenv';
-import path from 'path';
+import dotenv from "dotenv";
+import path from "path";
 
 // Load environment variables from .env.local (project root)
-dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
-import { getTemporal } from './agents/temporal_router_agent';
+import { getTemporal } from "./agents/temporal_router_agent";
 
 interface TemporalResponse {
   companies: string[];
@@ -41,7 +41,7 @@ const TEST_DATA = [
     end_date: getCurrentDate(),
     expectedMinCompanies: 1,
   },
- 
+
   {
     description: "Last week",
     input: "Who has been funded recently?",
@@ -123,11 +123,12 @@ async function runTemporalTests(): Promise<TestResult[]> {
         pass,
       });
 
-      console.log(`  Found ${companies.length} companies (expected min: ${test.expectedMinCompanies})`);
-      console.log(`  Status: ${pass ? '✅ PASS' : '❌ FAIL'}`);
-
+      console.log(
+        `  Found ${companies.length} companies (expected min: ${test.expectedMinCompanies})`
+      );
+      console.log(`  Status: ${pass ? "✅ PASS" : "❌ FAIL"}`);
     } catch (error) {
-      console.error(`  Error:`, error);
+      console.error("  Error:", error);
       results.push({
         description: test.description,
         input: test.input,
@@ -149,16 +150,15 @@ async function runTemporalTests(): Promise<TestResult[]> {
   try {
     const results = await runTemporalTests();
 
-    console.log('\n=== TEST SUMMARY ===');
+    console.log("\n=== TEST SUMMARY ===");
     console.log(`Total tests: ${results.length}`);
-    console.log(`Passed: ${results.filter(r => r.pass).length}`);
-    console.log(`Failed: ${results.filter(r => !r.pass).length}`);
+    console.log(`Passed: ${results.filter((r) => r.pass).length}`);
+    console.log(`Failed: ${results.filter((r) => !r.pass).length}`);
 
-    console.log('\n=== DETAILED RESULTS ===');
+    console.log("\n=== DETAILED RESULTS ===");
     console.log(JSON.stringify(results, null, 2));
-
   } catch (error) {
-    console.error('Error running temporal harness:', error);
+    console.error("Error running temporal harness:", error);
     process.exit(1);
   }
 })();

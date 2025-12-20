@@ -21,18 +21,18 @@ export interface ModelConfig {
  * Add new models here with their configurations
  */
 const MODEL_REGISTRY: Record<string, ModelConfig> = {
-  'onnx-community/Llama-3.2-1B-Instruct': {
-    transformersModelName: 'onnx-community/Llama-3.2-1B-Instruct',
-    displayName: 'Llama 3.2 1B Instruct',
+  "onnx-community/Llama-3.2-1B-Instruct": {
+    transformersModelName: "onnx-community/Llama-3.2-1B-Instruct",
+    displayName: "Llama 3.2 1B Instruct",
     defaultParams: {
       maxNewTokens: 2048,
       temperature: 0.4,
       topK: 30,
     },
   },
-  'onnx-community/Llama-3.2-3B-Instruct': {
-    transformersModelName: 'onnx-community/Llama-3.2-3B-Instruct',
-    displayName: 'Llama 3.2 3B Instruct',
+  "onnx-community/Llama-3.2-3B-Instruct": {
+    transformersModelName: "onnx-community/Llama-3.2-3B-Instruct",
+    displayName: "Llama 3.2 3B Instruct",
     defaultParams: {
       maxNewTokens: 512,
       temperature: 0.4,
@@ -44,7 +44,7 @@ const MODEL_REGISTRY: Record<string, ModelConfig> = {
 /**
  * Default model ID used when no model is specified
  */
-export const DEFAULT_MODEL_ID = 'onnx-community/Llama-3.2-1B-Instruct';
+export const DEFAULT_MODEL_ID = "onnx-community/Llama-3.2-1B-Instruct";
 
 /**
  * Get model configuration by ID
@@ -77,10 +77,10 @@ export function getAvailableModelIds(): string[] {
  * All UI models now use Llama 3.2 1B Instruct
  */
 export const UI_TO_INFERENCE_MODEL_MAP: Record<string, string> = {
-  'llama-chat-model': 'onnx-community/Llama-3.2-1B-Instruct',
-  'llama-3.1-8b-chat-model': 'onnx-community/Llama-3.1-8B-Instruct',
-  'title-model': 'onnx-community/Llama-3.2-1B-Instruct',
-  'artifact-model': 'onnx-community/Llama-3.2-1B-Instruct',
+  "llama-chat-model": "onnx-community/Llama-3.2-1B-Instruct",
+  "llama-3.1-8b-chat-model": "onnx-community/Llama-3.1-8B-Instruct",
+  "title-model": "onnx-community/Llama-3.2-1B-Instruct",
+  "artifact-model": "onnx-community/Llama-3.2-1B-Instruct",
 };
 
 /**

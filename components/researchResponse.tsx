@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 
 type ResearchResponseProps = {
   company_name: string;
@@ -22,9 +22,7 @@ const ResearchResponse: React.FC<ResearchResponseProps> = ({
 }) => {
   return (
     <div style={{ padding: "20px", fontFamily: "Inter, sans-serif" }}>
-      <h2 style={{ fontSize: "24px", marginBottom: "20px" }}>
-        {company_name}
-      </h2>
+      <h2 style={{ fontSize: "24px", marginBottom: "20px" }}>{company_name}</h2>
 
       <div style={{ display: "flex", gap: "60px" }}>
         <div style={{ flex: 1 }}>
@@ -45,7 +43,7 @@ const ResearchResponse: React.FC<ResearchResponseProps> = ({
           </p>
           <p>
             <strong>Website:</strong>{" "}
-            <a href={website} target="_blank" rel="noopener noreferrer">
+            <a href={website} rel="noopener noreferrer" target="_blank">
               {website}
             </a>
           </p>
@@ -61,4 +59,3 @@ const ResearchResponse: React.FC<ResearchResponseProps> = ({
 };
 
 export default ResearchResponse;
-

@@ -1,12 +1,13 @@
-import dotenv from 'dotenv';
-import path from 'path';
+import dotenv from "dotenv";
+import path from "path";
+
 // Load environment variables before any other imports
-dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
 import { Agent, run, tool } from "@openai/agents";
+import type { Collection } from "mongodb";
 import { z } from "zod";
 import { getMongoClient } from "../mongoPool";
-import { Collection } from "mongodb";
 
 // Schema for temporal analysis output
 const TemporalAnalysisSchema = z.object({
@@ -30,27 +31,33 @@ async function getRecentCompanies(
   startDate: string,
   endDate: string,
   domain?: string,
-  limit: number = 40
+  limit = 40
 ): Promise<{ companies: string[]; details: any[] }> {
   const client = await getMongoClient();
-  const collection: Collection = client.db("companies").collection("funded_companies");
+  const collection: Collection = client
+    .db("companies")
+    .collection("funded_companies");
 
   try {
     const startDateObj = new Date(startDate);
     const endDateObj = new Date(endDate);
 
     if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
-      throw new Error(`Invalid date format. Expected ISO strings (YYYY-MM-DD). Got: start=${startDate}, end=${endDate}`);
+      throw new Error(
+        `Invalid date format. Expected ISO strings (YYYY-MM-DD). Got: start=${startDate}, end=${endDate}`
+      );
     }
 
     if (startDateObj > endDateObj) {
-      throw new Error(`Start date (${startDate}) cannot be after end date (${endDate})`);
+      throw new Error(
+        `Start date (${startDate}) cannot be after end date (${endDate})`
+      );
     }
 
     const now = endDateObj;
 
     const query: any = {
-      created_at: { $gte: startDateObj, $lte: now }
+      created_at: { $gte: startDateObj, $lte: now },
     };
 
     if (domain) {
@@ -97,15 +104,33 @@ async function getRecentCompanies(
 // Define the temporal search tool
 const temporalSearchTool = tool({
   name: "temporalSearch",
-  description: "Search for companies based on funding announcement date (article date) or database creation date within a specific time period",
+  description:
+    "Search for companies based on funding announcement date (article date) or database creation date within a specific time period",
   parameters: z.object({
-    start_date: z.string().describe("Start date in ISO format (YYYY-MM-DD). Companies with funding announcements or database records on or after this date will be included."),
-    end_date: z.string().describe("End date in ISO format (YYYY-MM-DD). Companies with funding announcements or database records on or before this date will be included."),
-    domain: z.string().describe("Optional domain/industry to filter by (e.g., 'AI', 'fintech', 'healthcare'). Leave empty string if not filtering by domain.").default(""),
-    limit: z.number().describe("Maximum number of companies to return").default(40),
+    start_date: z
+      .string()
+      .describe(
+        "Start date in ISO format (YYYY-MM-DD). Companies with funding announcements or database records on or after this date will be included."
+      ),
+    end_date: z
+      .string()
+      .describe(
+        "End date in ISO format (YYYY-MM-DD). Companies with funding announcements or database records on or before this date will be included."
+      ),
+    domain: z
+      .string()
+      .describe(
+        "Optional domain/industry to filter by (e.g., 'AI', 'fintech', 'healthcare'). Leave empty string if not filtering by domain."
+      )
+      .default(""),
+    limit: z
+      .number()
+      .describe("Maximum number of companies to return")
+      .default(40),
   }),
   execute: async (input) => {
-    const domain = input.domain && input.domain.trim() !== "" ? input.domain : undefined;
+    const domain =
+      input.domain && input.domain.trim() !== "" ? input.domain : undefined;
     const result = await getRecentCompanies(
       input.start_date,
       input.end_date,

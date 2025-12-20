@@ -6,15 +6,15 @@
  */
 
 import { Agent, run, tool } from "@openai/agents";
-import { z } from "zod";
-import { RagResearchAgent } from "./agents/rag_research_agent";
+import { config } from "dotenv";
 import OpenAI from "openai";
-import { config } from 'dotenv';
-import * as path from 'path';
-import { debugLog, debugError } from '@/lib/utils';
+import * as path from "path";
+import { z } from "zod";
+import { debugError, debugLog } from "@/lib/utils";
+import { RagResearchAgent } from "./agents/rag_research_agent";
 
 // Load environment variables from .env.local
-config({ path: path.resolve(__dirname, '../.env.local') });
+config({ path: path.resolve(__dirname, "../.env.local") });
 
 // ===============================
 // GLOBAL RAG AGENT INSTANCE
@@ -23,7 +23,6 @@ config({ path: path.resolve(__dirname, '../.env.local') });
 // Lazy initialization to avoid loading MongoDB on import
 let _ragAgentInstance: RagResearchAgent | null = null;
 let _openaiClient: OpenAI | null = null;
-
 
 function getRagAgent(): RagResearchAgent {
   if (_ragAgentInstance === null) {
@@ -74,7 +73,11 @@ export type RAGQueryResponse = z.infer<typeof RAGQueryResponseSchema>;
 
 interface SemanticSearchResult {
   documents: string[];
-  metadatas: Array<{ company_name: string; company_index: number; _id?: string }>;
+  metadatas: Array<{
+    company_name: string;
+    company_index: number;
+    _id?: string;
+  }>;
   distances: number[];
   count: number;
 }
@@ -92,8 +95,8 @@ interface SemanticSearchResult {
  */
 export async function ragSemanticSearch(
   query: string,
-  topK: number = 5,
-  distanceThreshold: number = 0.3
+  topK = 5,
+  distanceThreshold = 0.3
 ): Promise<SemanticSearchResult> {
   const ragAgent = getRagAgent();
   await ragAgent.connect();
@@ -103,12 +106,13 @@ export async function ragSemanticSearch(
 
     // Filter by distance threshold and limit to topK
     const filteredResults = results
-      .filter(r => r.distance <= distanceThreshold)
+      .filter((r) => r.distance <= distanceThreshold)
       .slice(0, topK);
 
     return {
-      documents: filteredResults.map(r =>
-        `Company: ${r.company_name}\nDescription: ${r.description}\nSimilarity: ${r.similarity?.toFixed(3)}\nDistance: ${r.distance?.toFixed(3)}`
+      documents: filteredResults.map(
+        (r) =>
+          `Company: ${r.company_name}\nDescription: ${r.description}\nSimilarity: ${r.similarity?.toFixed(3)}\nDistance: ${r.distance?.toFixed(3)}`
       ),
       metadatas: filteredResults.map((r, idx) => ({
         company_name: r.company_name || "Unknown",
@@ -117,7 +121,7 @@ export async function ragSemanticSearch(
         description: r.description || "",
         investors: r.investors || "",
       })),
-      distances: filteredResults.map(r => r.distance || 1.0),
+      distances: filteredResults.map((r) => r.distance || 1.0),
       count: filteredResults.length,
     };
   } catch (error) {
@@ -180,7 +184,8 @@ Please synthesize the information from these documents to answer the query. Be s
       messages: [
         {
           role: "system",
-          content: "You are a helpful research assistant that synthesizes information from retrieved documents to answer user queries accurately and comprehensively.",
+          content:
+            "You are a helpful research assistant that synthesizes information from retrieved documents to answer user queries accurately and comprehensively.",
         },
         {
           role: "user",
@@ -190,7 +195,10 @@ Please synthesize the information from these documents to answer the query. Be s
       temperature: 0.7,
     });
 
-    return completion.choices[0]?.message?.content || "Unable to generate a response.";
+    return (
+      completion.choices[0]?.message?.content ||
+      "Unable to generate a response."
+    );
   } catch (error) {
     debugError("Error in ragGenerateReasoning:", error);
     return `Error generating reasoning: ${error instanceof Error ? error.message : String(error)}`;
@@ -209,7 +217,7 @@ Please synthesize the information from these documents to answer the query. Be s
  */
 export async function ragFullQuery(
   query: string,
-  topK: number = 5
+  topK = 5
 ): Promise<{ answer: string; sources: string[]; documentCount: number }> {
   const searchResults = await ragSemanticSearch(query, topK);
   const { documents, metadatas, distances, count } = searchResults;
@@ -229,7 +237,7 @@ export async function ragFullQuery(
     distances
   );
 
-  const sources = metadatas.map(meta => meta.company_name);
+  const sources = metadatas.map((meta) => meta.company_name);
 
   return {
     answer,
@@ -244,11 +252,20 @@ export async function ragFullQuery(
 
 const ragSemanticSearchTool = tool({
   name: "ragSemanticSearch",
-  description: "Search the vector store for documents relevant to the query using semantic similarity",
+  description:
+    "Search the vector store for documents relevant to the query using semantic similarity",
   parameters: z.object({
     query: z.string().describe("The search query"),
-    topK: z.number().optional().default(5).describe("Maximum number of results to return"),
-    distanceThreshold: z.number().optional().default(0.3).describe("Maximum distance for relevance filtering"),
+    topK: z
+      .number()
+      .optional()
+      .default(5)
+      .describe("Maximum number of results to return"),
+    distanceThreshold: z
+      .number()
+      .optional()
+      .default(0.3)
+      .describe("Maximum distance for relevance filtering"),
   }),
   execute: async (input) => {
     const result = await ragSemanticSearch(
@@ -284,7 +301,11 @@ const ragFullQueryTool = tool({
   description: "Perform complete RAG query: search + reasoning",
   parameters: z.object({
     query: z.string().describe("The search query"),
-    topK: z.number().optional().default(5).describe("Max documents to retrieve"),
+    topK: z
+      .number()
+      .optional()
+      .default(5)
+      .describe("Max documents to retrieve"),
   }),
   execute: async (input) => {
     const result = await ragFullQuery(input.query, input.topK ?? 5);
@@ -348,14 +369,14 @@ export async function runRagQuery(question: string): Promise<RAGQueryResponse> {
 
   return {
     answer: result.finalOutput.answer,
-    sources: result.finalOutput.sources.map(source => {
-      debugLog('Document:', JSON.stringify(source, null, 2));
-      return ({
-      companyName: source.companyName,
-      investors: source.investors,
-      relevanceScore: source.relevanceScore,
-      documentSnippet: source.documentSnippet,
-    })
+    sources: result.finalOutput.sources.map((source) => {
+      debugLog("Document:", JSON.stringify(source, null, 2));
+      return {
+        companyName: source.companyName,
+        investors: source.investors,
+        relevanceScore: source.relevanceScore,
+        documentSnippet: source.documentSnippet,
+      };
     }),
     confidenceScore: result.finalOutput.confidenceScore,
     reasoning: result.finalOutput.reasoning,
@@ -409,8 +430,10 @@ if (require.main === module) {
         debugLog(`Answer: ${result.answer.substring(0, 200)}...`);
         debugLog(`Confidence: ${result.confidenceScore}`);
         debugLog(`Sources: ${result.sources.length} documents`);
-        result.sources.slice(0, 3).forEach(source => {
-          debugLog(`  - ${source.companyName} (relevance: ${source.relevanceScore.toFixed(2)})`);
+        result.sources.slice(0, 3).forEach((source) => {
+          debugLog(
+            `  - ${source.companyName} (relevance: ${source.relevanceScore.toFixed(2)})`
+          );
         });
       } catch (error) {
         debugError(`Error: ${error}`);
