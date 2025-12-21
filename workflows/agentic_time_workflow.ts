@@ -808,7 +808,7 @@ function routeAfterFinish(state: TimeExtractionState): 'temporal' | 'handleFailu
   const { validationPassed, currentExtraction } = state;
 
   // If validation passed and we have a good extraction, get temporal data
-  if (validationPassed && currentExtraction && currentExtraction.confidence >= 0.85) {
+  if (validationPassed && currentExtraction && currentExtraction.confidence >= 0.75) {
     logger.log("[ROUTE AFTER FINISH] → TEMPORAL (validation passed with good confidence, fetching companies)");
     return 'temporal';
   }
