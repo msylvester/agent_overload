@@ -13,6 +13,7 @@ import { zodResponseFormat } from "openai/helpers/zod";
 
 import { classifyTime } from "./agents/time_router_agent";
 import { getTemporal } from "./agents/temporal_router_agent";
+import { logger } from "@/lib/logger";
 
 // ----------------------------
 // OUTPUT SCHEMA
@@ -151,7 +152,7 @@ async function temporalNode(state: {
   time: any;
 }) {
   if (!state.time) {
-    console.warn("⚠️ No time classification found - returning null results");
+    logger.warn("⚠️ No time classification found - returning null results");
     return { results: null, validationErrors: ["No time classification provided"] };
   }
 
@@ -161,14 +162,14 @@ async function temporalNode(state: {
   const validation = validateTimestamps(start, end);
 
   if (!validation.isValid) {
-    console.error("❌ Timestamp validation failed:", validation.errors);
+    logger.error("❌ Timestamp validation failed:", validation.errors);
     return {
       results: null,
       validationErrors: validation.errors
     };
   }
 
-  console.log(
+  logger.log(
     `✓ Timestamp validation passed: ${validation.startDate} to ${validation.endDate}`
   );
 
@@ -280,17 +281,17 @@ async function verificationNode(state: {
   const isValid = errors.length === 0;
 
   if (!isValid) {
-    console.error("❌ Final verification failed:");
-    errors.forEach(e => console.error(`  - ${e}`));
+    logger.error("❌ Final verification failed:");
+    errors.forEach(e => logger.error(`  - ${e}`));
   }
 
   if (warnings.length > 0) {
-    console.warn("⚠️ Verification warnings:");
-    warnings.forEach(w => console.warn(`  - ${w}`));
+    logger.warn("⚠️ Verification warnings:");
+    warnings.forEach(w => logger.warn(`  - ${w}`));
   }
 
   if (isValid && warnings.length === 0) {
-    console.log("✓ Final verification passed");
+    logger.log("✓ Final verification passed");
   }
 
   return {
@@ -345,9 +346,9 @@ export async function temporalIntent(
   const verification = result.verificationResult as { isValid: boolean; errors: string[]; warnings: string[] } | null;
 
   if (verification && !verification.isValid) {
-    console.error("❌ Workflow verification failed:");
+    logger.error("❌ Workflow verification failed:");
     verification.errors.forEach((e: string) =>
-      console.error(`  - ${e}`)
+      logger.error(`  - ${e}`)
     );
 
     // Fail-fast strategy: throw error to force caller to handle
@@ -358,9 +359,9 @@ export async function temporalIntent(
 
   // Log warnings even if verification passed
   if (verification && verification.warnings.length > 0) {
-    console.warn("⚠️ Verification warnings (non-blocking):");
+    logger.warn("⚠️ Verification warnings (non-blocking):");
     verification.warnings.forEach((w: string) =>
-      console.warn(`  - ${w}`)
+      logger.warn(`  - ${w}`)
     );
   }
 

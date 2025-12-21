@@ -18,6 +18,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { useWindowSize } from "usehooks-ts";
+import { logger } from "@/lib/logger";
 import { useLocalStorageSafe } from "@/hooks/use-local-storage-safe";
 import { saveChatModelAsCookie } from "@/app/(chat)/actions";
 import { SelectItem } from "@/components/ui/select";
@@ -130,7 +131,7 @@ function PureMultimodalInput({
   const [uploadQueue, setUploadQueue] = useState<string[]>([]);
 
   const submitForm = useCallback(() => {
-    console.log("[submitForm] Called, input:", input);
+    logger.log("[submitForm] Called, input:", input);
     window.history.replaceState({}, "", `/chat/${chatId}`);
 
     sendMessage({
@@ -222,7 +223,7 @@ function PureMultimodalInput({
           ...successfullyUploadedAttachments,
         ]);
       } catch (error) {
-        console.error("Error uploading files!", error);
+        logger.error("Error uploading files!", error);
       } finally {
         setUploadQueue([]);
       }

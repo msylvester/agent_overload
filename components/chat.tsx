@@ -20,6 +20,7 @@ import { useChatVisibility } from "@/hooks/use-chat-visibility";
 import { useProphecyLimit } from "@/hooks/use-prophecy-limit";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
+import { logger } from "@/lib/logger";
 import { generateUUID } from "@/lib/utils";
 import { Artifact } from "./artifact";
 import { Messages } from "./messages";
@@ -71,11 +72,11 @@ export function Chat({
   const pollJobStatus = useCallback(async (jobId: string): Promise<ChatMessage | null> => {
     const maxAttempts = 120; // 2 minutes with 1s intervals
     const pollInterval = 1000; // 1 second
-    console.log("[pollJobStatus] Starting to poll for job:", jobId);
+    logger.log("[pollJobStatus] Starting to poll for job:", jobId);
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
-        console.log(`[pollJobStatus] Attempt ${attempt + 1}/${maxAttempts}`);
+        logger.log(`[pollJobStatus] Attempt ${attempt + 1}/${maxAttempts}`);
         const response = await fetch(`/api/job/${jobId}`);
 
         if (!response.ok) {
@@ -83,22 +84,22 @@ export function Chat({
         }
 
         const data = await response.json();
-        console.log(`[pollJobStatus] Job status:`, data.status);
+        logger.log(`[pollJobStatus] Job status:`, data.status);
 
         if (data.status === "completed") {
-          console.log("[pollJobStatus] Job completed!", data.result);
+          logger.log("[pollJobStatus] Job completed!", data.result);
           return data.result as ChatMessage;
         }
 
         if (data.status === "failed") {
-          console.error("[pollJobStatus] Job failed:", data.error);
+          logger.error("[pollJobStatus] Job failed:", data.error);
           throw new Error(data.error || "Job failed");
         }
 
         // Job is still pending or processing, wait and try again
         await new Promise((resolve) => setTimeout(resolve, pollInterval));
       } catch (error) {
-        console.error("Error polling job status:", error);
+        logger.error("Error polling job status:", error);
         throw error;
       }
     }
@@ -108,7 +109,7 @@ export function Chat({
 
   // Custom sendMessage function that POSTs to local inference endpoint
   const sendMessage = useCallback(async (message: ChatMessage) => {
-    console.log("[sendMessage] Called with:", message);
+    logger.log("[sendMessage] Called with:", message);
 
     // Check rate limit before sending
     if (isLimitReached) {
@@ -125,7 +126,7 @@ export function Chat({
     setMessages((prev) => [...prev, message]);
 
     try {
-      console.log("[sendMessage] Sending fetch to /api/chat");
+      logger.log("[sendMessage] Sending fetch to /api/chat");
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -138,22 +139,22 @@ export function Chat({
           selectedVisibilityType: visibilityType,
         }),
       });
-      console.log("[sendMessage] Fetch response:", response.status);
+      logger.log("[sendMessage] Fetch response:", response.status);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log("[sendMessage] Response data:", data);
+      logger.log("[sendMessage] Response data:", data);
 
       // Check if we got a jobId (background processing) or direct message
-      console.log("[sendMessage] Checking for jobId:", !!data.jobId);
+      logger.log("[sendMessage] Checking for jobId:", !!data.jobId);
       if (data.jobId) {
-        console.log("[sendMessage] Starting poll for jobId:", data.jobId);
+        logger.log("[sendMessage] Starting poll for jobId:", data.jobId);
         // Poll for job completion
         const assistantMessage = await pollJobStatus(data.jobId);
-        console.log("[sendMessage] Poll returned:", assistantMessage);
+        logger.log("[sendMessage] Poll returned:", assistantMessage);
         if (assistantMessage) {
           setMessages((prev) => [...prev, assistantMessage]);
         }
@@ -166,7 +167,7 @@ export function Chat({
       incrementProphecy();
       mutate(unstable_serialize(getChatHistoryPaginationKey));
     } catch (error) {
-      console.error("Error sending message:", error);
+      logger.error("Error sending message:", error);
       toast({
         type: "error",
         description: "Failed to send message. Please try again.",

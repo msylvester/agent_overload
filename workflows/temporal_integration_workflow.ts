@@ -7,6 +7,7 @@ import { getTemporal } from "./agents/temporal_agent"; //temporaal_router_agent
 
 import { ResponseItem } from "./agents/temporal_agent";
 import type { TimeClassification } from "./agents/time_agent";
+import { logger } from "@/lib/logger";
 
 const openai = new OpenAI();
 
@@ -119,9 +120,9 @@ export async function temporalIntent(input_text: string): Promise<TemporalOutput
   const summaryResult: SummarizeResults = await getSummary(temporalResult.inference);
   //update the TemporalResult by overwrtiing the inference object with summarize result 
   temporalResult.inference = summaryResult.inference_summary
-  console.log("=== Inference Summary ===");
-  console.log(summaryResult.inference_summary);
-  console.log("========================");
+  logger.log("=== Inference Summary ===");
+  logger.log(summaryResult.inference_summary);
+  logger.log("========================");
 
   // 4. Return combined workflow output
   return {

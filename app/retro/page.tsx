@@ -10,6 +10,7 @@ import type { ChatMessage } from "@/lib/types";
 import BasicResponse from "./components/responses/BasicResponse";
 import ResearchResponse from "./components/responses/ResearchResponse";
 import TemporalResponse from "./components/responses/TemporalResponse";
+import { logger } from "@/lib/logger";
 
 type Message = {
   id: number;
@@ -155,7 +156,7 @@ useEffect(() => {
       incrementProphecy();
     } catch (err) {
       // Error will be handled by the useEffect above
-      console.error("Failed to send message:", err);
+      logger.error("Failed to send message:", err);
     }
   };
 

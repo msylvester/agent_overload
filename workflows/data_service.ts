@@ -8,6 +8,7 @@ import { config } from 'dotenv';
 import { MongoClient, ObjectId } from 'mongodb';
 import OpenAI from 'openai';
 import * as path from 'path';
+import { logger } from "@/lib/logger";
 
 // Load environment variables from .env.local
 config({ path: path.resolve(__dirname, '../.env.local') });
@@ -135,7 +136,7 @@ export async function embed(
       await client.close();
     }
   } catch (error) {
-    console.error(`Failed to create embedding for document ${uid}:`, error);
+    logger.error(`Failed to create embedding for document ${uid}:`, error);
     throw new Error(
       `Embedding creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
     );

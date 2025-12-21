@@ -14,6 +14,7 @@ import { zodResponseFormat } from "openai/helpers/zod";
 // NEW: Agentic RAG using LangGraph, MongoDB Atlas, and OpenRouter
 
 import { buildGraph, invokeGraph } from "./agentic_two_rag";
+import { logger } from "@/lib/logger";
 
 
 
@@ -100,11 +101,11 @@ let ragGraph: Awaited<ReturnType<typeof buildGraph>> | null = null;
 
 // Node 2 — RAG Query (New Agentic RAG)
 async function ragNode(state: { query: string }) {
-  console.log("🔍 Running Agentic RAG Query...");
+  logger.log("🔍 Running Agentic RAG Query...");
 
   // Build graph on first use (lazy initialization)
   if (!ragGraph) {
-    console.log("📊 Building RAG graph (first run)...");
+    logger.log("📊 Building RAG graph (first run)...");
     ragGraph = await buildGraph();
   }
 
@@ -131,11 +132,11 @@ async function webResearchNode(state: {
   const companyNames = state.ragResults.sources.map(s => s.companyName);
 
   if (companyNames.length === 0) {
-    console.log("⏭️ No companies found — skipping web research");
+    logger.log("⏭️ No companies found — skipping web research");
     return {};
   }
 
-  console.log(`🌐 Web researching: ${companyNames.join(", ")}`);
+  logger.log(`🌐 Web researching: ${companyNames.join(", ")}`);
 
   const webResults = await researchCompanies(companyNames);
 
@@ -147,7 +148,7 @@ async function webResearchNode(state: {
 
 // Node 4 — Temporal Workflow
 async function temporalNode(state: { query: string }) {
-  console.log("📅 Running temporal workflow...");
+  logger.log("📅 Running temporal workflow...");
   const temporalResponse = await temporalIntent(state.query);
   return {
     temporalResponse,
