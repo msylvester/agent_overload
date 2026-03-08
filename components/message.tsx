@@ -24,6 +24,7 @@ import { MessageEditor } from "./message-editor";
 import { MessageReasoning } from "./message-reasoning";
 import { PreviewAttachment } from "./preview-attachment";
 import ResearchResponse from "./researchResponse";
+import { TemporalClarification } from "./temporal-clarification";
 import { Weather } from "./weather";
 
 const PurePreviewMessage = ({
@@ -35,6 +36,7 @@ const PurePreviewMessage = ({
   regenerate,
   isReadonly,
   requiresScrollPadding,
+  sendMessage,
 }: {
   chatId: string;
   message: ChatMessage;
@@ -44,6 +46,7 @@ const PurePreviewMessage = ({
   regenerate: UseChatHelpers<ChatMessage>["regenerate"];
   isReadonly: boolean;
   requiresScrollPadding: boolean;
+  sendMessage?: (message: ChatMessage) => void;
 }) => {
   const [mode, setMode] = useState<"view" | "edit">("view");
 
@@ -265,6 +268,16 @@ const PurePreviewMessage = ({
                     )}
                   </ToolContent>
                 </Tool>
+              );
+            }
+
+            if (type === "data-temporalClarification") {
+              return (
+                <TemporalClarification
+                  data={part.data}
+                  key={key}
+                  sendMessage={sendMessage!}
+                />
               );
             }
 

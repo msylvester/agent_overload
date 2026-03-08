@@ -28,7 +28,8 @@ export const maxDuration = 60;
 async function processWorkflowInBackground(
   jobId: string,
   chatId: string,
-  userMessageText: string
+  userMessageText: string,
+  skipClarification?: boolean
 ) {
   try {
     // Mark job as processing
@@ -36,14 +37,29 @@ async function processWorkflowInBackground(
 
     logger.log(`[Job ${jobId}] Starting workflow...`);
 
-    const orchWorkflowOutput: OrchFlowOutput = await runOrchestratorWorkflow(userMessageText);
+    const orchWorkflowOutput: OrchFlowOutput = await runOrchestratorWorkflow(userMessageText, { skipClarification });
     const { classifyResponse } = orchWorkflowOutput;
 
     let assistantMessage: ChatMessage;
 
     switch (classifyResponse) {
       case 'time': {
-        // Extract temporal data
+        if (orchWorkflowOutput.temporalClarification) {
+          // Phase 1: clarification needed — return buttons, stop execution
+          assistantMessage = {
+            id: generateUUID(),
+            role: "assistant",
+            parts: [
+              {
+                type: "data-temporalClarification" as const,
+                data: orchWorkflowOutput.temporalClarification,
+              },
+            ],
+          };
+          break;
+        }
+
+        // Phase 2: existing temporal response formatting (unchanged)
         const temporalResponse = orchWorkflowOutput.temporalResponse;
 
         let formattedText = "";
@@ -201,11 +217,13 @@ export async function POST(request: Request) {
       message,
       selectedChatModel,
       selectedVisibilityType,
+      skipClarification,
     }: {
       id: string;
       message: ChatMessage;
       selectedChatModel: ChatModel["id"];
       selectedVisibilityType: VisibilityType;
+      skipClarification?: boolean;
     } = requestBody;
 
     const userId = await ensureAuthenticated();
@@ -259,7 +277,7 @@ export async function POST(request: Request) {
 
     // Use waitUntil to process the workflow in the background
     // This allows the response to return immediately while processing continues
-    waitUntil(processWorkflowInBackground(jobId, id, userMessageText));
+    waitUntil(processWorkflowInBackground(jobId, id, userMessageText, skipClarification));
 
     // Return immediately with the job ID for polling
     return Response.json({
