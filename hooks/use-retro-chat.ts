@@ -5,8 +5,13 @@ import { generateUUID } from "@/lib/utils";
 import { useJobPolling } from "./use-job-polling";
 import type { ChatMessage } from "@/lib/types";
 
+interface SendMessageOptions {
+  skipClarification?: boolean;
+  dateRange?: { start: string; end: string };
+}
+
 interface UseRetroChatReturn {
-  sendMessage: (text: string) => Promise<void>;
+  sendMessage: (text: string, options?: SendMessageOptions) => Promise<void>;
   response: ChatMessage | null;
   error: Error | null;
   isLoading: boolean;
@@ -14,12 +19,12 @@ interface UseRetroChatReturn {
 }
 
 export function useRetroChat(): UseRetroChatReturn {
-  const [sessionId] = useState(() => generateUUID());
   const [jobId, setJobId] = useState<string | null>(null);
   const { data, error, isLoading } = useJobPolling(jobId);
 
-  const sendMessage = useCallback(async (text: string) => {
+  const sendMessage = useCallback(async (text: string, options?: SendMessageOptions) => {
     try {
+      const chatId = generateUUID();
       const messageId = generateUUID();
 
       const response = await fetch("/api/chat", {
@@ -28,7 +33,7 @@ export function useRetroChat(): UseRetroChatReturn {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          id: sessionId,
+          id: chatId,
           message: {
             id: messageId,
             role: "user",
@@ -41,6 +46,8 @@ export function useRetroChat(): UseRetroChatReturn {
           },
           selectedChatModel: "chat-model",
           selectedVisibilityType: "private",
+          ...(options?.skipClarification && { skipClarification: true }),
+          ...(options?.dateRange && { dateRange: options.dateRange }),
         }),
       });
 
@@ -58,7 +65,7 @@ export function useRetroChat(): UseRetroChatReturn {
     } catch (err) {
       throw err instanceof Error ? err : new Error("Failed to send message");
     }
-  }, [sessionId]);
+  }, []);
 
   const reset = useCallback(() => {
     setJobId(null);

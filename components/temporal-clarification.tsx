@@ -56,14 +56,13 @@ export function TemporalClarification({
     const range = TIME_RANGES[optionId]?.();
     if (!range) return; // custom_range — future enhancement
 
-    const refinedQuery = `${data.originalQuery} from ${range.start} to ${range.end}`;
-
     sendMessage({
       id: generateUUID(),
       role: "user",
-      parts: [{ type: "text", text: refinedQuery }],
+      parts: [{ type: "text", text: data.originalQuery }],
       skipClarification: true,
-    } as ChatMessage & { skipClarification: boolean });
+      dateRange: { start: range.start, end: range.end },
+    } as ChatMessage & { skipClarification: boolean; dateRange: { start: string; end: string } });
   };
 
   const field = data.fields[0];

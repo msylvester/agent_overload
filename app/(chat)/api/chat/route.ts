@@ -29,7 +29,8 @@ async function processWorkflowInBackground(
   jobId: string,
   chatId: string,
   userMessageText: string,
-  skipClarification?: boolean
+  skipClarification?: boolean,
+  dateRange?: { start: string; end: string }
 ) {
   try {
     // Mark job as processing
@@ -37,7 +38,7 @@ async function processWorkflowInBackground(
 
     logger.log(`[Job ${jobId}] Starting workflow...`);
 
-    const orchWorkflowOutput: OrchFlowOutput = await runOrchestratorWorkflow(userMessageText, { skipClarification });
+    const orchWorkflowOutput: OrchFlowOutput = await runOrchestratorWorkflow(userMessageText, { skipClarification, dateRange });
     const { classifyResponse } = orchWorkflowOutput;
 
     let assistantMessage: ChatMessage;
@@ -218,12 +219,14 @@ export async function POST(request: Request) {
       selectedChatModel,
       selectedVisibilityType,
       skipClarification,
+      dateRange,
     }: {
       id: string;
       message: ChatMessage;
       selectedChatModel: ChatModel["id"];
       selectedVisibilityType: VisibilityType;
       skipClarification?: boolean;
+      dateRange?: { start: string; end: string };
     } = requestBody;
 
     const userId = await ensureAuthenticated();
@@ -277,7 +280,7 @@ export async function POST(request: Request) {
 
     // Use waitUntil to process the workflow in the background
     // This allows the response to return immediately while processing continues
-    waitUntil(processWorkflowInBackground(jobId, id, userMessageText, skipClarification));
+    waitUntil(processWorkflowInBackground(jobId, id, userMessageText, skipClarification, dateRange));
 
     // Return immediately with the job ID for polling
     return Response.json({

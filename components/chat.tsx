@@ -138,6 +138,7 @@ export function Chat({
           selectedChatModel: currentModelIdRef.current,
           selectedVisibilityType: visibilityType,
           ...((message as any).skipClarification && { skipClarification: true }),
+          ...((message as any).dateRange && { dateRange: (message as any).dateRange }),
         }),
       });
       logger.log("[sendMessage] Fetch response:", response.status);

@@ -56,6 +56,12 @@ const PurePreviewMessage = ({
 
   useDataStream();
 
+  const hasRenderableContent = message.parts?.some(
+    (p) =>
+      (p.type === "text" && p.text?.trim()) ||
+      p.type.startsWith("data-")
+  );
+
   return (
     <motion.div
       animate={{ opacity: 1 }}
@@ -78,15 +84,10 @@ const PurePreviewMessage = ({
 
         <div
           className={cn("flex flex-col", {
-            "gap-2 md:gap-4": message.parts?.some(
-              (p) => p.type === "text" && p.text?.trim()
-            ),
+            "gap-2 md:gap-4": hasRenderableContent,
             "min-h-96": message.role === "assistant" && requiresScrollPadding,
             "w-full":
-              (message.role === "assistant" &&
-                message.parts?.some(
-                  (p) => p.type === "text" && p.text?.trim()
-                )) ||
+              (message.role === "assistant" && hasRenderableContent) ||
               mode === "edit",
             "max-w-[calc(100%-2.5rem)] sm:max-w-[min(fit-content,80%)]":
               message.role === "user" && mode !== "edit",

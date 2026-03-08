@@ -4,6 +4,7 @@
 //
 import { classifyIntent } from './agents/classify_agent_langgraph';
 import { classifyTime } from './agentic_time_workflow';
+import { getTemporal } from './agents/temporal_router_agent';
 import type { TemporalOutput } from './temporal_integration_workflow';
 import { runResearchWorkflow } from './agentic_research_workflow';
 import { buildTemporalClarification } from './agents/temporal_clarification_agent';
@@ -21,7 +22,7 @@ export interface OrchFlowOutput {
 
 async function runOrchestratorWorkflow(
   input_text: string,
-  options?: { skipClarification?: boolean }
+  options?: { skipClarification?: boolean; dateRange?: { start: string; end: string } }
 ): Promise<OrchFlowOutput> {
   // Step 1: Get classification
   const classification = await classifyIntent(input_text);
@@ -43,13 +44,28 @@ async function runOrchestratorWorkflow(
       return output;
     }
 
-    // Phase 2: user already clarified, run full temporal workflow
-    const result = await classifyTime(input_text);
-    const temporalResponse: TemporalOutput = {
-      time: result.timeClassification,
-      results: result.results
-    };
-    output.temporalResponse = temporalResponse;
+    if (options?.dateRange) {
+      // Dates already resolved by clarification gate — call getTemporal directly, skip LLM extraction
+      const results = await getTemporal(input_text, options.dateRange.start, options.dateRange.end);
+      const temporalResponse: TemporalOutput = {
+        time: {
+          start: options.dateRange.start,
+          end: options.dateRange.end,
+          confidence: 1,
+          rationale: "Date range selected by user via clarification gate",
+        },
+        results,
+      };
+      output.temporalResponse = temporalResponse;
+    } else {
+      // Fallback: no pre-resolved dates, use LLM extraction
+      const result = await classifyTime(input_text);
+      const temporalResponse: TemporalOutput = {
+        time: result.timeClassification,
+        results: result.results,
+      };
+      output.temporalResponse = temporalResponse;
+    }
   } else if (classification.intent === 'research') {
     // Run research workflow for research queries
     const researchResult = await runResearchWorkflow(input_text, 'research');
