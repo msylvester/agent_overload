@@ -30,6 +30,18 @@ export type ChatTools = {
   requestSuggestions: requestSuggestionsTool;
 };
 
+export type TemporalClarificationData = {
+  originalQuery: string;
+  detectedTimePhrase: string | null;
+  message: string;
+  fields: Array<{
+    name: string;
+    label: string;
+    type: "buttons";
+    options: Array<{ id: string; label: string }>;
+  }>;
+};
+
 export type ResearchResponseData = {
   company_name: string;
   description: string;
@@ -54,6 +66,7 @@ export type CustomUIDataTypes = {
   finish: null;
   usage: AppUsage;
   researchResponse: ResearchResponseData;
+  temporalClarification: TemporalClarificationData;
 };
 
 export type ChatMessage = UIMessage<

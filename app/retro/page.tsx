@@ -10,6 +10,7 @@ import type { ChatMessage } from "@/lib/types";
 import BasicResponse from "./components/responses/BasicResponse";
 import ResearchResponse from "./components/responses/ResearchResponse";
 import TemporalResponse from "./components/responses/TemporalResponse";
+import ClarificationResponse from "./components/responses/ClarificationResponse";
 import { logger } from "@/lib/logger";
 
 type Message = {
@@ -43,10 +44,29 @@ const initialMessages: Message[] = [
 ];
 
 // Render workflow response as React components
-function renderResponse(message: ChatMessage): {
+function renderResponse(
+  message: ChatMessage,
+  onClarificationSelect: (data: { query: string; start: string; end: string }) => void
+): {
   node: React.ReactNode;
   newType: string;
 } {
+  // Check for temporal clarification (data-* part)
+  const clarificationPart = message.parts.find(
+    (p) => p.type === "data-temporalClarification"
+  );
+  if (clarificationPart && clarificationPart.type === "data-temporalClarification") {
+    return {
+      node: (
+        <ClarificationResponse
+          data={clarificationPart.data}
+          onSelect={onClarificationSelect}
+        />
+      ),
+      newType: "/fortune.png",
+    };
+  }
+
   const textParts = message.parts.filter((p) => p.type === "text");
   const text = textParts.map((p: any) => p.text).join("\n");
 
@@ -84,10 +104,33 @@ export default function KrystalBallZ() {
   const { sendMessage, response, error, isLoading, reset } = useRetroChat();
   const { prophecyCount, incrementProphecy, isLimitReached, remainingProphecies } = useProphecyLimit();
 
+  // Handle clarification button selection
+  const handleClarificationSelect = async (data: { query: string; start: string; end: string }) => {
+    // Add the original query as a user message in the UI
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        sender: "user",
+        content: data.query,
+      },
+    ]);
+
+    // Send with pre-resolved date range — skip LLM extraction
+    try {
+      await sendMessage(data.query, {
+        skipClarification: true,
+        dateRange: { start: data.start, end: data.end },
+      });
+    } catch (err) {
+      logger.error("Failed to send clarification:", err);
+    }
+  };
+
   // Handle responses from the API
 useEffect(() => {
   if (response) {
-    const { node, newType } = renderResponse(response);
+    const { node, newType } = renderResponse(response, handleClarificationSelect);
     setType(newType);
 
     setMessages((prev) => [

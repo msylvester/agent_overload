@@ -24,6 +24,7 @@ import { MessageEditor } from "./message-editor";
 import { MessageReasoning } from "./message-reasoning";
 import { PreviewAttachment } from "./preview-attachment";
 import ResearchResponse from "./researchResponse";
+import { TemporalClarification } from "./temporal-clarification";
 import { Weather } from "./weather";
 
 const PurePreviewMessage = ({
@@ -35,6 +36,7 @@ const PurePreviewMessage = ({
   regenerate,
   isReadonly,
   requiresScrollPadding,
+  sendMessage,
 }: {
   chatId: string;
   message: ChatMessage;
@@ -44,6 +46,7 @@ const PurePreviewMessage = ({
   regenerate: UseChatHelpers<ChatMessage>["regenerate"];
   isReadonly: boolean;
   requiresScrollPadding: boolean;
+  sendMessage?: (message: ChatMessage) => void;
 }) => {
   const [mode, setMode] = useState<"view" | "edit">("view");
 
@@ -52,6 +55,12 @@ const PurePreviewMessage = ({
   );
 
   useDataStream();
+
+  const hasRenderableContent = message.parts?.some(
+    (p) =>
+      (p.type === "text" && p.text?.trim()) ||
+      p.type.startsWith("data-")
+  );
 
   return (
     <motion.div
@@ -75,15 +84,10 @@ const PurePreviewMessage = ({
 
         <div
           className={cn("flex flex-col", {
-            "gap-2 md:gap-4": message.parts?.some(
-              (p) => p.type === "text" && p.text?.trim()
-            ),
+            "gap-2 md:gap-4": hasRenderableContent,
             "min-h-96": message.role === "assistant" && requiresScrollPadding,
             "w-full":
-              (message.role === "assistant" &&
-                message.parts?.some(
-                  (p) => p.type === "text" && p.text?.trim()
-                )) ||
+              (message.role === "assistant" && hasRenderableContent) ||
               mode === "edit",
             "max-w-[calc(100%-2.5rem)] sm:max-w-[min(fit-content,80%)]":
               message.role === "user" && mode !== "edit",
@@ -265,6 +269,16 @@ const PurePreviewMessage = ({
                     )}
                   </ToolContent>
                 </Tool>
+              );
+            }
+
+            if (type === "data-temporalClarification") {
+              return (
+                <TemporalClarification
+                  data={part.data}
+                  key={key}
+                  sendMessage={sendMessage!}
+                />
               );
             }
 

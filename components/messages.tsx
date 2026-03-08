@@ -21,6 +21,7 @@ type MessagesProps = {
   isReadonly: boolean;
   isArtifactVisible: boolean;
   selectedModelId: string;
+  sendMessage?: (message: ChatMessage) => void;
 };
 
 function PureMessages({
@@ -32,6 +33,7 @@ function PureMessages({
   regenerate,
   isReadonly,
   selectedModelId,
+  sendMessage,
 }: MessagesProps) {
   const {
     containerRef: messagesContainerRef,
@@ -79,6 +81,7 @@ function PureMessages({
               key={message.id}
               message={message}
               regenerate={regenerate as any}
+              sendMessage={sendMessage}
               requiresScrollPadding={
                 hasSentMessage && index === messages.length - 1
               }

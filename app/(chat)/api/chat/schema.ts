@@ -23,6 +23,11 @@ export const postRequestBodySchema = z.object({
   }),
   selectedChatModel: z.enum(["chat-model", "llama-chat-model", "llama-3.1-8b-chat-model"]),
   selectedVisibilityType: z.enum(["public", "private"]),
+  skipClarification: z.boolean().optional(),
+  dateRange: z.object({
+    start: z.string(),
+    end: z.string(),
+  }).optional(),
 });
 
 export type PostRequestBody = z.infer<typeof postRequestBodySchema>;
