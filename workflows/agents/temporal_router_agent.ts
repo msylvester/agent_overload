@@ -247,7 +247,7 @@ export async function getTemporal(
   endDate: string,
   domain: string = "",
   limit: number = 40,
-  model: string = "gpt-4o"
+  model: string = "anthropic/claude-sonnet-4-20250514"
 ): Promise<ResponseItem> {
   const res = await app.invoke({
     query: inputText,
