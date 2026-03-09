@@ -5,12 +5,10 @@ interface TemporalResponseProps {
 }
 
 function parseTemporalResponse(text: string) {
-  // Extract time period
   const timeMatch = text.match(/\*\*Time Period:\*\* (.+?) to (.+)/);
   const start = timeMatch?.[1] || "";
   const end = timeMatch?.[2] || "";
 
-  // Extract companies
   const companiesMatch = text.match(/\*\*Companies Found:\*\*\n([\s\S]+?)\n\n/);
   const companiesText = companiesMatch?.[1] || "";
   const companies = companiesText
@@ -18,7 +16,6 @@ function parseTemporalResponse(text: string) {
     .map((line) => line.replace(/^[•\-\*]\s*/, "").trim())
     .filter(Boolean);
 
-  // Extract analysis
   const analysisMatch = text.match(/\*\*Analysis:\*\*\n([\s\S]+)/);
   const analysis = analysisMatch?.[1]?.trim() || "";
 
@@ -29,28 +26,28 @@ export default function TemporalResponse({ text }: TemporalResponseProps) {
   const { start, end, companies, analysis } = parseTemporalResponse(text);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {/* Time Period Header */}
-      <div className="border-2 border-[#8b6914] bg-gradient-to-r from-[#d5c29a] to-[#c9b88a] p-3 rounded-sm">
-        <div className="text-xs font-[var(--font-press-start)] uppercase text-[#2c1f18]">
+      <div className="rounded-lg border border-purple-500/20 bg-purple-500/10 p-3">
+        <div className="text-xs font-semibold text-purple-300 uppercase tracking-wider">
           Time Period
         </div>
-        <div className="text-sm mt-1 text-[#2c1f18]">
+        <div className="text-sm mt-1 text-gray-200">
           {start} to {end}
         </div>
       </div>
 
-      {/* Companies Grid */}
+      {/* Companies */}
       {companies.length > 0 && (
-        <div className="border-2 border-[#7b6b4a] bg-[#e5d8b0] p-3 rounded-sm">
-          <div className="text-xs font-[var(--font-press-start)] mb-2 uppercase text-[#2c1f18]">
+        <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
             Companies Found ({companies.length})
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-1.5">
             {companies.map((company, index) => (
               <div
                 key={index}
-                className="bg-[#c9b88a] border border-[#8b7a52] px-2 py-1 text-xs text-[#2c1f18]"
+                className="rounded-md bg-white/5 border border-white/10 px-2 py-1 text-xs text-gray-300"
               >
                 {company}
               </div>
@@ -59,13 +56,13 @@ export default function TemporalResponse({ text }: TemporalResponseProps) {
         </div>
       )}
 
-      {/* Analysis Card */}
+      {/* Analysis */}
       {analysis && (
-        <div className="border-2 border-[#7b6b4a] bg-[#e5d8b0] p-3 rounded-sm">
-          <div className="text-xs font-[var(--font-press-start)] mb-2 uppercase text-[#2c1f18]">
+        <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
             Analysis
           </div>
-          <div className="text-xs leading-relaxed whitespace-pre-wrap text-[#2c1f18]">
+          <div className="text-xs leading-relaxed whitespace-pre-wrap text-gray-300">
             {analysis}
           </div>
         </div>

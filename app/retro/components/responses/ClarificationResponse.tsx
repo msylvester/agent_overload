@@ -51,42 +51,38 @@ export default function ClarificationResponse({ data, onSelect }: ClarificationR
   };
 
   return (
-    <div className="space-y-3">
-      {/* Message Header */}
-      <div className="border-2 border-[#8b6914] bg-gradient-to-r from-[#d5c29a] to-[#c9b88a] p-3 rounded-sm">
-        <div className="text-xs font-[var(--font-press-start)] uppercase text-[#2c1f18]">
+    <div className="space-y-2">
+      {/* Message */}
+      <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3">
+        <div className="text-xs font-semibold text-amber-300 uppercase tracking-wider">
           Clarification Needed
         </div>
-        <div className="text-sm mt-1 text-[#2c1f18]">
-          {data.message}
-        </div>
+        <div className="text-sm mt-1 text-gray-200">{data.message}</div>
         {data.detectedTimePhrase && (
-          <div className="text-xs mt-1 text-[#5a4a30] italic">
+          <div className="text-xs mt-1 text-gray-500 italic">
             Detected: &ldquo;{data.detectedTimePhrase}&rdquo;
           </div>
         )}
       </div>
 
-      {/* Time Range Buttons */}
-      <div className="border-2 border-[#7b6b4a] bg-[#e5d8b0] p-3 rounded-sm">
-        <div className="text-xs font-[var(--font-press-start)] mb-2 uppercase text-[#2c1f18]">
+      {/* Buttons */}
+      <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+        <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
           {field.label}
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {field.options.map((option) => (
             <button
               key={option.id}
               disabled={selectedId !== null}
               onClick={() => handleClick(option.id)}
               className={`
-                border-2 px-2 py-1.5 text-[10px] uppercase
-                font-[var(--font-press-start)]
-                cursor-pointer
-                disabled:cursor-not-allowed disabled:opacity-50
+                rounded-md px-2 py-1.5 text-xs font-medium transition-all duration-200
+                cursor-pointer disabled:cursor-not-allowed disabled:opacity-50
                 ${
                   selectedId === option.id
-                    ? "border-[#8b6914] bg-[#8b6914] text-[#f5f5dc]"
-                    : "border-[#8b7a52] bg-[#c9b88a] text-[#2c1f18] hover:bg-[#b8a87a]"
+                    ? "bg-blue-600 text-white border border-blue-500"
+                    : "bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10"
                 }
               `}
             >
