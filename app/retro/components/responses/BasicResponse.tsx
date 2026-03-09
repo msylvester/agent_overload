@@ -6,11 +6,8 @@ interface BasicResponseProps {
 
 export default function BasicResponse({ text }: BasicResponseProps) {
   return (
-    <div className="border-2 border-[#7b6b4a] bg-[#e5d8b0] p-3 rounded-sm">
-      <div className="text-xs font-[var(--font-press-start)] mb-2 border-b border-[#8b7a52] pb-1 uppercase">
-        Oracle&apos;s Wisdom
-      </div>
-      <div className="text-xs leading-relaxed whitespace-pre-wrap text-[#2c1f18]">
+    <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+      <div className="text-xs text-gray-200 leading-relaxed whitespace-pre-wrap">
         {text}
       </div>
     </div>

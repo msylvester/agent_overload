@@ -7,18 +7,15 @@ interface ResearchResponseProps {
 
 export default function ResearchResponse({ ragResponse }: ResearchResponseProps) {
   return (
-    <div className="space-y-3">
-      {/* Header */}
-      <div className="border-2 border-[#8b6914] bg-gradient-to-r from-[#d5c29a] to-[#c9b88a] p-2 rounded-sm">
-        <div className="text-xs font-[var(--font-press-start)] uppercase text-[#2c1f18]">
+    <div className="space-y-2">
+      <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-1.5">
+        <span className="text-xs font-semibold text-blue-300 uppercase tracking-wider">
           Research Results
-        </div>
+        </span>
       </div>
-
-      {/* Response Content */}
-      <div className="border-2 border-[#7b6b4a] bg-[#e5d8b0] p-3 rounded-sm">
+      <div className="rounded-lg border border-white/10 bg-white/5 p-3">
         <Streamdown
-          className="retro-markdown"
+          className="modern-markdown"
           controls={false}
           parseIncompleteMarkdown={true}
         >
