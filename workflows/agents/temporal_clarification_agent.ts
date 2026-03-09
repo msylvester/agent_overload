@@ -25,10 +25,6 @@ export function buildTemporalClarification(
         options: [
           { id: "last_7_days", label: "Last 7 days" },
           { id: "last_30_days", label: "Last 30 days" },
-          { id: "last_90_days", label: "Last 90 days" },
-          { id: "this_month", label: "This month" },
-          { id: "this_year", label: "This year" },
-          { id: "custom_range", label: "Custom range" },
         ],
       },
     ],
