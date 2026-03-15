@@ -37,7 +37,7 @@ async function getRecentCompanies(
   startDate: string,
   endDate: string,
   domain?: string,
-  limit: number = 40
+  limit: number = 200
 ): Promise<{ companies: string[]; details: any[] }> {
   const client = await getMongoClient();
   const collection: Collection = client
@@ -45,29 +45,31 @@ async function getRecentCompanies(
     .collection("funded_companies");
 
   try {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const startStr = startDate; // already "YYYY-MM-DD"
+    const endStr = endDate;
 
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      throw new Error(`Invalid start/end date`);
-    }
-
-    const query: any = {
-      created_at: { $gte: start, $lte: end },
+    const dateCondition = {
+      $or: [
+        { posted_date: { $gte: startStr, $lte: endStr } },
+        { source: "TechCrunch", date: { $gte: startStr, $lte: endStr } },
+      ],
     };
 
+    let query: any = dateCondition;
+
     if (domain && domain.trim() !== "") {
-      query.$and = [
-        { created_at: { $gte: start, $lte: end } },
-        {
-          $or: [
-            { description: { $regex: domain, $options: "i" } },
-            { industry: { $regex: domain, $options: "i" } },
-            { company_name: { $regex: domain, $options: "i" } },
-          ],
-        },
-      ];
-      delete query.created_at;
+      query = {
+        $and: [
+          dateCondition,
+          {
+            $or: [
+              { description: { $regex: domain, $options: "i" } },
+              { industry: { $regex: domain, $options: "i" } },
+              { company_name: { $regex: domain, $options: "i" } },
+            ],
+          },
+        ],
+      };
     }
 
     const results = await collection
@@ -80,6 +82,8 @@ async function getRecentCompanies(
       companies: results.map((r) => r.company_name ?? "Unknown"),
       details: results.map((r) => ({
         company_name: r.company_name,
+        posted_date: r.posted_date,
+        source: r.source,
         date: r.date,
         created_at: r.created_at,
         founded_year: r.founded_year,
@@ -132,7 +136,7 @@ async function temporalSearchNode(state: {
     startDate,
     endDate,
     domain ?? "",
-    limit ?? 40
+    limit ?? 200
   );
 
   return { toolResult: result };
@@ -246,7 +250,7 @@ export async function getTemporal(
   startDate: string,
   endDate: string,
   domain: string = "",
-  limit: number = 40,
+  limit: number = 200,
   model: string = "gpt-4o"
 ): Promise<ResponseItem> {
   const res = await app.invoke({

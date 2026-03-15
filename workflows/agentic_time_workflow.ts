@@ -362,7 +362,7 @@ async function temporalAdvice(state: TimeExtractionState): Promise<Partial<TimeE
       start,      // startDate
       end,        // endDate
       "",         // domain (empty for now)
-      40,         // limit
+      200,        // limit
       state.model // model
     );
 
