@@ -23,6 +23,7 @@ function currentYear(): number {
 }
 
 const TIME_RANGES: Record<string, () => { start: string; end: string } | null> = {
+  last_3_days: () => ({ start: daysAgo(3), end: today() }),
   last_7_days: () => ({ start: daysAgo(7), end: today() }),
   last_30_days: () => ({ start: daysAgo(30), end: today() }),
   last_90_days: () => ({ start: daysAgo(90), end: today() }),

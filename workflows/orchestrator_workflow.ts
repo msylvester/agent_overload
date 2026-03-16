@@ -47,6 +47,15 @@ async function runOrchestratorWorkflow(
     if (options?.dateRange) {
       // Dates already resolved by clarification gate — call getTemporal directly, skip LLM extraction
       const results = await getTemporal(input_text, options.dateRange.start, options.dateRange.end);
+
+      // Check if 3-day range returned no results
+      const daySpan = Math.round(
+        (new Date(options.dateRange.end).getTime() - new Date(options.dateRange.start).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      if (results.companies.length === 0 && daySpan <= 3) {
+        results.inference = "No recent funding announcements in the last 3 days, try last 7 days.";
+      }
+
       const temporalResponse: TemporalOutput = {
         time: {
           start: options.dateRange.start,

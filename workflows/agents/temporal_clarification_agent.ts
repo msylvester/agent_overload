@@ -23,6 +23,7 @@ export function buildTemporalClarification(
         label: "Choose a time range",
         type: "buttons",
         options: [
+          { id: "last_3_days", label: "Last 3 days" },
           { id: "last_7_days", label: "Last 7 days" },
           { id: "last_30_days", label: "Last 30 days" },
         ],
