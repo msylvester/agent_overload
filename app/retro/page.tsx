@@ -9,7 +9,7 @@ import { useProphecyLimit } from "@/hooks/use-prophecy-limit";
 import type { ChatMessage } from "@/lib/types";
 import BasicResponse from "./components/responses/BasicResponse";
 import ResearchResponse from "./components/responses/ResearchResponse";
-import TemporalResponse from "./components/responses/TemporalResponse";
+import TemporalResponse, { CompanyCard, CompanyDetails } from "./components/responses/TemporalResponse";
 import ClarificationResponse from "./components/responses/ClarificationResponse";
 import { logger } from "@/lib/logger";
 
@@ -46,7 +46,8 @@ const initialMessages: Message[] = [
 // Render workflow response as React components
 function renderResponse(
   message: ChatMessage,
-  onClarificationSelect: (data: { query: string; start: string; end: string }) => void
+  onClarificationSelect: (data: { query: string; start: string; end: string }) => void,
+  onCompanySelect?: (company: CompanyDetails) => void
 ): {
   node: React.ReactNode;
   newType: string;
@@ -84,7 +85,7 @@ function renderResponse(
   // Temporal response
   if (text.includes("**Time Period:**")) {
     return {
-      node: <TemporalResponse text={text} />,
+      node: <TemporalResponse text={text} onCompanySelect={onCompanySelect} />,
       newType: "/prince.png",
     };
   }
@@ -127,10 +128,28 @@ export default function KrystalBallZ() {
     }
   };
 
+  // Handle company card selection — push as new message
+  const handleCompanySelect = (company: CompanyDetails) => {
+    const msgId = Date.now();
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: msgId,
+        sender: "system",
+        content: (
+          <CompanyCard
+            company={company}
+            onClose={() => setMessages((prev) => prev.filter((m) => m.id !== msgId))}
+          />
+        ),
+      },
+    ]);
+  };
+
   // Handle responses from the API
 useEffect(() => {
   if (response) {
-    const { node, newType } = renderResponse(response, handleClarificationSelect);
+    const { node, newType } = renderResponse(response, handleClarificationSelect, handleCompanySelect);
     setType(newType);
 
     setMessages((prev) => [
