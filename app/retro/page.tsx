@@ -47,7 +47,8 @@ const initialMessages: Message[] = [
 function renderResponse(
   message: ChatMessage,
   onClarificationSelect: (data: { query: string; start: string; end: string }) => void,
-  onCompanySelect?: (company: CompanyDetails) => void
+  onCompanySelect?: (company: CompanyDetails) => void,
+  onCompanyNotFound?: (companyName: string) => void
 ): {
   node: React.ReactNode;
   newType: string;
@@ -85,7 +86,7 @@ function renderResponse(
   // Temporal response
   if (text.includes("**Time Period:**")) {
     return {
-      node: <TemporalResponse text={text} onCompanySelect={onCompanySelect} />,
+      node: <TemporalResponse text={text} onCompanySelect={onCompanySelect} onCompanyNotFound={onCompanyNotFound} />,
       newType: "/prince.png",
     };
   }
@@ -146,10 +147,26 @@ export default function KrystalBallZ() {
     ]);
   };
 
+  // Handle company not found — push system message
+  const handleCompanyNotFound = (companyName: string) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        sender: "system",
+        content: (
+          <BasicResponse
+            text={`Company "${companyName}" not found. Try selecting a different company.`}
+          />
+        ),
+      },
+    ]);
+  };
+
   // Handle responses from the API
 useEffect(() => {
   if (response) {
-    const { node, newType } = renderResponse(response, handleClarificationSelect, handleCompanySelect);
+    const { node, newType } = renderResponse(response, handleClarificationSelect, handleCompanySelect, handleCompanyNotFound);
     setType(newType);
 
     setMessages((prev) => [

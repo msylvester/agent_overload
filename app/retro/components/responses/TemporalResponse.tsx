@@ -5,6 +5,7 @@ import React, { useState } from "react";
 export interface TemporalResponseProps {
   text: string;
   onCompanySelect?: (company: CompanyDetails) => void;
+  onCompanyNotFound?: (companyName: string) => void;
 }
 
 export interface CompanyDetails {
@@ -112,7 +113,7 @@ export function CompanyCard({
   );
 }
 
-export default function TemporalResponse({ text, onCompanySelect }: TemporalResponseProps) {
+export default function TemporalResponse({ text, onCompanySelect, onCompanyNotFound }: TemporalResponseProps) {
   const { start, end, companies, analysis } = parseTemporalResponse(text);
   const [loading, setLoading] = useState<string | null>(null);
 
@@ -125,12 +126,16 @@ export default function TemporalResponse({ text, onCompanySelect }: TemporalResp
       );
       if (res.ok) {
         const data = await res.json();
-        onCompanySelect?.(data);
+        if (data.error) {
+          onCompanyNotFound?.(companyName);
+        } else {
+          onCompanySelect?.(data);
+        }
       } else {
-        onCompanySelect?.({ company_name: companyName });
+        onCompanyNotFound?.(companyName);
       }
     } catch {
-      onCompanySelect?.({ company_name: companyName });
+      onCompanyNotFound?.(companyName);
     } finally {
       setLoading(null);
     }
