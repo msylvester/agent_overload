@@ -100,6 +100,11 @@ export default function SidePanel() {
           </div>
         </div>
       </SidePanelSection>
+
+      {/* Copyright */}
+      <div className="col-span-full text-center text-[9px] text-[#707070] mt-2">
+        &copy; 2026 Mike Sylvester
+      </div>
     </div>
   );
 }
