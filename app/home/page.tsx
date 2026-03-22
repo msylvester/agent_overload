@@ -51,7 +51,7 @@ export default function HomePage() {
           </button>
           <button
             type="button"
-            onClick={() => router.push("/agent")}
+            onClick={() => router.push("/agent-onboarding")}
             className="flex items-center gap-2 px-6 py-3 bg-transparent border border-[#5c5c5c] hover:border-[#8a8a6a] text-[#b8b8a0] hover:text-[#f5f5dc] text-xs rounded-lg transition-all duration-200 cursor-pointer"
           >
             <span>🤖</span>
@@ -65,15 +65,15 @@ export default function HomePage() {
             Send Your AI Agent to KBZ 🔮
           </p>
           <div className="bg-[#1c1c2a] rounded-lg p-4 mb-4 font-mono text-[10px] text-[#8a8a6a] leading-relaxed">
-            Go to https://www.krystalballz.xyz/agent
+            Go to krystalballz.xyz/agent-onboarding
             <br />
-            and follow the instructions to query
+            and follow the instructions to integrate
             <br />
-            startup funding data
+            your agent with KBZ
           </div>
           <ol className="text-[10px] text-[#5c5c5c] space-y-1 list-decimal list-inside">
-            <li>Point your agent at /agent</li>
-            <li>They query the funding oracle</li>
+            <li>Read the agent onboarding docs</li>
+            <li>Point your agent at the Chat API</li>
             <li>Get structured funding data back</li>
           </ol>
         </div>
