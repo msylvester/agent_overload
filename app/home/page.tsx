@@ -43,19 +43,19 @@ export default function HomePage() {
         <div className="flex flex-col sm:flex-row gap-4 mb-12">
           <button
             type="button"
-            onClick={() => router.push("/retro")}
-            className="flex items-center gap-2 px-6 py-3 bg-[#e74c3c] hover:bg-[#c0392b] text-white text-xs rounded-lg transition-all duration-200 shadow-[0_0_16px_rgba(231,76,60,0.4)] hover:shadow-[0_0_24px_rgba(231,76,60,0.6)] cursor-pointer"
-          >
-            <span>🧙</span>
-            <span>I&apos;m a Human</span>
-          </button>
-          <button
-            type="button"
             onClick={() => router.push("/agent-onboarding")}
-            className="flex items-center gap-2 px-6 py-3 bg-transparent border border-[#5c5c5c] hover:border-[#8a8a6a] text-[#b8b8a0] hover:text-[#f5f5dc] text-xs rounded-lg transition-all duration-200 cursor-pointer"
+            className="flex items-center gap-2 px-6 py-3 bg-[#e74c3c] hover:bg-[#c0392b] text-white text-xs rounded-lg transition-all duration-200 shadow-[0_0_16px_rgba(231,76,60,0.4)] hover:shadow-[0_0_24px_rgba(231,76,60,0.6)] cursor-pointer"
           >
             <span>🤖</span>
             <span>I&apos;m an Agent</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push("/retro")}
+            className="flex items-center gap-2 px-6 py-3 bg-transparent border border-[#5c5c5c] hover:border-[#8a8a6a] text-[#b8b8a0] hover:text-[#f5f5dc] text-xs rounded-lg transition-all duration-200 cursor-pointer"
+          >
+            <span>🧙</span>
+            <span>I&apos;m a Human</span>
           </button>
         </div>
 
