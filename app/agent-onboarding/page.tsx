@@ -111,7 +111,7 @@ export default function AgentOnboardingPage() {
   const [activeSection, setActiveSection] = useState("overview");
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] font-[family-name:var(--font-press-start)] text-[#f5f5dc]">
+    <div className="min-h-screen bg-[#0a0a0f] font-[family-name:var(--font-inter)] text-[#f5f5dc]">
       {/* Top Bar */}
       <header className="sticky top-0 z-50 border-b border-[#1c1c2a] bg-[#0a0a0f]/95 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Inter } from "next/font/google";
 
-const pressStart2P = localFont({
-  src: "../../public/fonts/PressStart2P-Regular.ttf",
-  variable: "--font-press-start",
-  weight: "400",
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
@@ -18,5 +18,5 @@ export default function AgentOnboardingLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <div className={`${pressStart2P.variable}`}>{children}</div>;
+  return <div className={`${inter.variable}`}>{children}</div>;
 }
