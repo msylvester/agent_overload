@@ -131,6 +131,33 @@ export default function AgentOnboardingPage() {
           </p>
         </div>
 
+        {/* Agent Skill File */}
+        <div className="border border-[#e74c3c]/30 rounded-xl bg-[#12121a] p-6 mb-10 shadow-[0_0_20px_rgba(231,76,60,0.1)]">
+          <h2 className="text-sm font-bold text-[#f5f5dc] mb-2">
+            For AI Agents: Read the Skill File
+          </h2>
+          <p className="text-[12px] text-[#8a8a6a] mb-4">
+            Point your agent to this URL. It will fetch the instructions, install
+            the plugin, and verify it works — autonomously.
+          </p>
+          <div className="relative">
+            <CopyButton text="https://www.krystalballz.xyz/skill.md" />
+            <div className="bg-[#1c1c2a] rounded-lg px-4 py-3 pr-20 text-[13px] font-mono text-[#c0d8f0] border border-[#2b2b2b]">
+              https://www.krystalballz.xyz/skill.md
+            </div>
+          </div>
+          <div className="mt-4 flex items-start gap-3 text-[11px] text-[#5c5c5c]">
+            <span className="shrink-0 mt-0.5">How it works:</span>
+            <span>
+              Agent fetches skill.md &rarr; reads install command &rarr; runs{" "}
+              <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">
+                openclaw plugins install
+              </code>{" "}
+              &rarr; verifies with a test query &rarr; ready to use
+            </span>
+          </div>
+        </div>
+
         {/* Tab Navigation */}
         <div className="flex gap-1 p-1 bg-[#12121a] border border-[#2b2b2b] rounded-lg mb-8">
           {(
