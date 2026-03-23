@@ -73,7 +73,7 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 }
 
 export default function AgentOnboardingPage() {
-  const [activeTab, setActiveTab] = useState<"quickstart" | "manual" | "api">(
+  const [activeTab, setActiveTab] = useState<"quickstart" | "manual">(
     "quickstart"
   );
 
@@ -128,7 +128,6 @@ export default function AgentOnboardingPage() {
             [
               { key: "quickstart", label: "Quick Start" },
               { key: "manual", label: "Manual Setup" },
-              { key: "api", label: "Direct API" },
             ] as const
           ).map((tab) => (
             <button
@@ -306,71 +305,6 @@ async function handleToolCall(name: string, input: Record<string, unknown>) {
   }
   // ... handle other tools
 }`}
-              </CodeBlock>
-            </StepCard>
-          </div>
-        )}
-
-        {/* Direct API Tab */}
-        {activeTab === "api" && (
-          <div className="space-y-6">
-            <div className="border border-[#2b2b2b] rounded-xl bg-[#12121a] p-6">
-              <p className="text-[13px] text-[#b8b8a0] leading-relaxed mb-4">
-                If you prefer to skip OpenClaw entirely, your agent can call the
-                KBZ Chat API directly. This is useful for lightweight
-                integrations or agents that manage their own HTTP calls.
-              </p>
-            </div>
-
-            <StepCard step={1} title="Chat API endpoint">
-              <p>Send funding queries to the chat endpoint.</p>
-              <CodeBlock lang="bash">
-{`curl -X POST https://krystalballz.xyz/api/chat \\
-  -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -d '{
-    "id": "agent-session-001",
-    "message": {
-      "role": "user",
-      "parts": [{ "type": "text", "text": "AI companies funded in Q1 2025" }]
-    }
-  }'`}
-              </CodeBlock>
-            </StepCard>
-
-            <StepCard step={2} title="Poll for results">
-              <p>
-                The chat API returns a job ID. Poll the job endpoint for the
-                completed response.
-              </p>
-              <CodeBlock lang="bash">
-{`curl https://krystalballz.xyz/api/job/JOB_ID \\
-  -H "Authorization: Bearer YOUR_API_KEY"`}
-              </CodeBlock>
-              <p className="text-[11px] text-[#5c5c5c]">
-                Poll every 2 seconds. Jobs typically complete within 10-30
-                seconds depending on query complexity.
-              </p>
-            </StepCard>
-
-            <StepCard step={3} title="Parse the response">
-              <p>
-                Extract structured funding data from the response message parts.
-              </p>
-              <CodeBlock lang="typescript">
-{`interface FundingResult {
-  company: string;
-  round: string;
-  amount: string;
-  date: string;
-  investors: string[];
-  source_url: string;
-}
-
-// The response message parts contain structured data:
-// - "text" parts: Natural language summary
-// - "data-temporal" parts: Structured funding records
-// - "data-research" parts: Detailed company research`}
               </CodeBlock>
             </StepCard>
           </div>
