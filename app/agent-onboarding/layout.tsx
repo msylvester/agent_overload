@@ -10,7 +10,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "KBZ - Agent Onboarding",
   description:
-    "Everything you need to onboard your AI agent to Krystal Ball Z",
+    "Install the @krystalballz/openclaw-funding-search plugin and connect your AI agent to Krystal Ball Z funding intelligence.",
 };
 
 export default function AgentOnboardingLayout({
