@@ -1,0 +1,118 @@
+{
+  "project": "KBZ Agent API Key Management",
+  "branchName": "ralph/api-key-management",
+  "description": "Add API key generation, storage, and validation so agents using the funding-search plugin can authenticate. Keys are created by humans in a settings UI and passed to agents via openclaw.json plugin config.",
+  "context": {
+    "existingApp": "Next.js 15 app at ~/agent_overload",
+    "database": "Vercel Postgres via Drizzle ORM (already configured)",
+    "auth": "next-auth 5.0.0-beta.25 (already configured)",
+    "plugin": "@krystalballz/openclaw-funding-search (accepts optional apiKey in config)",
+    "existingCode": {
+      "drizzleSchema": "lib/db/schema.ts",
+      "authConfig": "app/(auth)/auth.config.ts",
+      "middleware": "middleware.ts"
+    }
+  },
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "API key generation endpoint",
+      "description": "As an authenticated user, I can generate an API key so my agent can authenticate with the funding search plugin.",
+      "acceptanceCriteria": [
+        "POST /api/keys creates a new API key tied to the authenticated user",
+        "Returns the full key ONCE at creation time (stored as hash afterward)",
+        "Key format: kbz_<random 32 chars>",
+        "Requires active next-auth session"
+      ],
+      "priority": 1,
+      "passes": false
+    },
+    {
+      "id": "US-002",
+      "title": "API key listing and revocation UI",
+      "description": "As a user, I can view my keys and revoke them from a settings page.",
+      "acceptanceCriteria": [
+        "GET /api/keys returns list of user's keys (name, created_at, last_used_at, masked key)",
+        "DELETE /api/keys/:id revokes a key (soft delete via revoked_at timestamp)",
+        "Simple UI at /settings/keys showing active keys with revoke buttons",
+        "Styled to match retro theme"
+      ],
+      "priority": 2,
+      "passes": false
+    },
+    {
+      "id": "US-003",
+      "title": "API key validation middleware",
+      "description": "As a system, I can validate API keys on protected endpoints.",
+      "acceptanceCriteria": [
+        "Middleware checks Authorization: Bearer <key> header",
+        "Hashes incoming key and compares against stored hashes",
+        "Updates last_used_at on successful validation",
+        "Rejects revoked keys",
+        "Returns 401 with clear error message on invalid/missing key"
+      ],
+      "priority": 3,
+      "passes": false
+    },
+    {
+      "id": "US-004",
+      "title": "Database schema for API keys",
+      "description": "As a system, I store API keys securely in Vercel Postgres.",
+      "acceptanceCriteria": [
+        "Add api_keys table to Drizzle schema",
+        "Columns: id, user_id, key_hash, name, created_at, last_used_at, revoked_at",
+        "Foreign key to existing user table",
+        "Index on key_hash for fast lookups",
+        "Run migration successfully"
+      ],
+      "priority": 1,
+      "passes": false
+    }
+  ],
+  "dataModel": {
+    "database": "Vercel Postgres (existing)",
+    "table": "api_keys",
+    "columns": {
+      "id": "uuid PRIMARY KEY DEFAULT gen_random_uuid()",
+      "user_id": "uuid NOT NULL REFERENCES users(id)",
+      "key_hash": "varchar(64) NOT NULL UNIQUE",
+      "name": "varchar(255) DEFAULT 'Default Key'",
+      "created_at": "timestamp DEFAULT now()",
+      "last_used_at": "timestamp",
+      "revoked_at": "timestamp"
+    }
+  },
+  "endpoints": {
+    "POST /api/keys": {
+      "description": "Generate a new API key for the authenticated user",
+      "auth": "next-auth session required",
+      "request": { "name": "string (optional)" },
+      "response": { "id": "uuid", "key": "kbz_...", "name": "string", "created_at": "timestamp" }
+    },
+    "GET /api/keys": {
+      "description": "List all API keys for the authenticated user",
+      "auth": "next-auth session required",
+      "response": [{ "id": "uuid", "name": "string", "created_at": "timestamp", "last_used_at": "timestamp | null", "key_preview": "kbz_...xxxx" }]
+    },
+    "DELETE /api/keys/:id": {
+      "description": "Revoke an API key",
+      "auth": "next-auth session required",
+      "response": { "status": "revoked" }
+    }
+  },
+  "outOfScope": [
+    "Rate limiting per API key",
+    "Usage tracking / analytics",
+    "Key rotation",
+    "Scoped permissions (read-only vs read-write)",
+    "API key billing / quotas"
+  ],
+  "definitionOfDone": [
+    "User can generate an API key from /settings/keys",
+    "Key is displayed once and stored as hash",
+    "Agent can pass key in openclaw.json plugin config",
+    "User can see list of their keys with last-used timestamps",
+    "User can revoke a key and it immediately stops working",
+    "Revoked keys return 401"
+  ]
+}
