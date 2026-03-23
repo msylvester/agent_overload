@@ -116,9 +116,18 @@ export default function AgentOnboardingPage() {
             <span className="text-[#e74c3c]">Krystal Ball Z</span>
           </h1>
           <p className="text-sm text-[#8a8a6a] max-w-lg mx-auto leading-relaxed">
-            Install the <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1.5 py-0.5 rounded text-xs">@krystalballz/openclaw-funding-search</code>{" "}
-            plugin via OpenClaw and give your AI agent direct access to startup
-            funding intelligence.
+            Install the{" "}
+            <a
+              href="https://www.npmjs.com/package/@krystalballz/openclaw-funding-search"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#c0d8f0] bg-[#1c1c2a] px-1.5 py-0.5 rounded text-xs hover:text-[#e74c3c] transition-colors"
+            >
+              @krystalballz/openclaw-funding-search
+            </a>{" "}
+            plugin via OpenClaw. One command, then the{" "}
+            <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1.5 py-0.5 rounded text-xs">funding_search</code>{" "}
+            tool is automatically available to your agent.
           </p>
         </div>
 
@@ -148,88 +157,51 @@ export default function AgentOnboardingPage() {
         {/* Quick Start Tab */}
         {activeTab === "quickstart" && (
           <div className="space-y-6">
-            <StepCard step={1} title="Install OpenClaw CLI">
+            <StepCard step={1} title="Install the plugin">
               <p>
-                OpenClaw is the package manager for AI agent plugins. Install it
-                globally first.
+                Install the funding search plugin from the OpenClaw registry.
+                This is all you need.
               </p>
-              <CodeBlock lang="bash">npm install -g openclaw</CodeBlock>
-            </StepCard>
-
-            <StepCard step={2} title="Initialize your agent project">
-              <p>
-                If you haven&apos;t already, initialize OpenClaw in your agent&apos;s
-                project directory.
-              </p>
-              <CodeBlock lang="bash">openclaw init</CodeBlock>
+              <CodeBlock lang="bash">openclaw plugins install @krystalballz/openclaw-funding-search</CodeBlock>
               <p className="text-[11px] text-[#5c5c5c]">
-                This creates an <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">openclaw.config.json</code> file
-                that tracks your installed plugins.
+                The <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">funding_search</code>{" "}
+                tool is automatically available to all agents after installation.
+                No registration code needed.
               </p>
             </StepCard>
 
-            <StepCard step={3} title="Install the Funding Search plugin">
+            <StepCard step={2} title="Configure API key (optional)">
               <p>
-                Install the KBZ funding search plugin from the OpenClaw
-                registry.
+                If you have an API key for authenticated access, add it to your{" "}
+                <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">openclaw.json</code>.
               </p>
-              <CodeBlock lang="bash">
-{`openclaw install @krystalballz/openclaw-funding-search`}
-              </CodeBlock>
-              <p className="text-[11px] text-[#5c5c5c]">
-                Or install from the local extension source if you have access:
-              </p>
-              <CodeBlock lang="bash">
-{`openclaw install --from-path ~/openclaw_source/krystalclaw/extensions/funding-search/`}
-              </CodeBlock>
-            </StepCard>
-
-            <StepCard step={4} title="Configure your API key">
-              <p>
-                Set your KBZ API key so the plugin can authenticate requests.
-              </p>
-              <CodeBlock lang="bash">
-{`openclaw config set krystalballz.api_key YOUR_API_KEY`}
+              <CodeBlock lang="json">
+{`{
+  "plugins": {
+    "funding-search": {
+      "apiKey": "your-api-key"
+    }
+  }
+}`}
               </CodeBlock>
               <p className="text-[11px] text-[#5c5c5c]">
-                Don&apos;t have an API key?{" "}
-                <Link href="/register" className="text-[#e74c3c] underline">
-                  Sign up
-                </Link>{" "}
-                to get one from your dashboard.
+                The plugin works without an API key. Authenticated access is
+                reserved for future premium features.
               </p>
             </StepCard>
 
-            <StepCard step={5} title="Register the plugin with your agent">
+            <StepCard step={3} title="Use it">
               <p>
-                Add the funding search tool to your agent&apos;s available
-                capabilities.
+                Your agent can now call <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">funding_search</code>{" "}
+                with any combination of parameters.
               </p>
-              <CodeBlock lang="typescript">
-{`import { OpenClaw } from "openclaw";
-import fundingSearch from "@krystalballz/openclaw-funding-search";
-
-const openclaw = new OpenClaw();
-openclaw.register(fundingSearch);
-
-// The plugin exposes these tools to your agent:
-// - funding_search: Query startup funding rounds
-// - company_lookup: Get detailed company funding history
-// - funding_timeline: Get funding events in a date range`}
+              <CodeBlock lang="json">
+{`{ "query": "autonomous vehicles", "sector": "AI", "limit": 5 }`}
               </CodeBlock>
-            </StepCard>
-
-            <StepCard step={6} title="Test the integration">
-              <p>Verify everything works with a quick test query.</p>
-              <CodeBlock lang="typescript">
-{`const results = await openclaw.invoke("funding_search", {
-  query: "AI companies funded in 2025",
-  limit: 5,
-});
-
-console.log(results);
-// => [{ company: "...", round: "Series A", amount: "$10M", ... }, ...]`}
-              </CodeBlock>
+              <p className="text-[11px] text-[#5c5c5c]">
+                At least one parameter is required. See the full parameter
+                reference below.
+              </p>
             </StepCard>
           </div>
         )}
@@ -237,174 +209,119 @@ console.log(results);
         {/* Manual Setup Tab */}
         {activeTab === "manual" && (
           <div className="space-y-6">
-            <StepCard step={1} title="Add the package dependency">
+            <StepCard step={1} title="Clone into your extensions directory">
               <p>
-                Install the plugin directly as an npm dependency if you prefer
-                not to use the OpenClaw CLI.
+                Clone the plugin repo directly into your local OpenClaw
+                extensions folder.
               </p>
               <CodeBlock lang="bash">
-{`npm install @krystalballz/openclaw-funding-search openclaw`}
+{`git clone https://github.com/krystalballz/openclaw-funding-search ~/.openclaw/extensions/funding-search
+cd ~/.openclaw/extensions/funding-search
+npm install --omit=dev`}
               </CodeBlock>
             </StepCard>
 
-            <StepCard step={2} title="Create the plugin configuration">
+            <StepCard step={2} title="Configure API key (optional)">
               <p>
-                Create an <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">openclaw.config.json</code> in
-                your project root.
+                Add an optional API key in your{" "}
+                <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">openclaw.json</code>{" "}
+                plugin config.
               </p>
               <CodeBlock lang="json">
 {`{
   "plugins": {
-    "@krystalballz/openclaw-funding-search": {
-      "enabled": true,
-      "config": {
-        "api_key": "$KRYSTALBALLZ_API_KEY",
-        "base_url": "https://krystalballz.xyz/api",
-        "timeout_ms": 30000,
-        "max_results": 50
-      }
+    "funding-search": {
+      "apiKey": "your-api-key"
     }
   }
 }`}
               </CodeBlock>
             </StepCard>
 
-            <StepCard step={3} title="Initialize and use in your agent">
+            <StepCard step={3} title="Verify the tool is available">
               <p>
-                Load the config and wire the plugin into your agent&apos;s tool
-                chain.
+                The plugin registers itself automatically via{" "}
+                <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">openclaw.plugin.json</code>.
+                No manual registration code is needed. The{" "}
+                <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">funding_search</code>{" "}
+                tool will be available to all agents immediately.
               </p>
-              <CodeBlock lang="typescript">
-{`import { OpenClaw } from "openclaw";
-import fundingSearch from "@krystalballz/openclaw-funding-search";
-
-const openclaw = new OpenClaw({ configPath: "./openclaw.config.json" });
-openclaw.register(fundingSearch);
-
-// Get tool definitions for your LLM framework
-const tools = openclaw.getToolDefinitions();
-
-// Example: Pass tools to an Anthropic/OpenAI agent
-const response = await llm.chat({
-  messages: [...],
-  tools: tools,
-});`}
-              </CodeBlock>
-            </StepCard>
-
-            <StepCard step={4} title="Handle tool calls in your agent loop">
-              <p>
-                When your agent decides to use a funding search tool, route the
-                call through OpenClaw.
-              </p>
-              <CodeBlock lang="typescript">
-{`// In your agent's tool execution handler:
-async function handleToolCall(name: string, input: Record<string, unknown>) {
-  if (openclaw.hasPlugin(name)) {
-    return await openclaw.invoke(name, input);
-  }
-  // ... handle other tools
-}`}
-              </CodeBlock>
             </StepCard>
           </div>
         )}
 
-        {/* Available Tools Reference */}
-        <SectionHeading>Available Tools</SectionHeading>
-        <div className="grid gap-4">
-          {[
-            {
-              name: "funding_search",
-              description:
-                "Search for startup funding rounds by keyword, industry, or investor.",
-              params: "query: string, limit?: number, filters?: object",
-            },
-            {
-              name: "company_lookup",
-              description:
-                "Get the complete funding history for a specific company.",
-              params: "company_name: string",
-            },
-            {
-              name: "funding_timeline",
-              description:
-                "Retrieve funding events within a specific date range.",
-              params: "start_date: string, end_date: string, sector?: string",
-            },
-          ].map((tool) => (
-            <div
-              key={tool.name}
-              className="border border-[#2b2b2b] rounded-lg bg-[#12121a] p-4"
-            >
-              <code className="text-[#e74c3c] text-sm font-mono font-semibold">
-                {tool.name}
-              </code>
-              <p className="text-[12px] text-[#8a8a6a] mt-1">
-                {tool.description}
-              </p>
-              <div className="mt-2 text-[11px] text-[#5c5c5c] font-mono">
-                ({tool.params})
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Environment Variables */}
-        <SectionHeading>Environment Variables</SectionHeading>
+        {/* Tool Reference */}
+        <SectionHeading>Tool Reference: funding_search</SectionHeading>
         <div className="border border-[#2b2b2b] rounded-xl bg-[#12121a] p-6">
-          <div className="space-y-3 font-mono text-[12px]">
-            {[
-              {
-                name: "KRYSTALBALLZ_API_KEY",
-                desc: "Your API authentication key",
-                required: true,
-              },
-              {
-                name: "KBZ_BASE_URL",
-                desc: "API base URL (defaults to https://krystalballz.xyz/api)",
-                required: false,
-              },
-              {
-                name: "KBZ_TIMEOUT",
-                desc: "Request timeout in ms (default: 30000)",
-                required: false,
-              },
-            ].map((env) => (
-              <div
-                key={env.name}
-                className="flex items-start justify-between gap-4 py-2 border-b border-[#1c1c2a] last:border-0"
-              >
-                <div>
-                  <code className="text-[#c0d8f0]">{env.name}</code>
-                  <span className="text-[11px] text-[#5c5c5c] ml-2">
-                    {env.desc}
-                  </span>
-                </div>
-                {env.required && (
-                  <span className="text-[9px] text-[#e74c3c] bg-[#e74c3c]/10 px-2 py-0.5 rounded-full shrink-0">
-                    required
-                  </span>
-                )}
-              </div>
-            ))}
+          <p className="text-[13px] text-[#b8b8a0] mb-4">
+            Search the KrystalBallz startup funding database for companies,
+            investors, and funding rounds. At least one parameter is required.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[12px]">
+              <thead>
+                <tr className="border-b border-[#2b2b2b]">
+                  <th className="text-left py-2 pr-4 text-[#f5f5dc] font-semibold">Parameter</th>
+                  <th className="text-left py-2 pr-4 text-[#f5f5dc] font-semibold">Type</th>
+                  <th className="text-left py-2 text-[#f5f5dc] font-semibold">Description</th>
+                </tr>
+              </thead>
+              <tbody className="text-[#b8b8a0]">
+                {[
+                  { name: "query", type: "string", desc: "Text search across company names, descriptions, investors" },
+                  { name: "sector", type: "string", desc: 'Filter by sector (e.g. "AI", "healthcare")' },
+                  { name: "series", type: "string", desc: 'Filter by round type (e.g. "Seed", "Series A")' },
+                  { name: "investor", type: "string", desc: "Filter by investor name (partial match)" },
+                  { name: "days", type: "number", desc: "Lookback window in days (default 30)" },
+                  { name: "limit", type: "number", desc: "Max results (default 10, max 50)" },
+                ].map((param) => (
+                  <tr key={param.name} className="border-b border-[#1c1c2a] last:border-0">
+                    <td className="py-2 pr-4">
+                      <code className="text-[#c0d8f0] font-mono">{param.name}</code>
+                    </td>
+                    <td className="py-2 pr-4">
+                      <code className="text-[#5c5c5c] font-mono">{param.type}</code>
+                    </td>
+                    <td className="py-2 text-[#8a8a6a]">{param.desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* Quick Reference */}
-        <SectionHeading>Quick Reference</SectionHeading>
-        <CodeBlock lang="typescript">
-{`// Full setup in ~10 lines
-import { OpenClaw } from "openclaw";
-import fundingSearch from "@krystalballz/openclaw-funding-search";
+        {/* Example Queries */}
+        <SectionHeading>Example Queries</SectionHeading>
+        <div className="space-y-4">
+          <div>
+            <p className="text-[12px] text-[#8a8a6a] mb-2">Search by text:</p>
+            <CodeBlock lang="json">{`{ "query": "autonomous vehicles" }`}</CodeBlock>
+          </div>
+          <div>
+            <p className="text-[12px] text-[#8a8a6a] mb-2">Filter by sector and series:</p>
+            <CodeBlock lang="json">{`{ "sector": "AI", "series": "Series A" }`}</CodeBlock>
+          </div>
+          <div>
+            <p className="text-[12px] text-[#8a8a6a] mb-2">Find a specific investor&apos;s deals in the last 7 days:</p>
+            <CodeBlock lang="json">{`{ "investor": "Sequoia", "days": 7, "limit": 20 }`}</CodeBlock>
+          </div>
+        </div>
 
-const oc = new OpenClaw();
-oc.register(fundingSearch);
-
-const results = await oc.invoke("funding_search", {
-  query: "Series A AI startups",
-  limit: 10,
-});`}
+        {/* Example Response */}
+        <SectionHeading>Example Response</SectionHeading>
+        <CodeBlock lang="json">
+{`[
+  {
+    "company_name": "Waabi",
+    "funding_amount": "$750M",
+    "series": "Series C",
+    "sector": "Autonomous Vehicles",
+    "investors": "Khosla Ventures, Uber",
+    "date": "2026-02-02",
+    "source": "TechStartups",
+    "description": "Waabi, an autonomous driving technology company..."
+  }
+]`}
         </CodeBlock>
 
         {/* Footer CTA */}
@@ -422,12 +339,14 @@ const results = await oc.invoke("funding_search", {
             >
               Try the Oracle
             </Link>
-            <Link
-              href="/register"
+            <a
+              href="https://www.npmjs.com/package/@krystalballz/openclaw-funding-search"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-[#2b2b2b] hover:border-[#5c5c5c] text-[#8a8a6a] hover:text-[#f5f5dc] text-xs rounded-lg transition-all"
             >
-              Get an API Key
-            </Link>
+              View on npm
+            </a>
           </div>
         </div>
       </main>
