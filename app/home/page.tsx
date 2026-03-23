@@ -6,8 +6,8 @@ import { useState } from "react";
 
 export default function HomePage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [agreed, setAgreed] = useState(false);
+  // const [email, setEmail] = useState("");
+  // const [agreed, setAgreed] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] flex flex-col items-center font-[family-name:var(--font-press-start)] text-[#f5f5dc]">
@@ -92,9 +92,9 @@ export default function HomePage() {
       </div>
 
       {/* Divider */}
-      <div className="w-full max-w-lg border-t border-[#1c1c2a] mb-8" />
+      {/* <div className="w-full max-w-lg border-t border-[#1c1c2a] mb-8" /> */}
 
-      {/* Email Signup */}
+      {/* Email Signup - commented out
       <div className="flex flex-col items-center px-4 pb-16 max-w-lg w-full">
         <p className="text-[10px] text-[#4ade80] mb-4 flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-[#4ade80] inline-block" />
@@ -130,6 +130,7 @@ export default function HomePage() {
           </span>
         </label>
       </div>
+      */}
     </div>
   );
 }
