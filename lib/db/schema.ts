@@ -189,3 +189,12 @@ export const job = pgTable("Job", {
 });
 
 export type Job = InferSelectModel<typeof job>;
+
+export const subscriber = pgTable("Subscriber", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  email: varchar("email", { length: 256 }).notNull().unique(),
+  agreedToTos: boolean("agreedToTos").notNull().default(false),
+  createdAt: timestamp("createdAt").notNull(),
+});
+
+export type Subscriber = InferSelectModel<typeof subscriber>;
