@@ -111,3 +111,16 @@ Started: Mon Mar 23 22:28:44 CDT 2026
   - kbz_chron root returns { last_run: { timestamp: ... } } for last scrape info
   - Companies API may return array directly or { results: [...] } — handle both
 ---
+
+## 2026-03-23 - US-010
+- Created /admin/companies page with search, sector/series filters, pagination
+- Table: Company Name, Funding Amount, Series, Sector, Source, Date
+- Client-side pagination (20 per page), search triggers API re-fetch
+- Company names link to /admin/companies/[name] detail page
+- Loading skeleton, error state, empty state
+- Files changed: app/admin/(portal)/companies/page.tsx (new), prd.json
+- **Learnings for future iterations:**
+  - Search uses q param on API, filters use sector/series params
+  - Default 30 days of data, limit 200 for client-side pagination
+  - useCallback for fetchCompanies to avoid stale closure in useEffect
+---

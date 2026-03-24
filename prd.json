@@ -183,7 +183,7 @@
         "Each company name is clickable and links to /admin/companies/[name]"
       ],
       "priority": 10,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-011",
