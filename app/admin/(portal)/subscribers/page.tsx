@@ -44,6 +44,20 @@ export default function SubscribersPage() {
     [subscribers, search],
   );
 
+  const handleDelete = async (id: string, email: string) => {
+    if (!window.confirm(`Delete subscriber ${email}?`)) return;
+    try {
+      const res = await fetch(`/api/admin/subscribers/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setSubscribers((prev) => prev.filter((s) => s.id !== id));
+      }
+    } catch {
+      // silently fail
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     try {
       return new Date(dateStr).toLocaleDateString("en-US", {
@@ -100,22 +114,23 @@ export default function SubscribersPage() {
       ) : (
         <>
           {/* Header */}
-          <div className="grid grid-cols-3 gap-2 border-b-2 border-[#5c5c5c] pb-2 mb-2">
+          <div className="grid grid-cols-[1fr_80px_100px_40px] gap-2 border-b-2 border-[#5c5c5c] pb-2 mb-2">
             <span className="text-[7px] tracking-[1px] text-[#c0b896]">
               EMAIL
             </span>
             <span className="text-[7px] tracking-[1px] text-[#c0b896]">
-              AGREED TO TOS
+              TOS
             </span>
             <span className="text-[7px] tracking-[1px] text-[#c0b896]">
               SIGNED UP
             </span>
+            <span />
           </div>
 
           {filtered.map((s) => (
             <div
               key={s.id}
-              className="grid grid-cols-3 gap-2 border-b border-[#2b2b2b] py-2"
+              className="grid grid-cols-[1fr_80px_100px_40px] gap-2 border-b border-[#2b2b2b] py-2 items-center"
             >
               <span className="text-[8px] text-[#f0e6d2] truncate">
                 {s.email}
@@ -126,6 +141,14 @@ export default function SubscribersPage() {
               <span className="text-[8px] text-[#c0b896]">
                 {formatDate(s.createdAt)}
               </span>
+              <button
+                type="button"
+                onClick={() => handleDelete(s.id, s.email)}
+                className="text-[10px] text-red-400 hover:text-red-300"
+                title="Delete subscriber"
+              >
+                X
+              </button>
             </div>
           ))}
         </>

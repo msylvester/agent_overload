@@ -176,3 +176,11 @@ Started: Mon Mar 23 22:28:44 CDT 2026
 - CSV escapes double quotes in emails
 - Files changed: app/api/admin/subscribers/export/route.ts (new), app/admin/(portal)/subscribers/page.tsx, prd.json
 ---
+
+## 2026-03-23 - US-017
+- Added deleteSubscriber() to lib/db/queries.ts
+- Created DELETE /api/admin/subscribers/[id] route with session verification
+- Added delete (X) button to each subscriber row with confirmation dialog
+- Optimistic list update after deletion
+- Files changed: lib/db/queries.ts, app/api/admin/subscribers/[id]/route.ts (new), app/admin/(portal)/subscribers/page.tsx, prd.json
+---

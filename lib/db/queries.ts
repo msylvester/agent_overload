@@ -668,6 +668,21 @@ export async function getSubscribers() {
   }
 }
 
+export async function deleteSubscriber({ id }: { id: string }) {
+  try {
+    const result = await db
+      .delete(subscriber)
+      .where(eq(subscriber.id, id))
+      .returning();
+    return result[0] ?? null;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to delete subscriber"
+    );
+  }
+}
+
 export async function updateJobStatus({
   id,
   status,
