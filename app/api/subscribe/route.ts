@@ -1,4 +1,14 @@
-import { createSubscriber } from "@/lib/db/queries";
+import { createSubscriber, getSubscribers } from "@/lib/db/queries";
+
+export async function GET() {
+  try {
+    const subscribers = await getSubscribers();
+    return Response.json({ subscribers }, { status: 200 });
+  } catch (error) {
+    console.error("Fetch subscribers error:", error);
+    return Response.json({ error: "Something went wrong" }, { status: 500 });
+  }
+}
 
 export async function POST(request: Request) {
   try {

@@ -654,6 +654,20 @@ export async function createSubscriber({ email }: { email: string }) {
   }
 }
 
+export async function getSubscribers() {
+  try {
+    return await db
+      .select()
+      .from(subscriber)
+      .orderBy(desc(subscriber.createdAt));
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to fetch subscribers"
+    );
+  }
+}
+
 export async function updateJobStatus({
   id,
   status,
