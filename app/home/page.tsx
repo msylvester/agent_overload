@@ -118,9 +118,9 @@ export default function HomePage() {
       </div>
 
       {/* Divider */}
-      <div className="w-full max-w-lg border-t border-[#1c1c2a] mb-8" />
+      {/* <div className="w-full max-w-lg border-t border-[#1c1c2a] mb-8" /> */}
 
-      {/* Email Signup */}
+      {/* Email Signup - commented out
       <div className="flex flex-col items-center px-4 pb-16 max-w-lg w-full">
         <p className="text-[10px] text-[#4ade80] mb-4 flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-[#4ade80] inline-block" />
@@ -167,6 +167,7 @@ export default function HomePage() {
           </p>
         )}
       </div>
+      */}
     </div>
   );
 }

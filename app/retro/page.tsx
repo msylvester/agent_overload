@@ -11,6 +11,7 @@ import BasicResponse from "./components/responses/BasicResponse";
 import ResearchResponse from "./components/responses/ResearchResponse";
 import TemporalResponse, { CompanyCard, CompanyDetails } from "./components/responses/TemporalResponse";
 import ClarificationResponse from "./components/responses/ClarificationResponse";
+import RetroModals from "./components/RetroModals";
 import { logger } from "@/lib/logger";
 
 type Message = {
@@ -259,6 +260,7 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen flex justify-center bg-[radial-gradient(circle_at_top,#1c2840_0%,#05040a_70%)] text-[#f0e6d2] p-4 box-border font-[var(--font-press-start),'Press_Start_2P',system-ui,-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif]">
+      <RetroModals />
       <div className="[image-rendering:pixelated] max-w-[1120px] w-full border-4 border-[#2b2b2b] bg-[#141016] shadow-[0_0_0_4px_#4e4e4e,0_0_32px_rgba(0,0,0,0.7)] p-2">
         {/* TOP BAR */}
         <div className="flex items-center justify-between border-[3px] border-[#5c5c5c] px-2.5 py-1.5 bg-[linear-gradient(#403b3b,#262020)] [text-shadow:1px_1px_#000] mb-2">
