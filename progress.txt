@@ -41,3 +41,16 @@ Started: Mon Mar 23 22:28:44 CDT 2026
   - Error messages appear below the submit button in red, consistent with the retro theme
   - The `Link` import from `next/link` was already present but unused for this feature (used for BACK TO SITE link)
 ---
+
+## 2026-03-23 - US-004
+- Created middleware.ts at project root for admin route protection
+- Protects /admin/* routes (except /admin login page and /api/admin/auth)
+- Uses jose jwtVerify directly (edge-compatible, can't import lib/admin/session.ts in middleware edge runtime)
+- Redirects unauthenticated users to /admin
+- Files changed: middleware.ts (new), prd.json
+- **Learnings for future iterations:**
+  - Next.js middleware runs in Edge runtime — can't import Node.js-only modules
+  - jose works in Edge runtime natively
+  - Used NextRequest.cookies.get() API instead of parsing raw cookie header
+  - Matcher `/admin/:path+` matches all sub-paths but NOT `/admin` itself
+---
