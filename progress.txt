@@ -135,3 +135,11 @@ Started: Mon Mar 23 22:28:44 CDT 2026
   - Next.js 15 App Router: params is a Promise, use React `use()` to unwrap
   - Company name from URL is already encoded, need decodeURIComponent for display (but API handles it)
 ---
+
+## 2026-03-23 - US-012
+- Created /admin/scrape page with health indicator, last run details, trigger button (disabled)
+- Auto-refreshes every 30 seconds
+- Shows health green/red, last run timestamp/status/articles/companies counts
+- Trigger Scrape button disabled with "Coming soon" tooltip
+- Files changed: app/admin/(portal)/scrape/page.tsx (new), prd.json
+---
