@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const NAV_ITEMS = [
   { href: "/admin/dashboard", label: "Dashboard" },
@@ -26,6 +27,7 @@ export default function PortalLayout({
     setLoggingOut(true);
     try {
       await fetch("/api/admin/auth/logout", { method: "POST" });
+      toast.success("Logged out");
     } finally {
       router.push("/admin");
     }

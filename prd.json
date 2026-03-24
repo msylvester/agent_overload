@@ -343,7 +343,7 @@
         "Verify all pages handle the unauthenticated redirect gracefully (no flash of content)"
       ],
       "priority": 20,
-      "passes": false
+      "passes": true
     }
   ],
   "dataModel": {

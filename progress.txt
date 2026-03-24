@@ -201,3 +201,14 @@ Started: Mon Mar 23 22:28:44 CDT 2026
 - **Learnings for future iterations:**
   - `db` is not exported from queries.ts — use existing query functions to test DB connectivity
 ---
+
+## 2026-03-23 - US-020
+- Created reusable AdminLoadingSkeleton, AdminErrorState, AdminEmptyState components
+- Added toast notifications (sonner) for: delete subscriber, trigger scrape, logout
+- All pages already had try/catch with proper error display from prior stories
+- Toaster already configured in root layout
+- Files changed: components/admin/loading-skeleton.tsx (new), components/admin/error-state.tsx (new), components/admin/empty-state.tsx (new), app/admin/(portal)/scrape/page.tsx, app/admin/(portal)/subscribers/page.tsx, app/admin/(portal)/layout.tsx, prd.json
+- **Learnings for future iterations:**
+  - Sonner Toaster is in app/layout.tsx at position="top-center"
+  - All admin pages have inline loading/error states; reusable components available for future pages
+---

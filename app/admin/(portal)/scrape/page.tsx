@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface HealthData {
   status: string;
@@ -47,13 +48,17 @@ export default function ScrapePage() {
           parts.push(`Articles found: ${data.articles_found}`);
         if (data.companies_inserted !== undefined)
           parts.push(`Companies inserted: ${data.companies_inserted}`);
-        setScrapeResult(parts.length > 0 ? parts.join(", ") : "Scrape completed");
+        const msg = parts.length > 0 ? parts.join(", ") : "Scrape completed";
+        setScrapeResult(msg);
+        toast.success(msg);
         fetchData();
       } else {
         setScrapeError("Scrape failed — upstream error");
+        toast.error("Scrape failed");
       }
     } catch {
       setScrapeError("Scrape failed — connection error");
+      toast.error("Scrape failed");
     } finally {
       setScraping(false);
     }

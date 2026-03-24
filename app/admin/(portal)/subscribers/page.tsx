@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 interface Subscriber {
   id: string;
@@ -64,9 +65,12 @@ export default function SubscribersPage() {
       });
       if (res.ok) {
         setSubscribers((prev) => prev.filter((s) => s.id !== id));
+        toast.success("Subscriber deleted");
+      } else {
+        toast.error("Failed to delete subscriber");
       }
     } catch {
-      // silently fail
+      toast.error("Failed to delete subscriber");
     }
   };
 
