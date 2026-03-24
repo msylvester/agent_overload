@@ -30,6 +30,7 @@ import {
   message,
   type Suggestion,
   stream,
+  subscriber,
   suggestion,
   type User,
   user,
@@ -631,6 +632,39 @@ export async function getJobById({ id }: { id: string }) {
     return selectedJob || null;
   } catch (_error) {
     throw new ChatSDKError("bad_request:database", "Failed to get job by id");
+  }
+}
+
+export async function createSubscriber({ email }: { email: string }) {
+  try {
+    const normalizedEmail = email.trim().toLowerCase();
+    return await db
+      .insert(subscriber)
+      .values({
+        email: normalizedEmail,
+        agreedToTos: true,
+        createdAt: new Date(),
+      })
+      .onConflictDoNothing({ target: subscriber.email });
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to create subscriber"
+    );
+  }
+}
+
+export async function getSubscribers() {
+  try {
+    return await db
+      .select()
+      .from(subscriber)
+      .orderBy(desc(subscriber.createdAt));
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to fetch subscribers"
+    );
   }
 }
 

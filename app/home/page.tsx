@@ -6,8 +6,34 @@ import { useState } from "react";
 
 export default function HomePage() {
   const router = useRouter();
-  // const [email, setEmail] = useState("");
-  // const [agreed, setAgreed] = useState(false);
+  const [email, setEmail] = useState("");
+  const [agreed, setAgreed] = useState(false);
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleSubscribe = async () => {
+    setStatus("loading");
+    setErrorMessage("");
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (res.ok) {
+        setStatus("success");
+        setEmail("");
+        setAgreed(false);
+      } else {
+        const data = await res.json();
+        setStatus("error");
+        setErrorMessage(data.error || "Something went wrong");
+      }
+    } catch {
+      setStatus("error");
+      setErrorMessage("Something went wrong");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] flex flex-col items-center font-[family-name:var(--font-press-start)] text-[#f5f5dc]">
@@ -110,10 +136,11 @@ export default function HomePage() {
           />
           <button
             type="button"
-            disabled={!email || !agreed}
+            disabled={!email || !agreed || status === "loading"}
+            onClick={handleSubscribe}
             className="px-4 py-3 bg-[#2b2b2b] text-[#5c5c5c] text-[10px] rounded-lg disabled:opacity-50 hover:bg-[#3b3b3b] transition-colors cursor-pointer disabled:cursor-not-allowed"
           >
-            Notify me
+            {status === "loading" ? "Sending..." : "Notify me"}
           </button>
         </div>
         <label className="flex items-start gap-2 text-[8px] text-[#5c5c5c] cursor-pointer">
@@ -129,6 +156,16 @@ export default function HomePage() {
             the <span className="underline">Privacy Policy</span>.
           </span>
         </label>
+        {status === "success" && (
+          <p className="text-[10px] text-[#4ade80] mt-3">
+            You&apos;re on the list! We&apos;ll notify you when we launch.
+          </p>
+        )}
+        {status === "error" && (
+          <p className="text-[10px] text-[#e74c3c] mt-3">
+            {errorMessage}
+          </p>
+        )}
       </div>
       */}
     </div>
