@@ -23,6 +23,41 @@ export default function ScrapePage() {
   const [healthError, setHealthError] = useState(false);
   const [statusError, setStatusError] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [scraping, setScraping] = useState(false);
+  const [scrapeResult, setScrapeResult] = useState<string | null>(null);
+  const [scrapeError, setScrapeError] = useState("");
+
+  const handleTriggerScrape = async () => {
+    if (
+      !window.confirm(
+        "Are you sure? This will scrape TechCrunch and TechStartups.",
+      )
+    ) {
+      return;
+    }
+    setScraping(true);
+    setScrapeResult(null);
+    setScrapeError("");
+    try {
+      const res = await fetch("/api/admin/scrape/trigger", { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        const parts: string[] = [];
+        if (data.articles_found !== undefined)
+          parts.push(`Articles found: ${data.articles_found}`);
+        if (data.companies_inserted !== undefined)
+          parts.push(`Companies inserted: ${data.companies_inserted}`);
+        setScrapeResult(parts.length > 0 ? parts.join(", ") : "Scrape completed");
+        fetchData();
+      } else {
+        setScrapeError("Scrape failed — upstream error");
+      }
+    } catch {
+      setScrapeError("Scrape failed — connection error");
+    } finally {
+      setScraping(false);
+    }
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -137,19 +172,22 @@ export default function ScrapePage() {
             )}
           </div>
 
-          {/* Trigger Scrape (disabled for now) */}
+          {/* Trigger Scrape */}
           <div className="border-2 border-[#2b2b2b] bg-[#141016] p-4">
             <button
               type="button"
-              disabled
-              title="Coming soon"
-              className="px-6 py-2 border-2 border-[#474747] bg-[linear-gradient(#373737,#181818)] text-[9px] tracking-[2px] text-[#6e6e6e] opacity-50 cursor-not-allowed"
+              disabled={scraping}
+              onClick={handleTriggerScrape}
+              className="px-6 py-2 border-2 border-[#555555] bg-[linear-gradient(#373737,#181818)] text-[9px] tracking-[2px] text-[#f5f5dc] hover:border-[#7abaff] hover:shadow-[0_0_15px_rgba(93,172,255,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              TRIGGER SCRAPE
+              {scraping ? "SCRAPING..." : "TRIGGER SCRAPE"}
             </button>
-            <span className="text-[7px] text-[#6e6e6e] ml-3">
-              Coming soon
-            </span>
+            {scrapeResult && (
+              <p className="text-[9px] text-green-400 mt-3">{scrapeResult}</p>
+            )}
+            {scrapeError && (
+              <p className="text-[9px] text-red-400 mt-3">{scrapeError}</p>
+            )}
           </div>
         </div>
       )}

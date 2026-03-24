@@ -244,7 +244,7 @@
         "Add a confirmation dialog before triggering ('Are you sure? This will scrape TechCrunch and TechStartups.')"
       ],
       "priority": 14,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-015",
