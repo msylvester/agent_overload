@@ -89,3 +89,12 @@ Started: Mon Mar 23 22:28:44 CDT 2026
   - KBZ_CHRON_URL defaults to https://kbz-chron.fly.dev
   - Use `verifyAdminSession()` from lib/admin/session.ts for cookie-based auth in API routes
 ---
+
+## 2026-03-23 - US-008
+- Created GET /api/admin/scrape/health proxying to kbz_chron /health
+- Created GET /api/admin/scrape/status proxying to kbz_chron / (root)
+- Both verify admin session, handle upstream errors with 502, 10s timeout
+- Files changed: app/api/admin/scrape/health/route.ts (new), app/api/admin/scrape/status/route.ts (new), prd.json
+- **Learnings for future iterations:**
+  - Proxy routes follow same pattern: verify session, AbortController timeout, try/catch with 502
+---

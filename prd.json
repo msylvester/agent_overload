@@ -148,7 +148,7 @@
         "Both use the KBZ_CHRON_URL env var"
       ],
       "priority": 8,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-009",
