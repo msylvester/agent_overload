@@ -124,3 +124,14 @@ Started: Mon Mar 23 22:28:44 CDT 2026
   - Default 30 days of data, limit 200 for client-side pagination
   - useCallback for fetchCompanies to avoid stale closure in useEffect
 ---
+
+## 2026-03-23 - US-011
+- Created /admin/companies/[name] detail page
+- Displays all company fields in card layout
+- URL field renders as clickable link, investors array joined with commas
+- Back button to companies list, loading/error/not-found states
+- Files changed: app/admin/(portal)/companies/[name]/page.tsx (new), prd.json
+- **Learnings for future iterations:**
+  - Next.js 15 App Router: params is a Promise, use React `use()` to unwrap
+  - Company name from URL is already encoded, need decodeURIComponent for display (but API handles it)
+---

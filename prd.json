@@ -198,7 +198,7 @@
         "Use retro pixel theme styling with card-based layout"
       ],
       "priority": 11,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-012",
