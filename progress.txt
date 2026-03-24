@@ -191,3 +191,13 @@ Started: Mon Mar 23 22:28:44 CDT 2026
 - Added stats cards and CSS bar chart (14 days) to subscribers page
 - Files changed: lib/db/queries.ts, app/api/admin/subscribers/stats/route.ts (new), app/admin/(portal)/subscribers/page.tsx, prd.json
 ---
+
+## 2026-03-23 - US-019
+- Created GET /api/admin/settings returning env var presence, kbz_chron connectivity, DB connectivity
+- Created /admin/settings page with env var status and service connections
+- kbz_chron URL is masked in display
+- DB connectivity checked via getSubscriberStats() (count query)
+- Files changed: app/api/admin/settings/route.ts (new), app/admin/(portal)/settings/page.tsx (new), prd.json
+- **Learnings for future iterations:**
+  - `db` is not exported from queries.ts — use existing query functions to test DB connectivity
+---

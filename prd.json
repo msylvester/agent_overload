@@ -327,7 +327,7 @@
         "Use retro pixel theme with a config-panel aesthetic"
       ],
       "priority": 19,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-020",
