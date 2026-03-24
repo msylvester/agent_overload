@@ -169,3 +169,10 @@ Started: Mon Mar 23 22:28:44 CDT 2026
   - /api/subscribe GET returns { subscribers: [...] } not a raw array
   - Subscribers already sorted by createdAt desc from the query
 ---
+
+## 2026-03-23 - US-016
+- Created GET /api/admin/subscribers/export returning CSV with Content-Disposition header
+- Added EXPORT CSV button (anchor tag) on subscribers page
+- CSV escapes double quotes in emails
+- Files changed: app/api/admin/subscribers/export/route.ts (new), app/admin/(portal)/subscribers/page.tsx, prd.json
+---

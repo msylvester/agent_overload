@@ -67,8 +67,8 @@ export default function SubscribersPage() {
         TOTAL: {subscribers.length}
       </div>
 
-      {/* Search */}
-      <div className="mb-6">
+      {/* Search + Export */}
+      <div className="flex flex-wrap gap-3 mb-6">
         <input
           type="text"
           placeholder="SEARCH BY EMAIL..."
@@ -76,6 +76,12 @@ export default function SubscribersPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="bg-[#050608] border-2 border-[#474747] px-3 py-2 text-[9px] text-[#f5f5dc] font-[inherit] placeholder:text-[#6e6e6e] outline-none w-64"
         />
+        <a
+          href="/api/admin/subscribers/export"
+          className="px-4 py-2 border-2 border-[#555555] bg-[linear-gradient(#373737,#181818)] text-[9px] tracking-[2px] text-[#f5f5dc] hover:border-[#7abaff] transition-colors"
+        >
+          EXPORT CSV
+        </a>
       </div>
 
       {/* Table */}

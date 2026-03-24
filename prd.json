@@ -277,7 +277,7 @@
         "Button triggers a download via window.location or anchor tag href"
       ],
       "priority": 16,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-017",
