@@ -164,7 +164,7 @@
         "Show error states if any API call fails"
       ],
       "priority": 9,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-010",

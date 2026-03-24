@@ -98,3 +98,16 @@ Started: Mon Mar 23 22:28:44 CDT 2026
 - **Learnings for future iterations:**
   - Proxy routes follow same pattern: verify session, AbortController timeout, try/catch with 502
 ---
+
+## 2026-03-23 - US-009
+- Created /admin/dashboard page with metric cards and recent companies
+- Metric cards: Total Subscribers, Scrape Health (green/red), Last Scrape Time
+- Recent Companies preview list (last 5 from past 7 days) with links to detail
+- Loading skeletons (animate-pulse), error states for each section
+- Files changed: app/admin/(portal)/dashboard/page.tsx (new), prd.json
+- **Learnings for future iterations:**
+  - /api/subscribe GET returns array of subscribers (use .length for count)
+  - kbz_chron health returns { status: "healthy" } or similar
+  - kbz_chron root returns { last_run: { timestamp: ... } } for last scrape info
+  - Companies API may return array directly or { results: [...] } — handle both
+---
