@@ -229,7 +229,7 @@
         "Handle upstream errors with 502 response"
       ],
       "priority": 13,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-014",

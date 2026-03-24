@@ -143,3 +143,10 @@ Started: Mon Mar 23 22:28:44 CDT 2026
 - Trigger Scrape button disabled with "Coming soon" tooltip
 - Files changed: app/admin/(portal)/scrape/page.tsx (new), prd.json
 ---
+
+## 2026-03-23 - US-013
+- Created POST /api/admin/scrape/trigger proxy to kbz_chron /run
+- 120-second timeout for long scraping operations
+- Admin session verification, 502 on upstream errors
+- Files changed: app/api/admin/scrape/trigger/route.ts (new), prd.json
+---
