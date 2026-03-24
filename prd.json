@@ -1,0 +1,400 @@
+{
+  "project": "KBZ Admin Portal",
+  "branchName": "ralph/admin-portal",
+  "description": "Build a full admin portal at /admin for krystalballz.xyz. Includes simple env-var-based authentication (not next-auth), a dashboard showing key metrics, views into kbz_chron scrape data (companies, health, manual scrape trigger), subscriber management (list, export CSV, delete), and admin navigation. The portal uses the existing retro/pixel theme (Press Start 2P font) established in the admin login page.",
+  "context": {
+    "existingApp": "Next.js 15 with App Router, Tailwind CSS, shadcn/ui, Drizzle ORM on Vercel Postgres",
+    "adminPages": "app/admin/page.tsx (styled login form, auth not wired), app/admin/layout.tsx (Press Start 2P font)",
+    "kbzChron": {
+      "deployment": "Flask on Fly.io at https://kbz-chron.fly.dev",
+      "endpoints": {
+        "GET /": "Service status and last_run info",
+        "GET /health": "Health check",
+        "GET /search": "Search companies (params: q, company_name, sector, series, investor, days, limit)",
+        "GET /scrape": "Trigger on-demand TechStartups scrape",
+        "POST /run": "Trigger full funding scraper (TechCrunch + TechStartups)"
+      },
+      "database": "MongoDB Atlas, companies DB, funded_companies collection",
+      "fields": "company_name, funding_amount, series, sector, investors, date, source, title, url, content, description, founded_year, total_funding, valuation, created_at, enriched_at, scraped_at"
+    },
+    "subscribers": {
+      "table": "Subscriber in Vercel Postgres (id, email, agreedToTos, createdAt)",
+      "existingQueries": "getSubscribers() and createSubscriber() in lib/db/queries.ts",
+      "existingApi": "GET/POST /api/subscribe"
+    },
+    "auth": {
+      "strategy": "Simple env var check against ADMIN_USERNAME and ADMIN_PASSWORD. NOT next-auth.",
+      "session": "HTTP-only cookie with signed JWT token scoped to /admin path"
+    },
+    "styling": "Retro pixel theme with Press Start 2P font, dark backgrounds (#141016, #171217), gold accents (#d4a853), pixelated borders"
+  },
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Admin auth API route (login)",
+      "description": "As an admin, I want a POST /api/admin/auth endpoint that validates my credentials against ADMIN_USERNAME and ADMIN_PASSWORD env vars so that I can authenticate securely.",
+      "acceptanceCriteria": [
+        "Create app/api/admin/auth/route.ts with a POST handler",
+        "Accept JSON body with { username, password }",
+        "Compare against process.env.ADMIN_USERNAME and process.env.ADMIN_PASSWORD",
+        "Return 401 with { error: 'Invalid credentials' } if mismatch",
+        "Return 400 if username or password missing",
+        "On success, set an HTTP-only cookie named 'admin-session' with a signed JWT value (use jose library for JWT signing with ADMIN_SESSION_SECRET env var)",
+        "Cookie should have: httpOnly: true, secure: true, sameSite: 'lax', path: '/admin', maxAge: 86400 (24h)",
+        "Return 200 with { success: true } on valid credentials",
+        "Create lib/admin/session.ts utility with createSessionToken(payload) and verifySessionToken(token) functions"
+      ],
+      "priority": 1,
+      "passes": true
+    },
+    {
+      "id": "US-002",
+      "title": "Admin auth verification utility",
+      "description": "As a developer, I need a reusable function to verify the admin session cookie so that all admin routes can check authentication consistently.",
+      "acceptanceCriteria": [
+        "In lib/admin/session.ts, export a verifyAdminSession() function that reads the 'admin-session' cookie from next/headers",
+        "Returns { authenticated: true } if valid, { authenticated: false } otherwise",
+        "Handles missing cookie, expired token, and invalid signature gracefully",
+        "Export a helper getAdminSessionFromRequest(request: Request) for use in API routes",
+        "Ensure the module compiles with npx tsc --noEmit"
+      ],
+      "priority": 2,
+      "passes": true
+    },
+    {
+      "id": "US-003",
+      "title": "Wire up admin login form to auth API",
+      "description": "As an admin, I want the existing login form at /admin to actually call the auth API and redirect me to /admin/dashboard on success so that I can log in.",
+      "acceptanceCriteria": [
+        "Modify app/admin/page.tsx handleSubmit to POST to /api/admin/auth with { username, password }",
+        "Show loading state on the ENTER button during submission (text changes to 'LOADING...' and button is disabled)",
+        "On 200 response, redirect to /admin/dashboard using router.push",
+        "On 401 response, show error text 'INVALID CREDENTIALS' in red below the form",
+        "On network error, show 'CONNECTION ERROR' message",
+        "Clear error message when user starts typing again"
+      ],
+      "priority": 3,
+      "passes": false
+    },
+    {
+      "id": "US-004",
+      "title": "Admin route protection middleware",
+      "description": "As a system, I need all /admin/* routes (except /admin login page) to require authentication so unauthorized users cannot access admin features.",
+      "acceptanceCriteria": [
+        "Use Next.js middleware.ts at project root to intercept /admin/* requests",
+        "If no valid admin-session cookie, redirect to /admin (login page) for all /admin/* paths except /admin itself and /api/admin/auth",
+        "If the project already has a middleware.ts, add the admin check as an additional matcher without breaking existing middleware",
+        "If no middleware.ts exists, create one with matcher for /admin/:path+ patterns",
+        "The /admin page (login) and /api/admin/auth must remain accessible without a session"
+      ],
+      "priority": 4,
+      "passes": false
+    },
+    {
+      "id": "US-005",
+      "title": "Admin logout functionality",
+      "description": "As an admin, I want to log out so that my session is invalidated and I'm returned to the login page.",
+      "acceptanceCriteria": [
+        "Create POST /api/admin/auth/logout route in app/api/admin/auth/logout/route.ts",
+        "Clear the admin-session cookie by setting it with maxAge: 0",
+        "Return 200 with { success: true }",
+        "The logout action will be called from a button in the admin nav (built in a later story)"
+      ],
+      "priority": 5,
+      "passes": false
+    },
+    {
+      "id": "US-006",
+      "title": "Admin layout with sidebar navigation",
+      "description": "As an admin, I want a persistent sidebar navigation on all admin pages (post-login) so I can navigate between dashboard, companies, subscribers, and settings.",
+      "acceptanceCriteria": [
+        "Create app/admin/(portal)/layout.tsx as a layout for authenticated admin pages",
+        "Layout includes a left sidebar with navigation links: Dashboard, Companies, Subscribers, Scrape Status, Settings",
+        "Sidebar uses the retro pixel theme consistent with the login page (dark bg, gold accents, Press Start 2P font)",
+        "Sidebar shows 'KRYSTAL BALL Z' branding at top and a LOGOUT button at bottom",
+        "LOGOUT button calls POST /api/admin/auth/logout then redirects to /admin",
+        "Active route is visually highlighted in the sidebar",
+        "Sidebar is collapsible on mobile (hamburger menu)",
+        "Main content area takes remaining width with proper padding"
+      ],
+      "priority": 6,
+      "passes": false
+    },
+    {
+      "id": "US-007",
+      "title": "kbz_chron proxy API route - search companies",
+      "description": "As a developer, I need a server-side proxy to the kbz_chron /search endpoint so that the admin UI can fetch company data without exposing the Fly.io URL to the client.",
+      "acceptanceCriteria": [
+        "Create app/api/admin/companies/route.ts with a GET handler",
+        "Verify admin session before processing (return 401 if not authenticated)",
+        "Forward query parameters (q, company_name, sector, series, investor, days, limit) to KBZ_CHRON_URL/search",
+        "Return the JSON response from kbz_chron to the client",
+        "Handle kbz_chron errors gracefully (return 502 with error message if upstream fails)",
+        "Set a 10-second timeout on the fetch to kbz_chron",
+        "Use KBZ_CHRON_URL env var (default: https://kbz-chron.fly.dev)"
+      ],
+      "priority": 7,
+      "passes": false
+    },
+    {
+      "id": "US-008",
+      "title": "kbz_chron proxy API route - health and status",
+      "description": "As a developer, I need proxy endpoints for kbz_chron health and status so the admin dashboard can display scrape service health.",
+      "acceptanceCriteria": [
+        "Create app/api/admin/scrape/health/route.ts - proxies GET to kbz_chron /health",
+        "Create app/api/admin/scrape/status/route.ts - proxies GET to kbz_chron / (root, returns last_run info)",
+        "Both routes verify admin session (return 401 if unauthenticated)",
+        "Both handle upstream errors gracefully with 502 responses",
+        "Both use the KBZ_CHRON_URL env var"
+      ],
+      "priority": 8,
+      "passes": false
+    },
+    {
+      "id": "US-009",
+      "title": "Admin dashboard overview page",
+      "description": "As an admin, I want a dashboard at /admin/dashboard showing key metrics at a glance so I can quickly assess system health.",
+      "acceptanceCriteria": [
+        "Create app/admin/(portal)/dashboard/page.tsx",
+        "Display metric cards: Total Subscribers (from /api/subscribe GET), Scrape Service Health (from /api/admin/scrape/health), Last Scrape Time (from /api/admin/scrape/status)",
+        "Each card shows a label, value, and status indicator (green/red dot for health)",
+        "Show a 'Recent Companies' preview list (last 5 companies from /api/admin/companies?days=7&limit=5)",
+        "Use the retro pixel theme styling",
+        "Show loading skeletons while data is being fetched",
+        "Show error states if any API call fails"
+      ],
+      "priority": 9,
+      "passes": false
+    },
+    {
+      "id": "US-010",
+      "title": "Companies list view with search and pagination",
+      "description": "As an admin, I want to browse all scraped companies with search and pagination so I can find and review funding data.",
+      "acceptanceCriteria": [
+        "Create app/admin/(portal)/companies/page.tsx",
+        "Display a table/list of companies with columns: Company Name, Funding Amount, Series, Sector, Source, Date",
+        "Add a search input that filters by company name (uses the q parameter on /api/admin/companies)",
+        "Add filter dropdowns for sector and series",
+        "Default to showing last 30 days of data",
+        "Implement client-side pagination with limit=20 per page (Next/Previous buttons)",
+        "Use retro pixel theme styling for the table",
+        "Show loading skeleton while fetching",
+        "Show 'No companies found' empty state",
+        "Each company name is clickable and links to /admin/companies/[name]"
+      ],
+      "priority": 10,
+      "passes": false
+    },
+    {
+      "id": "US-011",
+      "title": "Company detail view",
+      "description": "As an admin, I want to click on a company and see all its details so I can review the full funding record.",
+      "acceptanceCriteria": [
+        "Create app/admin/(portal)/companies/[name]/page.tsx",
+        "Fetch company data from /api/admin/companies?company_name=[name]",
+        "Display all available fields: company_name, funding_amount, series, sector, investors, date, source, title, url (as clickable link), description, founded_year, total_funding, valuation",
+        "Show a back button that returns to the companies list",
+        "Handle case where company is not found with appropriate message",
+        "Use retro pixel theme styling with card-based layout"
+      ],
+      "priority": 11,
+      "passes": false
+    },
+    {
+      "id": "US-012",
+      "title": "Scrape status and health dashboard",
+      "description": "As an admin, I want a dedicated page showing the scrape service status, last run details, and health so I can monitor the data pipeline.",
+      "acceptanceCriteria": [
+        "Create app/admin/(portal)/scrape/page.tsx",
+        "Show kbz_chron health status (green/red indicator from /api/admin/scrape/health)",
+        "Show last run timestamp and status from /api/admin/scrape/status",
+        "Show last run details if available (articles found, companies inserted/skipped)",
+        "Auto-refresh status every 30 seconds",
+        "Show a 'Trigger Scrape' button (wired in a later story, disabled for now with tooltip 'Coming soon')",
+        "Use retro pixel theme styling"
+      ],
+      "priority": 12,
+      "passes": false
+    },
+    {
+      "id": "US-013",
+      "title": "kbz_chron proxy API route - trigger scrape",
+      "description": "As a developer, I need a proxy endpoint to trigger a manual scrape so the admin can initiate data collection on demand.",
+      "acceptanceCriteria": [
+        "Create app/api/admin/scrape/trigger/route.ts with a POST handler",
+        "Verify admin session (return 401 if unauthenticated)",
+        "POST to KBZ_CHRON_URL/run endpoint to trigger full scrape",
+        "Set a 120-second timeout (scraping takes time)",
+        "Return the result JSON from kbz_chron",
+        "Handle upstream errors with 502 response"
+      ],
+      "priority": 13,
+      "passes": false
+    },
+    {
+      "id": "US-014",
+      "title": "Wire trigger scrape button on scrape status page",
+      "description": "As an admin, I want to click a button to trigger a manual scrape and see the result so I can collect data on demand.",
+      "acceptanceCriteria": [
+        "Enable the 'Trigger Scrape' button on app/admin/(portal)/scrape/page.tsx",
+        "On click, POST to /api/admin/scrape/trigger",
+        "Show a loading/spinner state with text 'SCRAPING...' (button disabled during operation)",
+        "On success, show a result summary (articles found, companies inserted) and refresh the status display",
+        "On error, show error message in red",
+        "Add a confirmation dialog before triggering ('Are you sure? This will scrape TechCrunch and TechStartups.')"
+      ],
+      "priority": 14,
+      "passes": false
+    },
+    {
+      "id": "US-015",
+      "title": "Subscribers list view with search",
+      "description": "As an admin, I want to view all email subscribers with search functionality so I can manage the subscriber base.",
+      "acceptanceCriteria": [
+        "Create app/admin/(portal)/subscribers/page.tsx",
+        "Fetch subscribers from /api/subscribe GET endpoint",
+        "Display a table with columns: Email, Agreed to TOS, Signed Up (formatted date)",
+        "Add a search input that filters subscribers by email (client-side filter)",
+        "Show total subscriber count prominently",
+        "Sort by createdAt descending (most recent first) by default",
+        "Show loading skeleton while fetching",
+        "Show 'No subscribers yet' empty state",
+        "Use retro pixel theme styling"
+      ],
+      "priority": 15,
+      "passes": false
+    },
+    {
+      "id": "US-016",
+      "title": "Export subscribers as CSV",
+      "description": "As an admin, I want to download all subscribers as a CSV file so I can use the data in external tools.",
+      "acceptanceCriteria": [
+        "Add an 'EXPORT CSV' button to the subscribers page",
+        "Create app/api/admin/subscribers/export/route.ts that returns subscribers as CSV",
+        "CSV includes columns: email, agreedToTos, createdAt",
+        "Response has Content-Type: text/csv and Content-Disposition: attachment; filename=subscribers-YYYY-MM-DD.csv",
+        "Verify admin session (return 401 if unauthenticated)",
+        "Button triggers a download via window.location or anchor tag href"
+      ],
+      "priority": 16,
+      "passes": false
+    },
+    {
+      "id": "US-017",
+      "title": "Delete subscriber capability",
+      "description": "As an admin, I want to delete a subscriber so I can manage the subscriber list (e.g., remove test entries or honor removal requests).",
+      "acceptanceCriteria": [
+        "Create app/api/admin/subscribers/[id]/route.ts with a DELETE handler",
+        "Verify admin session (return 401 if unauthenticated)",
+        "Delete the subscriber record from Postgres by id",
+        "Return 200 with { success: true } on success",
+        "Return 404 if subscriber not found",
+        "Add deleteSubscriber({ id }) function to lib/db/queries.ts",
+        "Add a delete button (trash icon or 'X') next to each subscriber row on the subscribers page",
+        "Show a confirmation dialog before deleting",
+        "After deletion, refresh the subscriber list"
+      ],
+      "priority": 17,
+      "passes": false
+    },
+    {
+      "id": "US-018",
+      "title": "Subscriber stats and signup chart",
+      "description": "As an admin, I want to see subscriber signup trends over time so I can understand growth patterns.",
+      "acceptanceCriteria": [
+        "Add a stats section at the top of app/admin/(portal)/subscribers/page.tsx",
+        "Show: Total Subscribers, Signups This Week, Signups This Month",
+        "Create app/api/admin/subscribers/stats/route.ts that returns { total, thisWeek, thisMonth }",
+        "Verify admin session in the API route",
+        "Add getSubscriberStats() function to lib/db/queries.ts using count() with date filters",
+        "Display a simple bar chart of signups by day for the last 14 days (inline SVG or CSS bars, no external chart library)",
+        "Use retro pixel theme styling"
+      ],
+      "priority": 18,
+      "passes": false
+    },
+    {
+      "id": "US-019",
+      "title": "Admin settings page",
+      "description": "As an admin, I want a settings page showing system configuration status so I can verify the deployment is properly configured.",
+      "acceptanceCriteria": [
+        "Create app/admin/(portal)/settings/page.tsx",
+        "Display environment variable status (present/missing, NOT the values): ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_SESSION_SECRET, KBZ_CHRON_URL, POSTGRES_URL",
+        "Create app/api/admin/settings/route.ts that returns env var presence checks (boolean for each)",
+        "Verify admin session in the API route",
+        "Show kbz_chron service URL (masked) and connection status",
+        "Show database connection status (simple check via a count query)",
+        "Use retro pixel theme with a config-panel aesthetic"
+      ],
+      "priority": 19,
+      "passes": false
+    },
+    {
+      "id": "US-020",
+      "title": "Error handling and loading states polish",
+      "description": "As an admin, I want consistent error handling and loading states across all admin pages so the portal feels polished and reliable.",
+      "acceptanceCriteria": [
+        "Create a reusable AdminLoadingSkeleton component at components/admin/loading-skeleton.tsx with the retro theme",
+        "Create a reusable AdminErrorState component at components/admin/error-state.tsx with retry button",
+        "Create a reusable AdminEmptyState component at components/admin/empty-state.tsx",
+        "Apply these components to all admin pages that don't already use them: dashboard, companies, subscribers, scrape, settings",
+        "Ensure all fetch calls have try/catch with proper error display",
+        "Add toast notifications (using sonner, already installed) for success/error on actions (delete subscriber, trigger scrape, logout)",
+        "Verify all pages handle the unauthenticated redirect gracefully (no flash of content)"
+      ],
+      "priority": 20,
+      "passes": false
+    }
+  ],
+  "dataModel": {
+    "existingTables": {
+      "Subscriber": "id (uuid PK), email (varchar 256 unique), agreedToTos (boolean), createdAt (timestamp)"
+    },
+    "noNewTables": "This project does not require new database tables. Admin auth uses env vars + cookies (no DB). Company data lives in kbz_chron MongoDB (accessed via proxy). Subscribers already exist.",
+    "envVars": {
+      "ADMIN_USERNAME": "Admin login username",
+      "ADMIN_PASSWORD": "Admin login password",
+      "ADMIN_SESSION_SECRET": "Secret key for signing admin session JWT (min 32 chars)",
+      "KBZ_CHRON_URL": "Base URL for kbz_chron service (default: https://kbz-chron.fly.dev)"
+    }
+  },
+  "endpoints": {
+    "POST /api/admin/auth": "Admin login - validate credentials against env vars, set session cookie",
+    "POST /api/admin/auth/logout": "Admin logout - clear session cookie",
+    "GET /api/admin/companies": "Proxy to kbz_chron /search with query params (q, company_name, sector, series, investor, days, limit)",
+    "GET /api/admin/scrape/health": "Proxy to kbz_chron /health",
+    "GET /api/admin/scrape/status": "Proxy to kbz_chron / (root status)",
+    "POST /api/admin/scrape/trigger": "Proxy to kbz_chron /run (trigger full scrape)",
+    "GET /api/admin/subscribers/export": "Download subscribers as CSV",
+    "DELETE /api/admin/subscribers/[id]": "Delete a subscriber by id",
+    "GET /api/admin/subscribers/stats": "Subscriber count stats (total, thisWeek, thisMonth)",
+    "GET /api/admin/settings": "Env var presence and connection status checks"
+  },
+  "outOfScope": [
+    "Multi-user admin accounts (single admin via env vars)",
+    "Role-based access control",
+    "Editing or creating company records from admin (read-only view of kbz_chron data)",
+    "Sending emails to subscribers",
+    "Real-time WebSocket updates",
+    "Admin activity/audit log (deferred to v2)",
+    "Dark/light theme toggle (always dark retro theme)",
+    "Mobile-optimized admin experience (desktop-first, responsive sidebar only)"
+  ],
+  "definitionOfDone": [
+    "Admin can log in at /admin with env var credentials and be redirected to /admin/dashboard",
+    "Unauthenticated users are redirected to /admin login page when accessing any /admin/* route",
+    "Admin can log out and session is cleared",
+    "Dashboard shows subscriber count, scrape health, and last scrape time",
+    "Admin can browse, search, and filter companies from kbz_chron",
+    "Admin can view individual company details",
+    "Admin can monitor scrape service health and trigger manual scrapes",
+    "Admin can view, search, export (CSV), and delete subscribers",
+    "Subscriber stats show total, weekly, and monthly counts",
+    "Settings page shows env var configuration status",
+    "All pages have loading states, error handling, and empty states",
+    "All admin API routes verify the admin session cookie",
+    "All UI uses the retro pixel theme consistent with the login page",
+    "Lint passes (npx ultracite@latest check)",
+    "Build succeeds (npm run build)"
+  ]
+}

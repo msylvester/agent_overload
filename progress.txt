@@ -1,0 +1,32 @@
+# Ralph Progress Log
+Started: Mon Mar 23 22:28:44 CDT 2026
+## Codebase Patterns
+- Use `pnpm` as the package manager (not npm)
+- Lint with `npx ultracite@latest check` — enforces Biome formatting (no trailing commas in single-line objects, sorted imports, numeric separators for large numbers)
+- TypeScript check with `npx tsc --noEmit`
+- Trailing commas in multi-line function params are NOT used by this formatter
+- Existing auth uses NextAuth for regular users; admin auth is separate (env vars + JWT cookies)
+- `jose` library used for JWT signing/verification in admin auth
+---
+
+## 2026-03-23 22:30 CDT - US-001
+- Implemented POST /api/admin/auth endpoint and lib/admin/session.ts utility
+- Files changed: lib/admin/session.ts (new), app/api/admin/auth/route.ts (new), package.json, pnpm-lock.yaml
+- **Learnings for future iterations:**
+  - jose library was not installed — had to add it with pnpm
+  - Biome linter requires: sorted imports (jwtVerify before SignJWT), numeric separators (86_400), no trailing commas in single-line args
+  - `createSessionToken` returns a Promise from `.sign()` but doesn't need `async` keyword since it just returns the promise directly
+  - `getAdminSessionFromRequest` parses cookies from raw header — useful for middleware contexts where `next/headers` cookies() isn't available
+---
+
+## 2026-03-23 - US-002
+- Verified admin auth verification utility already fully implemented in US-001
+- `verifyAdminSession()` reads admin-session cookie from next/headers, returns `{ authenticated: boolean }`
+- `getAdminSessionFromRequest(request)` parses cookies from raw header for API route/middleware use
+- Handles missing cookie, expired token, invalid signature gracefully (try/catch returns `{ authenticated: false }`)
+- Files changed: prd.json (marked passes: true)
+- **Learnings for future iterations:**
+  - US-001 already implemented all of US-002's requirements — sometimes stories overlap
+  - Pre-existing lint errors (806) exist across the codebase; don't be alarmed, just ensure your own files are clean
+  - `npx tsc --noEmit` passes cleanly
+---
