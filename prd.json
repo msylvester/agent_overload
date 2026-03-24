@@ -74,7 +74,7 @@
         "Clear error message when user starts typing again"
       ],
       "priority": 3,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-004",

@@ -30,3 +30,14 @@ Started: Mon Mar 23 22:28:44 CDT 2026
   - Pre-existing lint errors (806) exist across the codebase; don't be alarmed, just ensure your own files are clean
   - `npx tsc --noEmit` passes cleanly
 ---
+
+## 2026-03-23 - US-003
+- Wired up admin login form to POST /api/admin/auth
+- Added loading state (LOADING... text, disabled button), error display, and auto-clear on typing
+- On success redirects to /admin/dashboard, on 401 shows INVALID CREDENTIALS, on network error shows CONNECTION ERROR
+- Files changed: app/admin/page.tsx, prd.json
+- **Learnings for future iterations:**
+  - The login page uses `useRouter` from `next/navigation` for client-side redirect
+  - Error messages appear below the submit button in red, consistent with the retro theme
+  - The `Link` import from `next/link` was already present but unused for this feature (used for BACK TO SITE link)
+---

@@ -3,14 +3,37 @@
 import React, { useState, FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function AdminLogin() {
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // Auth not implemented yet
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      if (res.ok) {
+        router.push("/admin/dashboard");
+      } else if (res.status === 401) {
+        setError("INVALID CREDENTIALS");
+      } else {
+        setError("CONNECTION ERROR");
+      }
+    } catch {
+      setError("CONNECTION ERROR");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -60,7 +83,10 @@ export default function AdminLogin() {
                     <input
                       type="text"
                       value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      onChange={(e) => {
+                        setUsername(e.target.value);
+                        setError("");
+                      }}
                       className="flex-1 bg-transparent border-none outline-none text-[#f5f5dc] text-[11px] font-[inherit] placeholder:text-[#6e6e6e]"
                       placeholder="ENTER USERNAME..."
                     />
@@ -77,7 +103,10 @@ export default function AdminLogin() {
                     <input
                       type="password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setError("");
+                      }}
                       className="flex-1 bg-transparent border-none outline-none text-[#f5f5dc] text-[11px] font-[inherit] placeholder:text-[#6e6e6e]"
                       placeholder=""
                     />
@@ -94,6 +123,7 @@ export default function AdminLogin() {
                 {/* ENTER BUTTON */}
                 <button
                   type="submit"
+                  disabled={loading}
                   className="
                     mx-auto px-10 py-3
                     border-2 border-[#555555]
@@ -105,10 +135,17 @@ export default function AdminLogin() {
                     hover:border-[#7abaff]
                     transition-shadow duration-300
                     cursor-pointer
+                    disabled:opacity-50 disabled:cursor-not-allowed
                   "
                 >
-                  ENTER
+                  {loading ? "LOADING..." : "ENTER"}
                 </button>
+
+                {error && (
+                  <p className="text-center text-[10px] text-red-500 tracking-[2px]">
+                    {error}
+                  </p>
+                )}
 
                 {/* AUTHORIZED ONLY */}
                 <div className="text-center">
