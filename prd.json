@@ -134,7 +134,7 @@
         "Use KBZ_CHRON_URL env var (default: https://kbz-chron.fly.dev)"
       ],
       "priority": 7,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-008",

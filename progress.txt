@@ -78,3 +78,14 @@ Started: Mon Mar 23 22:28:44 CDT 2026
   - The parent admin layout.tsx provides the Press Start 2P font variable
   - Mobile sidebar uses translate-x transform with md: breakpoint
 ---
+
+## 2026-03-23 - US-007
+- Created GET /api/admin/companies proxy route to kbz_chron /search
+- Forwards query params (q, company_name, sector, series, investor, days, limit)
+- 10-second AbortController timeout, admin session verification, 502 on upstream errors
+- Files changed: app/api/admin/companies/route.ts (new), prd.json
+- **Learnings for future iterations:**
+  - Use AbortController with setTimeout for fetch timeouts (no native timeout option)
+  - KBZ_CHRON_URL defaults to https://kbz-chron.fly.dev
+  - Use `verifyAdminSession()` from lib/admin/session.ts for cookie-based auth in API routes
+---
