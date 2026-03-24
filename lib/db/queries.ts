@@ -668,6 +668,71 @@ export async function getSubscribers() {
   }
 }
 
+export async function getSubscriberStats() {
+  try {
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1_000);
+    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1_000);
+
+    const [totalResult] = await db
+      .select({ value: count() })
+      .from(subscriber);
+    const [weekResult] = await db
+      .select({ value: count() })
+      .from(subscriber)
+      .where(gte(subscriber.createdAt, weekAgo));
+    const [monthResult] = await db
+      .select({ value: count() })
+      .from(subscriber)
+      .where(gte(subscriber.createdAt, monthAgo));
+
+    return {
+      total: totalResult?.value ?? 0,
+      thisWeek: weekResult?.value ?? 0,
+      thisMonth: monthResult?.value ?? 0,
+    };
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to fetch subscriber stats"
+    );
+  }
+}
+
+export async function getSubscriberDailySignups(days: number = 14) {
+  try {
+    const since = new Date(
+      Date.now() - days * 24 * 60 * 60 * 1_000,
+    );
+    const rows = await db
+      .select()
+      .from(subscriber)
+      .where(gte(subscriber.createdAt, since))
+      .orderBy(asc(subscriber.createdAt));
+
+    // Group by date
+    const counts: Record<string, number> = {};
+    for (const row of rows) {
+      const date = new Date(row.createdAt).toISOString().split("T")[0];
+      counts[date] = (counts[date] || 0) + 1;
+    }
+
+    // Fill in missing dates
+    const result: { date: string; count: number }[] = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 24 * 60 * 60 * 1_000);
+      const key = d.toISOString().split("T")[0];
+      result.push({ date: key, count: counts[key] || 0 });
+    }
+    return result;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to fetch daily signups"
+    );
+  }
+}
+
 export async function deleteSubscriber({ id }: { id: string }) {
   try {
     const result = await db

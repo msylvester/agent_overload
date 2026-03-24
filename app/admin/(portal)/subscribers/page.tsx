@@ -9,11 +9,19 @@ interface Subscriber {
   createdAt: string;
 }
 
+interface Stats {
+  total: number;
+  thisWeek: number;
+  thisMonth: number;
+  daily: { date: string; count: number }[];
+}
+
 export default function SubscribersPage() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [stats, setStats] = useState<Stats | null>(null);
 
   const fetchSubscribers = async () => {
     setLoading(true);
@@ -32,6 +40,10 @@ export default function SubscribersPage() {
 
   useEffect(() => {
     fetchSubscribers();
+    fetch("/api/admin/subscribers/stats")
+      .then((r) => r.json())
+      .then((data) => setStats(data))
+      .catch(() => {});
   }, []);
 
   const filtered = useMemo(
@@ -76,10 +88,63 @@ export default function SubscribersPage() {
         SUBSCRIBERS
       </h1>
 
-      {/* Total count */}
-      <div className="text-[10px] text-[#c0b896] mb-4">
-        TOTAL: {subscribers.length}
-      </div>
+      {/* Stats */}
+      {stats && (
+        <div className="mb-6">
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            {[
+              { label: "TOTAL", value: stats.total },
+              { label: "THIS WEEK", value: stats.thisWeek },
+              { label: "THIS MONTH", value: stats.thisMonth },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="border-2 border-[#2b2b2b] bg-[#141016] p-3"
+              >
+                <div className="text-[7px] tracking-[1px] text-[#c0b896] mb-1">
+                  {s.label}
+                </div>
+                <div className="text-[12px] text-[#d4a853]">{s.value}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Bar chart */}
+          <div className="border-2 border-[#2b2b2b] bg-[#141016] p-3">
+            <div className="text-[7px] tracking-[1px] text-[#c0b896] mb-3">
+              SIGNUPS (LAST 14 DAYS)
+            </div>
+            <div className="flex items-end gap-1 h-20">
+              {stats.daily.map((d) => {
+                const max = Math.max(...stats.daily.map((x) => x.count), 1);
+                const height = (d.count / max) * 100;
+                return (
+                  <div
+                    key={d.date}
+                    className="flex-1 flex flex-col items-center justify-end"
+                    title={`${d.date}: ${d.count}`}
+                  >
+                    <div
+                      className="w-full bg-[#d4a853] min-h-[2px]"
+                      style={{ height: `${height}%` }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex gap-1 mt-1">
+              {stats.daily.map((d) => (
+                <div
+                  key={d.date}
+                  className="flex-1 text-center text-[5px] text-[#6e6e6e]"
+                >
+                  {d.date.slice(8)}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Search + Export */}
       <div className="flex flex-wrap gap-3 mb-6">

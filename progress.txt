@@ -184,3 +184,10 @@ Started: Mon Mar 23 22:28:44 CDT 2026
 - Optimistic list update after deletion
 - Files changed: lib/db/queries.ts, app/api/admin/subscribers/[id]/route.ts (new), app/admin/(portal)/subscribers/page.tsx, prd.json
 ---
+
+## 2026-03-23 - US-018
+- Added getSubscriberStats() and getSubscriberDailySignups() to lib/db/queries.ts
+- Created GET /api/admin/subscribers/stats returning total, thisWeek, thisMonth, daily
+- Added stats cards and CSS bar chart (14 days) to subscribers page
+- Files changed: lib/db/queries.ts, app/api/admin/subscribers/stats/route.ts (new), app/admin/(portal)/subscribers/page.tsx, prd.json
+---

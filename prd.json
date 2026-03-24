@@ -311,7 +311,7 @@
         "Use retro pixel theme styling"
       ],
       "priority": 18,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-019",
