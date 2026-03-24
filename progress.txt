@@ -54,3 +54,13 @@ Started: Mon Mar 23 22:28:44 CDT 2026
   - Used NextRequest.cookies.get() API instead of parsing raw cookie header
   - Matcher `/admin/:path+` matches all sub-paths but NOT `/admin` itself
 ---
+
+## 2026-03-23 - US-005
+- Created POST /api/admin/auth/logout route
+- Clears admin-session cookie by setting maxAge: 0
+- Returns { success: true }
+- Files changed: app/api/admin/auth/logout/route.ts (new), prd.json
+- **Learnings for future iterations:**
+  - Cookie clearing uses same path ("/admin") as the original cookie set
+  - The logout route is excluded from middleware protection since it's under /api/admin/auth
+---

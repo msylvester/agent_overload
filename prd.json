@@ -101,7 +101,7 @@
         "The logout action will be called from a button in the admin nav (built in a later story)"
       ],
       "priority": 5,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-006",
