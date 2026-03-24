@@ -64,3 +64,17 @@ Started: Mon Mar 23 22:28:44 CDT 2026
   - Cookie clearing uses same path ("/admin") as the original cookie set
   - The logout route is excluded from middleware protection since it's under /api/admin/auth
 ---
+
+## 2026-03-23 - US-006
+- Created app/admin/(portal)/layout.tsx with sidebar navigation
+- Nav links: Dashboard, Companies, Subscribers, Scrape Status, Settings
+- Active route highlighted with gold left border and text
+- LOGOUT button at bottom calls POST /api/admin/auth/logout then redirects to /admin
+- Mobile hamburger menu with overlay backdrop
+- Files changed: app/admin/(portal)/layout.tsx (new), prd.json
+- **Learnings for future iterations:**
+  - Route group `(portal)` wraps authenticated admin pages without affecting URL
+  - `usePathname().startsWith(href)` for active nav highlighting
+  - The parent admin layout.tsx provides the Press Start 2P font variable
+  - Mobile sidebar uses translate-x transform with md: breakpoint
+---

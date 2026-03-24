@@ -118,7 +118,7 @@
         "Main content area takes remaining width with proper padding"
       ],
       "priority": 6,
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-007",
