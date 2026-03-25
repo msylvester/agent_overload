@@ -299,7 +299,9 @@ npm install --omit=dev`}
                   { name: "sector", type: "string", desc: 'Filter by sector (e.g. "AI", "healthcare")' },
                   { name: "series", type: "string", desc: 'Filter by round type (e.g. "Seed", "Series A")' },
                   { name: "investor", type: "string", desc: "Filter by investor name (partial match)" },
-                  { name: "days", type: "number", desc: "Lookback window in days (default 30)" },
+                  { name: "start_date", type: "string", desc: "Start of date range, inclusive (YYYY-MM-DD)" },
+                  { name: "end_date", type: "string", desc: "End of date range, inclusive (YYYY-MM-DD)" },
+                  { name: "days", type: "number", desc: "Lookback window in days from today (alternative to date range)" },
                   { name: "limit", type: "number", desc: "Max results (default 10, max 50)" },
                 ].map((param) => (
                   <tr key={param.name} className="border-b border-[#1c1c2a] last:border-0">
@@ -331,6 +333,14 @@ npm install --omit=dev`}
           <div>
             <p className="text-[12px] text-[#8a8a6a] mb-2">Find a specific investor&apos;s deals in the last 7 days:</p>
             <CodeBlock lang="json">{`{ "investor": "Sequoia", "days": 7, "limit": 20 }`}</CodeBlock>
+          </div>
+          <div>
+            <p className="text-[12px] text-[#8a8a6a] mb-2">Funding in a specific month:</p>
+            <CodeBlock lang="json">{`{ "start_date": "2026-02-01", "end_date": "2026-02-28", "limit": 50 }`}</CodeBlock>
+          </div>
+          <div>
+            <p className="text-[12px] text-[#8a8a6a] mb-2">Investor activity in Q1 2026:</p>
+            <CodeBlock lang="json">{`{ "investor": "Sequoia", "start_date": "2026-01-01", "end_date": "2026-03-31" }`}</CodeBlock>
           </div>
         </div>
 
