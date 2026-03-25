@@ -4,7 +4,7 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
-import { SessionProvider } from "next-auth/react";
+import { SafeSessionProvider } from "@/components/safe-session-provider";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://chat.vercel.ai"),
@@ -79,7 +79,7 @@ export default function RootLayout({
           enableSystem
         >
           <Toaster position="top-center" />
-          <SessionProvider>{children}</SessionProvider>
+          <SafeSessionProvider>{children}</SafeSessionProvider>
         </ThemeProvider>
       </body>
     </html>
