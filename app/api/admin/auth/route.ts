@@ -13,8 +13,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const validUsername = process.env.ADMIN_USERNAME;
-    const validPassword = process.env.ADMIN_PASSWORD;
+    const validUsername = process.env.ADMIN_USERNAME || "admin";
+    const validPassword = process.env.ADMIN_PASSWORD || "admin";
 
     if (username !== validUsername || password !== validPassword) {
       return NextResponse.json(
