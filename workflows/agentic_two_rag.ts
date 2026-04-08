@@ -54,8 +54,8 @@ const OPENROUTER_SITE_NAME =
   process.env.OPENROUTER_SITE_NAME || "Company RAG System";
 
 // Model names (must be valid OpenRouter model IDs)
-const AGENT_MODEL = "anthropic/claude-3.5-sonnet-20241022"; // For agent decisions
-const GRADER_MODEL = "anthropic/claude-3.5-sonnet-20241022"; // For grading documents
+const AGENT_MODEL = "anthropic/claude-sonnet-4-20250514"; // For agent decisions
+const GRADER_MODEL = "anthropic/claude-sonnet-4-20250514"; // For grading documents
 const REWRITE_MODEL = "openai/gpt-4.1-mini"; // For query rewriting
 const GENERATION_MODEL = "openai/gpt-4.1-mini"; // For final answer generation
 
