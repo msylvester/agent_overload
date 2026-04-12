@@ -125,9 +125,11 @@ export default function AgentOnboardingPage() {
             >
               @krystalballz/openclaw-funding-search
             </a>{" "}
-            plugin via OpenClaw. One command, then the{" "}
+            plugin via OpenClaw. One command, then two tools —{" "}
             <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1.5 py-0.5 rounded text-xs">funding_search</code>{" "}
-            tool is automatically available to your agent.
+            and{" "}
+            <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1.5 py-0.5 rounded text-xs">funding_search_rag</code>{" "}
+            — are automatically available to your agent.
           </p>
         </div>
 
@@ -189,13 +191,52 @@ export default function AgentOnboardingPage() {
                 Install the funding search plugin from the OpenClaw registry.
                 This is all you need.
               </p>
-              <CodeBlock lang="bash">openclaw plugins install @krystalballz/openclaw-funding-search</CodeBlock>
+              <CodeBlock lang="bash">openclaw plugins install @krystalballz/openclaw-funding-search@0.3.0</CodeBlock>
               <p className="text-[11px] text-[#5c5c5c]">
-                The <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">funding_search</code>{" "}
-                tool is automatically available to all agents after installation.
+                Two tools —{" "}
+                <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">funding_search</code>{" "}
+                and{" "}
+                <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">funding_search_rag</code>{" "}
+                — are automatically available to all agents after installation.
                 No registration code needed.
               </p>
             </StepCard>
+
+            {/* Tool Routing */}
+            <div className="border border-[#e74c3c]/20 rounded-xl bg-[#12121a] p-6">
+              <h3 className="text-sm font-semibold text-[#f5f5dc] mb-3 flex items-center gap-2">
+                <span className="text-[#e74c3c]">&#9670;</span> Tool Routing
+              </h3>
+              <p className="text-[13px] text-[#b8b8a0] mb-4">
+                The plugin provides two tools. Your agent should pick the right one based on the query:
+              </p>
+              <div className="space-y-3">
+                <div className="bg-[#1c1c2a] rounded-lg p-4 border border-[#2b2b2b]">
+                  <p className="text-[12px] text-[#f5f5dc] font-semibold mb-1">
+                    <code className="text-[#c0d8f0] font-mono">funding_search</code>{" "}
+                    — keyword / filter search
+                  </p>
+                  <p className="text-[11px] text-[#8a8a6a]">
+                    Use for <span className="text-[#b8b8a0]">everything else</span>: investor searches, sector/series filtering,
+                    date-based queries, trends, and general exploration.
+                  </p>
+                </div>
+                <div className="bg-[#1c1c2a] rounded-lg p-4 border border-[#2b2b2b]">
+                  <p className="text-[12px] text-[#f5f5dc] font-semibold mb-1">
+                    <code className="text-[#c0d8f0] font-mono">funding_search_rag</code>{" "}
+                    — semantic vector search
+                  </p>
+                  <p className="text-[11px] text-[#8a8a6a] mb-2">
+                    Use <span className="text-[#e74c3c]">ONLY</span> when:
+                  </p>
+                  <ul className="text-[11px] text-[#8a8a6a] list-disc list-inside space-y-1">
+                    <li>Asking about a specific funded company by name <span className="text-[#5c5c5c]">(&ldquo;tell me about Wagi&rdquo;)</span></li>
+                    <li>Asking about funded companies in a specific geography <span className="text-[#5c5c5c]">(&ldquo;any companies in Japan that have been funded&rdquo;)</span></li>
+                    <li>Describing a product/idea to find similar funded companies <span className="text-[#5c5c5c]">(&ldquo;I&apos;m building X, any companies doing something similar&rdquo;)</span></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
 
             <StepCard step={2} title="Configure API key (optional)">
               <p>
@@ -220,13 +261,14 @@ export default function AgentOnboardingPage() {
             <StepCard step={3} title="Use it">
               <p>
                 Your agent can now call <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">funding_search</code>{" "}
-                with any combination of parameters.
+                or <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">funding_search_rag</code>{" "}
+                depending on the query type.
               </p>
               <CodeBlock lang="json">
 {`{ "query": "autonomous vehicles", "sector": "AI", "limit": 5 }`}
               </CodeBlock>
               <p className="text-[11px] text-[#5c5c5c]">
-                At least one parameter is required. See the full parameter
+                See the tool routing guide above and the full parameter
                 reference below.
               </p>
             </StepCard>
@@ -269,9 +311,11 @@ npm install --omit=dev`}
               <p>
                 The plugin registers itself automatically via{" "}
                 <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">openclaw.plugin.json</code>.
-                No manual registration code is needed. The{" "}
+                No manual registration code is needed. Both{" "}
                 <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">funding_search</code>{" "}
-                tool will be available to all agents immediately.
+                and{" "}
+                <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">funding_search_rag</code>{" "}
+                tools will be available to all agents immediately.
               </p>
             </StepCard>
           </div>
@@ -319,6 +363,50 @@ npm install --omit=dev`}
           </div>
         </div>
 
+        {/* Tool Reference: funding_search_rag */}
+        <SectionHeading>Tool Reference: funding_search_rag</SectionHeading>
+        <div className="border border-[#2b2b2b] rounded-xl bg-[#12121a] p-6">
+          <p className="text-[13px] text-[#b8b8a0] mb-4">
+            Semantic vector search for finding specific companies, geographic matches,
+            and thematically similar startups. Returns results ranked by relevance.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[12px]">
+              <thead>
+                <tr className="border-b border-[#2b2b2b]">
+                  <th className="text-left py-2 pr-4 text-[#f5f5dc] font-semibold">Parameter</th>
+                  <th className="text-left py-2 pr-4 text-[#f5f5dc] font-semibold">Type</th>
+                  <th className="text-left py-2 text-[#f5f5dc] font-semibold">Description</th>
+                </tr>
+              </thead>
+              <tbody className="text-[#b8b8a0]">
+                {[
+                  { name: "query", type: "string", desc: 'Natural language query (e.g. "AI healthcare startups", "tell me about Wagi")', required: true },
+                  { name: "limit", type: "number", desc: "Max results (default 5, max 10)", required: false },
+                ].map((param) => (
+                  <tr key={param.name} className="border-b border-[#1c1c2a] last:border-0">
+                    <td className="py-2 pr-4">
+                      <code className="text-[#c0d8f0] font-mono">{param.name}</code>
+                      {param.required && (
+                        <span className="ml-1.5 text-[9px] text-[#e74c3c] font-semibold uppercase">required</span>
+                      )}
+                    </td>
+                    <td className="py-2 pr-4">
+                      <code className="text-[#5c5c5c] font-mono">{param.type}</code>
+                    </td>
+                    <td className="py-2 text-[#8a8a6a]">{param.desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[11px] text-[#5c5c5c] mt-4">
+            Response includes the same fields as <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">funding_search</code>{" "}
+            plus <code className="text-[#c0d8f0] bg-[#1c1c2a] px-1 rounded">relevance_score</code>{" "}
+            (0–1, higher is more relevant).
+          </p>
+        </div>
+
         {/* Example Queries */}
         <SectionHeading>Example Queries</SectionHeading>
         <div className="space-y-4">
@@ -341,6 +429,23 @@ npm install --omit=dev`}
           <div>
             <p className="text-[12px] text-[#8a8a6a] mb-2">Investor activity in Q1 2026:</p>
             <CodeBlock lang="json">{`{ "investor": "Sequoia", "start_date": "2026-01-01", "end_date": "2026-03-31" }`}</CodeBlock>
+          </div>
+        </div>
+
+        {/* RAG Example Queries */}
+        <SectionHeading>Example Queries: funding_search_rag</SectionHeading>
+        <div className="space-y-4">
+          <div>
+            <p className="text-[12px] text-[#8a8a6a] mb-2">Look up a specific company:</p>
+            <CodeBlock lang="json">{`{ "query": "tell me about Wagi" }`}</CodeBlock>
+          </div>
+          <div>
+            <p className="text-[12px] text-[#8a8a6a] mb-2">Geographic search:</p>
+            <CodeBlock lang="json">{`{ "query": "funded companies in Japan" }`}</CodeBlock>
+          </div>
+          <div>
+            <p className="text-[12px] text-[#8a8a6a] mb-2">Find similar companies by description:</p>
+            <CodeBlock lang="json">{`{ "query": "companies building autonomous delivery robots" }`}</CodeBlock>
           </div>
         </div>
 
