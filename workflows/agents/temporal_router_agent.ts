@@ -87,7 +87,12 @@ async function getRecentCompanies(
         date: r.date,
         created_at: r.created_at,
         founded_year: r.founded_year,
-        description: r.description,
+        // Truncate description to avoid the LLM pulling long article prose
+        // fragments into the analysis output.
+        description:
+          typeof r.description === "string"
+            ? r.description.slice(0, 280)
+            : r.description,
         sector: r.sector,
         funding_amount: r.funding_amount,
         total_funding: r.total_funding,
@@ -262,9 +267,13 @@ export async function getTemporal(
     model,
   });
 
+  // Source the company list from the actual DB result, not the LLM.
+  // The analysisNode LLM was returning only a handful of "noteworthy" entries
+  // (and sometimes hallucinating names from article description text), which
+  // caused the UI to report ~2 companies even when Mongo returned dozens.
   return {
-    companies: res.result.companies,
-    inference: res.result.inference,
+    companies: res.toolResult?.companies ?? [],
+    inference: res.result?.inference ?? "",
   };
 }
 
