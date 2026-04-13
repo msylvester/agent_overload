@@ -162,25 +162,35 @@ async function analysisNode(state: {
 
   const { companies, details } = state.toolResult;
 
+  // If the Mongo search returned nothing, skip the LLM call entirely.
+  if (!companies || companies.length === 0) {
+    return {
+      result: {
+        companies: [],
+        inference: `No companies found in the database for the window ${state.startDate} to ${state.endDate}.`,
+      },
+    };
+  }
+
   const systemPrompt = `
 You are a trend-spotting agent analyzing companies within a time period.
 
-Your goals:
-1. Perform trend analysis:
-   - industries gaining traction
-   - emerging tech
-   - funding patterns
-   - geography patterns
-   - themes in descriptions
-2. If the query involves comparing industries by funding:
-   - Aggregate funding by sector
-   - Identify the top-funded sectors
-   - Provide examples and reasoning
-3. Always reference the date window (${state.startDate} to ${state.endDate})
+You will be given a list of companies that were funded in a date window.
+Your ONLY job is to produce a concise "inference" string summarizing
+trends across those companies — do NOT invent, filter, or rewrite the
+company list. The "companies" field in your output must be ignored by
+the caller, so you may leave it empty.
+
+Guidelines for the inference:
+- Highlight industries gaining traction, emerging tech, funding patterns,
+  geography patterns, and themes in descriptions.
+- If the query compares industries by funding, aggregate by sector and
+  call out the top-funded sectors with examples.
+- Always reference the date window (${state.startDate} to ${state.endDate}).
 
 OUTPUT FORMAT (STRICT):
 {
-  companies: string[],
+  companies: string[],  // leave empty — caller supplies the real list
   inference: string
 }
 `;
@@ -189,29 +199,42 @@ OUTPUT FORMAT (STRICT):
 User Query:
 ${state.query}
 
-Companies Returned:
+Companies Returned (${companies.length} total):
 ${JSON.stringify(details, null, 2)}
 
-Extract trends and produce final analysis.
+Produce the inference summary.
 `;
 
-  const response = await llm.invoke(
-    [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    {
-      response_format: zodResponseFormat(
-        TemporalAnalysisSchema,
-        "temporal_analysis"
-      ) as any,
-    }
-  );
+  let inference = "";
+  try {
+    const response = await llm.invoke(
+      [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      {
+        response_format: zodResponseFormat(
+          TemporalAnalysisSchema,
+          "temporal_analysis"
+        ) as any,
+      }
+    );
 
-  // Parse the JSON response from the content
-  const parsedContent = JSON.parse(response.content as string);
+    const parsedContent = JSON.parse(response.content as string);
+    inference = parsedContent?.inference ?? "";
+  } catch (e) {
+    console.error("Error in analysisNode LLM call:", e);
+    inference = `Found ${companies.length} companies between ${state.startDate} and ${state.endDate}.`;
+  }
 
-  return { result: parsedContent };
+  // Authoritative: companies come straight from the Mongo result, never
+  // from the LLM. The LLM only contributes the prose inference.
+  return {
+    result: {
+      companies,
+      inference,
+    },
+  };
 }
 
 // ============================================================
@@ -267,12 +290,11 @@ export async function getTemporal(
     model,
   });
 
-  // Source the company list from the actual DB result, not the LLM.
-  // The analysisNode LLM was returning only a handful of "noteworthy" entries
-  // (and sometimes hallucinating names from article description text), which
-  // caused the UI to report ~2 companies even when Mongo returned dozens.
+  // analysisNode now writes `result.companies` directly from the Mongo
+  // result (state.toolResult.companies), so `res.result.companies` is the
+  // authoritative DB list, not an LLM-filtered subset.
   return {
-    companies: res.toolResult?.companies ?? [],
+    companies: res.result?.companies ?? [],
     inference: res.result?.inference ?? "",
   };
 }
