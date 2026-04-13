@@ -78,8 +78,29 @@ async function getRecentCompanies(
       .limit(limit)
       .toArray();
 
+    // Clean and deduplicate company names — some MongoDB documents
+    // have garbled company_name values from the scraping pipeline
+    // (e.g. article text fragments, section headers, single generic words).
+    const seen = new Set<string>();
+    const cleanCompanies = results
+      .map((r) => r.company_name ?? "")
+      .filter((name) => {
+        if (!name || name === "Unknown") return false;
+        if (name.includes('\n')) return false;       // multi-line = garbled
+        if (name.includes('  ')) return false;        // double spaces = scraped text
+        if (name.length < 2 || name.length > 60) return false;
+        // single generic words that aren't company names
+        if (/^(AI|Robotics|Aerospace|Therapeutics|Health|Med|Photonics|Highlights|News|Cents|Factor|Biosignals)$/i.test(name)) return false;
+        // article text fragments (contains sentence-like patterns)
+        if (/\b(announced|that has|has now|has raised|startup\w+announced)\b/i.test(name)) return false;
+        const key = name.trim().toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
     return {
-      companies: results.map((r) => r.company_name ?? "Unknown"),
+      companies: cleanCompanies,
       details: results.map((r) => ({
         company_name: r.company_name,
         posted_date: r.posted_date,
@@ -206,7 +227,10 @@ Extract trends and produce final analysis.
   // Parse the JSON response from the content
   const parsedContent = JSON.parse(response.content as string);
 
-  return { result: parsedContent };
+  return { result: {
+    companies: state.toolResult.companies,  // Use actual MongoDB results, not LLM output
+    inference: parsedContent.inference,
+  } };
 }
 
 // ============================================================
@@ -263,7 +287,7 @@ export async function getTemporal(
   });
 
   return {
-    companies: res.result.companies,
+    companies: res.toolResult?.companies ?? res.result?.companies ?? [],
     inference: res.result.inference,
   };
 }
