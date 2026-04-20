@@ -61,7 +61,7 @@ export default function SidePanel() {
             LinkedIn
           </LinkItem>
           <LinkItem href="https://github.com/msylvester">
-            GitHub
+            GitHub 🐙
           </LinkItem>
           <LinkItem href="https://www.twitch.tv/krystal_mess323">
             Twitch
@@ -76,7 +76,7 @@ export default function SidePanel() {
       <SidePanelSection title="Project Links">
         <div className="flex flex-col gap-1">
           <LinkItem href="https://github.com/msylvester/agent_overload">
-            GitHub Repository
+            GitHub 🐙 Repository
           </LinkItem>
           <LinkItem href="https://github.com/msylvester/agent_overload/issues">
             Report Issues
