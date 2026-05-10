@@ -3,14 +3,38 @@
 import React, { useState, FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function AdminLogin() {
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // Auth not implemented yet
+    if (submitting) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      if (res.ok) {
+        router.replace("/admin/dashboard");
+        router.refresh();
+        return;
+      }
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      setError(data.error ?? "Login failed");
+    } catch {
+      setError("Network error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -91,9 +115,20 @@ export default function AdminLogin() {
                   </span>
                 </div>
 
+                {/* ERROR */}
+                {error && (
+                  <p
+                    role="alert"
+                    className="text-[10px] tracking-[1px] text-[#ff6b6b] text-center [text-shadow:0_0_8px_rgba(255,80,80,0.4)]"
+                  >
+                    {error}
+                  </p>
+                )}
+
                 {/* ENTER BUTTON */}
                 <button
                   type="submit"
+                  disabled={submitting}
                   className="
                     mx-auto px-10 py-3
                     border-2 border-[#555555]
@@ -105,9 +140,10 @@ export default function AdminLogin() {
                     hover:border-[#7abaff]
                     transition-shadow duration-300
                     cursor-pointer
+                    disabled:opacity-60 disabled:cursor-not-allowed
                   "
                 >
-                  ENTER
+                  {submitting ? "..." : "ENTER"}
                 </button>
 
                 {/* AUTHORIZED ONLY */}
